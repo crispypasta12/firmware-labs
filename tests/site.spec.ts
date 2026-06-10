@@ -58,7 +58,22 @@ test("home and lab routes expose SEO and social metadata", async ({ page }) => {
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /Lab 01 - Why counter\+\+ loses updates/);
 });
 
-for (const route of ["/", "/deck", "/track/wireless", "/lab/race-condition"]) {
+test("lab learning notes render outside the simulator section", async ({ page }) => {
+  await page.goto("/lab/race-condition");
+
+  await expect(page.getByRole("link", { name: "Learning notes" })).toBeVisible();
+  await expect(page.locator("#learning-notes")).toContainText("Build the engineering model");
+  await expect(page.locator("#learning-notes")).toContainText("Real firmware checklist");
+  await expect(page.locator("section.lab #learning-notes")).toHaveCount(0);
+  await expect(page.locator(".lab-tag")).not.toContainText("PDF");
+});
+
+test("track pages surface learning-note coverage", async ({ page }) => {
+  await page.goto("/track/wireless");
+  await expect(page.getByText("Includes field checklist")).toHaveCount(13);
+});
+
+for (const route of ["/", "/deck", "/track/wireless", "/lab/race-condition", "/lab/ble-debug-playbook"]) {
   test(`mobile layout has no horizontal overflow on ${route}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(route);

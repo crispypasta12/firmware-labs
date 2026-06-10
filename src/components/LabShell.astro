@@ -1,7 +1,7 @@
 ---
 // Renders the shared .lab chrome (head / why / takeaway) around a lab body.
 // why/takeaway/title accept HTML (golden copy contains <code>, <b> etc.).
-import { genericizePageCopy } from "../lib/pageCopy";
+import { genericizeLabTag, genericizePageCopy } from "../lib/pageCopy";
 
 interface Props {
   num: string;
@@ -13,6 +13,7 @@ interface Props {
   id?: string;
 }
 const { num, title, tag, why, takeaway, id } = Astro.props;
+const safeTag = genericizeLabTag(tag);
 const safeWhy = genericizePageCopy(why);
 const safeTakeaway = takeaway ? genericizePageCopy(takeaway) : undefined;
 ---
@@ -20,7 +21,7 @@ const safeTakeaway = takeaway ? genericizePageCopy(takeaway) : undefined;
   <div class="lab-head">
     <span class="lab-num">{num}</span>
     <span class="lab-title" set:html={title} />
-    <span class="lab-tag">{tag}</span>
+    <span class="lab-tag">{safeTag}</span>
   </div>
   <div class="lab-body">
     <div class="lab-why" set:html={safeWhy} />

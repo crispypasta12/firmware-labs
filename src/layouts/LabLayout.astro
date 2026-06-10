@@ -3,6 +3,8 @@
 // maxWidth mirrors the source golden file's .wrap (vol2/vol2b: 980, vol4: 1000)
 // so lab visual diffs stay pixel-faithful.
 import "../styles/tokens.css";
+import LabLearningPanel from "../components/LabLearningPanel.astro";
+import { labNotesBySlug } from "../content/labNotes";
 import { labBySlug, labNav } from "../lib/labs";
 
 interface Props {
@@ -13,6 +15,7 @@ const { title, maxWidth = 980 } = Astro.props;
 const slug = Astro.url.pathname.split("/").filter(Boolean).at(-1) || "";
 const lab = labBySlug(slug);
 const nav = lab ? labNav(slug) : {};
+const learningNote = lab ? labNotesBySlug[lab.slug] : undefined;
 const pageTitle = lab ? `Lab ${lab.num} - ${lab.title} - Firmware Labs` : title;
 const description = lab
   ? `${lab.description} Firmware Labs is an interactive simulator for practicing firmware engineering judgment.`
@@ -51,10 +54,12 @@ const ogImage = new URL("/og.svg", Astro.site ?? Astro.url.origin).toString();
       <nav class="site-nav" aria-label="Primary">
         <a href="/">Tracks</a>
         {nav.track && <a href={`/track/${nav.track.slug}`}>{nav.track.title}</a>}
+        {learningNote && <a href="#learning-notes">Learning notes</a>}
       </nav>
     </header>
     <div class="wrap" style={`max-width:${maxWidth}px`}>
       <slot />
+      {lab && learningNote && <LabLearningPanel lab={lab} note={learningNote} />}
       {lab && (
         <section class="lab-page-panel" aria-labelledby="lab-progress-title">
           <div>

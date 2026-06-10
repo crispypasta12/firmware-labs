@@ -1,0 +1,139 @@
+---
+import type { LabInfo } from "../lib/labs";
+import type { LabNote } from "../content/labNotes";
+
+interface Props {
+  lab: LabInfo;
+  note: LabNote;
+}
+
+const { lab, note } = Astro.props;
+---
+
+<section class="learning-panel" id="learning-notes" aria-labelledby="learning-notes-title">
+  <div class="learning-head">
+    <p class="learning-kicker">Learning notes</p>
+    <h2 id="learning-notes-title">Build the engineering model</h2>
+    <p>
+      Use these notes after running Lab {lab.num}. They connect the simulator behavior to real firmware design,
+      debugging, and review work.
+    </p>
+  </div>
+
+  <div class="learning-section learning-brief">
+    <h3>Concept brief</h3>
+    {note.conceptBrief.map((item) => <p set:html={item} />)}
+  </div>
+
+  <div class="learning-grid">
+    <div class="learning-section">
+      <h3>What to observe</h3>
+      <ul>{note.whatToObserve.map((item) => <li set:html={item} />)}</ul>
+    </div>
+    <div class="learning-section">
+      <h3>Real firmware checklist</h3>
+      <ul>{note.realFirmwareChecklist.map((item) => <li set:html={item} />)}</ul>
+    </div>
+    <div class="learning-section">
+      <h3>Common traps</h3>
+      <ul>{note.commonTraps.map((item) => <li set:html={item} />)}</ul>
+    </div>
+    <div class="learning-section self-check">
+      <h3>Self-check</h3>
+      <ol>{note.selfCheck.map((item) => <li set:html={item} />)}</ol>
+    </div>
+  </div>
+
+  {note.codeSketch && (
+    <div class="learning-section code-sketch">
+      <h3>Code sketch</h3>
+      <pre><code>{note.codeSketch}</code></pre>
+    </div>
+  )}
+</section>
+
+<style>
+  .learning-panel{
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:linear-gradient(180deg,rgba(15,18,24,.96),rgba(13,16,21,.96));
+    padding:18px;
+    margin:18px 0 14px;
+  }
+  .learning-head{
+    border-bottom:1px solid var(--border);
+    padding-bottom:14px;
+    margin-bottom:16px;
+  }
+  .learning-kicker{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--amber);
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin:0 0 6px;
+  }
+  .learning-head h2{
+    font-size:18px;
+    line-height:1.25;
+    margin:0 0 8px;
+  }
+  .learning-head p,
+  .learning-section p,
+  .learning-section li{
+    color:var(--dim);
+    font-size:13px;
+    line-height:1.65;
+  }
+  .learning-head p,
+  .learning-section p{
+    margin:0;
+  }
+  .learning-section p + p{
+    margin-top:8px;
+  }
+  .learning-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+  }
+  .learning-section{
+    min-width:0;
+  }
+  .learning-section h3{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--text);
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin:0 0 8px;
+  }
+  .learning-section ul,
+  .learning-section ol{
+    margin:0;
+    padding-left:18px;
+  }
+  .learning-section li + li{
+    margin-top:6px;
+  }
+  .code-sketch{
+    margin-top:16px;
+  }
+  .code-sketch pre{
+    margin:0;
+    border:1px solid var(--border2);
+    border-radius:6px;
+    background:rgba(0,0,0,.24);
+    padding:12px;
+    overflow:auto;
+  }
+  .code-sketch code{
+    color:var(--text);
+    font-size:12px;
+    line-height:1.55;
+  }
+  @media(max-width:700px){
+    .learning-panel{padding:14px}
+    .learning-grid{grid-template-columns:1fr}
+  }
+</style>

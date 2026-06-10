@@ -1,5 +1,6 @@
 ---
 import SiteLayout from "../../layouts/SiteLayout.astro";
+import { hasLabNotes } from "../../content/labNotes";
 import { labsForTrack, trackBySlug, tracks } from "../../lib/labs";
 
 export function getStaticPaths() {
@@ -25,6 +26,7 @@ const trackLabs = labsForTrack(track.slug);
         <span>
           <h2>{lab.title}</h2>
           <p>{lab.description}</p>
+          {hasLabNotes(lab.slug) && <span class="track-note-chip">Includes field checklist</span>}
         </span>
         <span class="site-check" data-progress-lab={lab.slug}>Not complete</span>
       </a>
@@ -35,4 +37,5 @@ const trackLabs = labsForTrack(track.slug);
 <style is:global>
   .site-back{display:inline-flex;margin-bottom:18px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);text-decoration:none}
   .site-back:hover{color:var(--teal)}
+  .track-note-chip{display:inline-flex;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);border:1px solid rgba(255,180,84,.35);border-radius:4px;padding:3px 6px}
 </style>
