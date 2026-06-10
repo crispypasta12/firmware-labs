@@ -1,66 +1,628 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
-import { featuredLabNums, labByNum, labsForTrack, tracks } from "../lib/labs";
+import { featuredLabNums, labByNum, labsForTrack, labs, tracks } from "../lib/labs";
 
 const featured = featuredLabNums.map((num) => labByNum(num)).filter(Boolean);
+const trackAccents: Record<string, string> = {
+  "concurrency-rtos": "var(--red)",
+  "memory-machine": "var(--purple)",
+  "drivers-buses": "var(--blue)",
+  wireless: "var(--teal)",
+  "shipping-firmware": "var(--green)",
+};
+const trackIcons: Record<string, string> = {
+  "concurrency-rtos": `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 6h7l3 8h6"/><path d="M2 14h7l3-8h6" opacity=".45"/></svg>`,
+  "memory-machine": `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="5" width="10" height="10" rx="1.5"/><path d="M8 5V2M12 5V2M8 18v-3M12 18v-3M5 8H2M5 12H2M18 8h-3M18 12h-3"/></svg>`,
+  "drivers-buses": `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 13h3V7h4v6h4V7h4v6h3"/></svg>`,
+  wireless: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10" cy="14" r="1.6" fill="currentColor" stroke="none"/><path d="M6.5 10.5a5 5 0 0 1 7 0M4 7.5a8.5 8.5 0 0 1 12 0"/></svg>`,
+  "shipping-firmware": `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M10 16V5"/><path d="M6 9l4-4 4 4"/><path d="M3 16h14" opacity=".45"/></svg>`,
+};
+const deckIcon = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="6" width="11" height="11" rx="1.5"/><path d="M7 3.5h10V14" opacity=".45"/></svg>`;
+const featSparks: Record<string, string> = {
+  "race-condition": `<svg viewBox="0 0 120 20" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0,15 H20 V5 H45 V15 H70 V5 H95 V15 H120"/><path d="M0,5 H12 V15 H38 V5 H62 V15 H88 V5 H112 V15 H120" opacity=".4"/></svg>`,
+  "dma-pingpong": `<svg viewBox="0 0 120 20" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0,15 H30 V5 H60 V15 H90 V5 H120"/><path d="M30,2 V18 M60,2 V18 M90,2 V18" opacity=".3" stroke-dasharray="2 2"/></svg>`,
+  "ble-connection-timing": `<svg viewBox="0 0 120 20" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0,16 H18 L20,4 L22,16 H48 L50,4 L52,16 H78 L80,4 L82,16 H108 L110,4 L112,16 H120"/></svg>`,
+  "ble-channel-map": `<svg viewBox="0 0 120 20" preserveAspectRatio="none" fill="currentColor" stroke="none"><rect x="2" y="8" width="5" height="10"/><rect x="11" y="5" width="5" height="13"/><rect x="20" y="10" width="5" height="8"/><rect x="29" y="7" width="5" height="11" opacity=".25"/><rect x="38" y="4" width="5" height="14" opacity=".25"/><rect x="47" y="9" width="5" height="9"/><rect x="56" y="6" width="5" height="12"/><rect x="65" y="11" width="5" height="7"/><rect x="74" y="5" width="5" height="13" opacity=".25"/><rect x="83" y="8" width="5" height="10"/><rect x="92" y="4" width="5" height="14"/><rect x="101" y="10" width="5" height="8"/><rect x="110" y="7" width="5" height="11"/></svg>`,
+  "throughput-calc": `<svg viewBox="0 0 120 20" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0,18 H20 V14 H40 V11 H60 V8 H80 V5 H100 V3 H120"/></svg>`,
+  "ble-debug-playbook": `<svg viewBox="0 0 120 20" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M0,12 H20 L26,6 L32,16 L38,12 H58 L64,4 L70,18 L76,12 H120"/></svg>`,
+};
 ---
 
-<SiteLayout title="Firmware Labs">
-  <div class="site-kicker">Interactive firmware labs</div>
-  <h1 class="site-title">Practice the failure modes that make firmware hard.</h1>
-  <p class="site-copy">
-    Firmware Labs is organized by engineering track. Each lab is a focused simulator for a concrete debugging,
-    architecture, timing, or wireless behavior.
-  </p>
+<SiteLayout title="Firmware Labs — interactive firmware engineering simulators">
+  <!-- ============ HERO ============ -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <div class="site-kicker">Interactive firmware labs</div>
+      <h1 id="hero-title" class="hero-title">
+        Practice the <em id="hero-rotate">failure modes</em> that make firmware hard.
+      </h1>
+      <p class="hero-sub">
+        {labs.length} hands-on simulators for race conditions, HardFaults, bus timing, and BLE behavior.
+        Break things on purpose, watch the signals, and learn to explain the fix like a senior engineer.
+      </p>
+      <div class="hero-cta">
+        <a class="cta primary" href="/lab/race-condition">Start with Lab 01 →</a>
+        <a class="cta" href="#tracks">Browse tracks</a>
+        <a class="cta" href="/deck">Drill deck</a>
+      </div>
+      <dl class="hero-stats">
+        <div><dt data-count="31">{labs.length}</dt><dd>interactive labs</dd></div>
+        <div><dt data-count="5">{tracks.length}</dt><dd>engineering tracks</dd></div>
+        <div><dt data-count="20">20</dt><dd>drill cards</dd></div>
+        <div><dt>0</dt><dd>slides — only sims</dd></div>
+      </dl>
+    </div>
 
-  <section class="site-section" aria-labelledby="deck-title">
-    <h2 id="deck-title" class="site-kicker">Practice deck</h2>
-    <div class="site-grid">
-      <a class="site-card" href="/deck">
-        <h3>Embedded fundamentals drill</h3>
-        <p>Self-grade core firmware concepts with filters, keyboard shortcuts, and a retry queue.</p>
-        <div class="site-meta">
-          <span>20 cards</span>
-          <span>Review draft</span>
-        </div>
-      </a>
+    <div class="hero-scope" aria-hidden="true">
+      <div class="scope-chrome">
+        <span class="dot" style="background:var(--red)"></span>
+        <span class="dot" style="background:var(--amber)"></span>
+        <span class="dot" style="background:var(--green)"></span>
+        <span class="scope-label">logic-analyzer — i2c decode</span>
+        <span class="scope-run"><span class="run-dot"></span>RUN</span>
+      </div>
+      <div class="scope-screen">
+        <svg viewBox="0 0 720 250" preserveAspectRatio="none">
+          <defs>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2.4" result="b" />
+              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+          <!-- measurement cursors around the IRQ pulse -->
+          <g class="cursors" stroke="var(--dim)" stroke-width="1" stroke-dasharray="3 4">
+            <line x1="330" y1="14" x2="330" y2="250" />
+            <line x1="354" y1="14" x2="354" y2="250" />
+          </g>
+          <g class="cursors" font-family="'IBM Plex Mono',monospace" font-size="9" fill="var(--dim)">
+            <text x="342" y="10" text-anchor="middle">Δt 24 µs</text>
+          </g>
+          <!-- channel labels -->
+          <g font-family="'IBM Plex Mono',monospace" font-size="9" class="chlabels">
+            <text x="6" y="40" fill="var(--teal)">CH1·SCL</text>
+            <text x="6" y="112" fill="var(--blue)">CH2·SDA</text>
+            <text x="6" y="182" fill="var(--amber)">CH3·IRQ</text>
+          </g>
+          <!-- CH1 clock (teal) -->
+          <path class="trace t1" pathLength="1" fill="none" stroke="var(--teal)" stroke-width="1.6" filter="url(#glow)"
+            d="M0,60 H30 V36 H60 V60 H90 V36 H120 V60 H150 V36 H180 V60 H210 V36 H240 V60 H270 V36 H300 V60 H330 V36 H360 V60 H390 V36 H420 V60 H450 V36 H480 V60 H510 V36 H540 V60 H570 V36 H600 V60 H630 V36 H660 V60 H690 V36 H720" />
+          <!-- CH2 data (blue) -->
+          <path class="trace t2" pathLength="1" fill="none" stroke="var(--blue)" stroke-width="1.6" filter="url(#glow)"
+            d="M0,130 H45 V106 H105 V130 H165 V106 H195 V130 H285 V106 H345 V130 H405 V106 H465 V130 H525 V106 H555 V130 H645 V106 H690 V130 H720" />
+          <!-- CH3 IRQ pulse (amber) -->
+          <path class="trace t3" pathLength="1" fill="none" stroke="var(--amber)" stroke-width="1.6" filter="url(#glow)"
+            d="M0,200 H330 V176 H354 V200 H720" />
+          <!-- protocol decode row -->
+          <g class="decode" font-family="'IBM Plex Mono',monospace" font-size="10" text-anchor="middle">
+            <rect x="36" y="82" width="60" height="14" rx="2" fill="rgba(0,212,170,.10)" stroke="rgba(0,212,170,.45)" />
+            <text x="66" y="93" fill="var(--teal)">START</text>
+            <rect x="150" y="82" width="60" height="14" rx="2" fill="rgba(0,153,204,.10)" stroke="rgba(0,153,204,.5)" />
+            <text x="180" y="93" fill="var(--blue)">0x4C</text>
+            <rect x="270" y="82" width="60" height="14" rx="2" fill="rgba(0,153,204,.10)" stroke="rgba(0,153,204,.5)" />
+            <text x="300" y="93" fill="var(--blue)">0xAB</text>
+            <rect x="390" y="82" width="60" height="14" rx="2" fill="rgba(224,80,80,.10)" stroke="rgba(224,80,80,.5)" />
+            <text x="420" y="93" fill="var(--red)">NACK</text>
+            <rect x="510" y="82" width="60" height="14" rx="2" fill="rgba(0,153,204,.10)" stroke="rgba(0,153,204,.5)" />
+            <text x="540" y="93" fill="var(--blue)">0xAB</text>
+            <rect x="624" y="82" width="60" height="14" rx="2" fill="rgba(0,212,170,.10)" stroke="rgba(0,212,170,.45)" />
+            <text x="654" y="93" fill="var(--teal)">STOP</text>
+            <text class="decode-note" x="420" y="236" fill="var(--amber)" font-size="9.5">▲ IRQ fired 1 byte late — find out why in Lab 04</text>
+          </g>
+          <!-- sweep cursor -->
+          <line class="sweep" x1="0" y1="0" x2="0" y2="250" stroke="var(--teal)" stroke-width="1" opacity=".35" />
+          <!-- hover measurement cursor -->
+          <line id="hover-cursor" x1="0" y1="0" x2="0" y2="250" stroke="var(--green)" stroke-width="1" opacity=".9" visibility="hidden" />
+        </svg>
+        <span class="scope-readout" id="scope-readout" hidden></span>
+        <span class="scope-status">24 µs/div&nbsp;&nbsp;trig CH3 ↑ 1.2 V</span>
+      </div>
+      <p class="bootlog" id="home-bootlog" data-final="[0.031] system ready — 31 labs loaded. pick a failure mode_"></p>
     </div>
   </section>
 
-  <section class="site-section" aria-labelledby="tracks-title">
-    <h2 id="tracks-title" class="site-kicker">Tracks</h2>
-    <div class="site-grid">
-      {tracks.map((track) => {
+  <!-- ============ HOW IT WORKS ============ -->
+  <section class="site-section" aria-labelledby="how-title">
+    <h2 id="how-title" class="site-kicker">How every lab works</h2>
+    <div class="how-grid">
+      <div class="how-card rv">
+        <span class="how-step" style="color:var(--teal)">01</span>
+        <h3>Run the scope</h3>
+        <p>Every lab opens on a live visual — waveforms, stack frames, packet timelines — not a wall of text.</p>
+      </div>
+      <div class="how-card rv">
+        <span class="how-step" style="color:var(--amber)">02</span>
+        <h3>Break it yourself</h3>
+        <p>Turn the knobs until it fails. Lose the increment, miss the interrupt, drop the connection.</p>
+      </div>
+      <div class="how-card rv">
+        <span class="how-step" style="color:var(--purple)">03</span>
+        <h3>Say it like a senior</h3>
+        <p>Each lab ends with the takeaway: the one-sentence explanation you'd give in a design review.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TRACKS ============ -->
+  <section id="tracks" class="site-section" aria-labelledby="tracks-title">
+    <div class="section-head">
+      <h2 id="tracks-title" class="site-kicker">Engineering tracks</h2>
+      <p class="section-sub">Pick the area you debug most — progress is saved locally as you complete labs.</p>
+    </div>
+    <div class="track-grid">
+      {tracks.map((track, i) => {
         const trackLabs = labsForTrack(track.slug);
+        const accent = trackAccents[track.slug] ?? "var(--teal)";
         return (
-          <a class="site-card" href={`/track/${track.slug}`}>
+          <a class="track-card rv" href={`/track/${track.slug}`} style={`--accent:${accent}`}>
+            <div class="track-top">
+              <span class="track-icon" set:html={trackIcons[track.slug] ?? ""} />
+              <span class="track-index">TRK {String(i + 1).padStart(2, "0")}</span>
+            </div>
             <h3>{track.title}</h3>
             <p>{track.summary}</p>
-            <div class="site-meta">
-              <span>{trackLabs.length} labs</span>
-              <span data-progress-track={track.slug} data-progress-labs={trackLabs.map((lab) => lab.slug).join(",")}>
-                0/{trackLabs.length}
+            <div class="track-progress">
+              <div class="track-bar">
+                <span class="track-fill" data-progress-bar data-progress-labs={trackLabs.map((lab) => lab.slug).join(",")}></span>
+              </div>
+              <span class="site-meta-num">
+                <span data-progress-track={track.slug} data-progress-labs={trackLabs.map((lab) => lab.slug).join(",")}>
+                  0/{trackLabs.length}
+                </span>
+                &nbsp;labs
               </span>
             </div>
           </a>
         );
       })}
+      <a class="track-card deck-card rv" href="/deck" style="--accent:var(--amber)">
+        <div class="track-top">
+          <span class="track-icon" set:html={deckIcon} />
+          <span class="track-index">DRILL</span>
+        </div>
+        <h3>Embedded fundamentals deck</h3>
+        <p>Self-grade 20 core firmware concepts with filters, keyboard shortcuts, and a retry queue.</p>
+        <div class="track-progress">
+          <span class="site-meta-num">20 cards · spaced practice</span>
+        </div>
+      </a>
     </div>
   </section>
 
+  <!-- ============ FEATURED ============ -->
   <section class="site-section" aria-labelledby="featured-title">
-    <h2 id="featured-title" class="site-kicker">Featured labs</h2>
-    <div class="site-list">
+    <div class="section-head">
+      <h2 id="featured-title" class="site-kicker">Featured labs</h2>
+      <p class="section-sub">A sampler across the tracks — each one runs in your browser, no setup.</p>
+    </div>
+    <div class="feat-grid">
       {featured.map((lab) => lab && (
-        <a class="site-lab-row" href={`/lab/${lab.slug}`}>
-          <span class="site-num">LAB {lab.num}</span>
-          <span>
-            <h2>{lab.title}</h2>
-            <p>{lab.description}</p>
-          </span>
-          <span class="site-check" data-progress-lab={lab.slug}>Not complete</span>
+        <a class="feat-card rv" href={`/lab/${lab.slug}`} style={`--accent:${trackAccents[lab.track] ?? "var(--teal)"}`}>
+          <div class="feat-top">
+            <span class="feat-num">LAB {lab.num}</span>
+            <span class="site-check" data-progress-lab={lab.slug}>Not complete</span>
+          </div>
+          <span class="feat-spark" aria-hidden="true" set:html={featSparks[lab.slug] ?? ""} />
+          <h3>{lab.title}</h3>
+          <p>{lab.description}</p>
+          <span class="feat-go">Open simulator →</span>
         </a>
       ))}
     </div>
   </section>
+
+  <!-- ============ LAB INDEX ============ -->
+  <section class="site-section" aria-labelledby="index-title">
+    <div class="section-head">
+      <h2 id="index-title" class="site-kicker">Lab index</h2>
+      <p class="section-sub">The full map — completed labs light up.</p>
+      <span class="site-meta-num index-count" id="index-count">0/{labs.length} complete</span>
+    </div>
+    <div class="chip-grid">
+      {labs.map((lab) => (
+        <a class="lab-chip" data-lab-chip={lab.slug} href={`/lab/${lab.slug}`} style={`--accent:${trackAccents[lab.track] ?? "var(--teal)"}`}>
+          <span class="chip-num">{lab.num}</span>
+          <span class="chip-slug">{lab.slug}</span>
+          <span class="chip-check" aria-hidden="true">✓</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- ============ CLOSER ============ -->
+  <section class="closer rv" aria-labelledby="closer-title">
+    <h2 id="closer-title">Stop reading about firmware. Start breaking it.</h2>
+    <p>Every simulator states its simplifications honestly — these are teaching models, built for judgment, not vendor manuals.</p>
+    <a class="cta primary" href="/lab/race-condition">Run your first lab →</a>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div class="foot-grid">
+      <div class="foot-about">
+        <span class="foot-brand">Firmware Labs</span>
+        <p>Interactive simulators for senior-level firmware engineering judgment.</p>
+      </div>
+      <nav class="foot-col" aria-label="Tracks">
+        <span class="foot-h">Tracks</span>
+        {tracks.map((track) => <a href={`/track/${track.slug}`}>{track.title}</a>)}
+      </nav>
+      <nav class="foot-col" aria-label="Practice">
+        <span class="foot-h">Practice</span>
+        <a href="/lab/race-condition">Start with Lab 01</a>
+        <a href="/deck">Drill deck</a>
+        <a href="#tracks">All tracks</a>
+      </nav>
+    </div>
+    <p class="foot-note">Built with Astro and vanilla JS — no frameworks were harmed. © 2026 Firmware Labs.</p>
+  </footer>
 </SiteLayout>
+
+<style>
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:36px;align-items:center;
+    padding:46px 0 20px;
+  }
+  .hero::before{
+    content:"";position:absolute;inset:-80px 0 0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(640px 320px at 74% 8%,rgba(0,212,170,.075),transparent 70%),
+      radial-gradient(480px 280px at 6% 92%,rgba(160,128,224,.05),transparent 70%);
+  }
+  .hero>*{position:relative;z-index:1}
+  .hero-title{font-size:42px;line-height:1.1;font-weight:600;letter-spacing:-.015em;margin:0 0 14px}
+  .hero-title em{font-style:normal;color:var(--teal);position:relative;text-shadow:0 0 28px rgba(0,212,170,.35)}
+  .hero-title em::after{
+    content:"";position:absolute;left:0;right:0;bottom:2px;height:2px;
+    background:linear-gradient(90deg,var(--teal),transparent);opacity:.7
+  }
+  .hero-sub{color:#8b98a8;font-size:15px;line-height:1.7;max-width:480px;margin:0 0 22px}
+  .hero-cta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px}
+  .cta{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-decoration:none;color:var(--text);
+    border:1px solid var(--border2);border-radius:5px;padding:10px 16px;transition:.15s;background:var(--bg2)
+  }
+  .cta:hover{border-color:var(--teal);color:var(--teal);transform:translateY(-1px)}
+  .cta:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .cta.primary{
+    border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.08);
+    box-shadow:0 0 22px -6px rgba(0,212,170,.45)
+  }
+  .cta.primary:hover{background:rgba(0,212,170,.15);box-shadow:0 0 30px -6px rgba(0,212,170,.6)}
+  .hero-stats{display:flex;gap:26px;flex-wrap:wrap;margin:0;border-top:1px solid var(--border);padding-top:18px}
+  .hero-stats div{display:flex;flex-direction:column;gap:2px}
+  .hero-stats dt{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--teal);font-variant-numeric:tabular-nums}
+  .hero-stats dd{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin:0;letter-spacing:.05em;text-transform:uppercase}
+
+  /* ---------- hero scope ---------- */
+  .hero-scope{
+    border:1px solid var(--border2);border-radius:8px;background:var(--bg2);overflow:hidden;
+    box-shadow:0 30px 80px -30px rgba(0,212,170,.22),0 10px 36px rgba(0,0,0,.5)
+  }
+  .scope-chrome{display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid var(--border)}
+  .scope-chrome .dot{width:8px;height:8px;border-radius:50%;opacity:.75}
+  .scope-label{margin-left:8px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--dim);letter-spacing:.04em}
+  .scope-run{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);letter-spacing:.1em}
+  .run-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.6s steps(1) infinite}
+  .scope-screen{
+    position:relative;background:#0c1014;padding:10px 0 4px;
+    background-image:linear-gradient(rgba(42,51,64,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(42,51,64,.25) 1px,transparent 1px);
+    background-size:24px 24px
+  }
+  .scope-screen svg{display:block;width:100%;height:222px}
+  .scope-status{
+    position:absolute;right:10px;bottom:6px;font-family:'IBM Plex Mono',monospace;
+    font-size:8.5px;color:var(--muted);letter-spacing:.04em
+  }
+  .scope-readout{
+    position:absolute;right:10px;top:6px;font-family:'IBM Plex Mono',monospace;
+    font-size:9px;color:var(--green);letter-spacing:.04em;
+    background:rgba(12,16,20,.85);border:1px solid var(--border2);border-radius:3px;padding:2px 6px
+  }
+  .scope-screen{cursor:crosshair}
+  .trace{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 2.2s ease forwards}
+  .trace.t2{animation-delay:.35s}
+  .trace.t3{animation-delay:.7s}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .decode,.cursors,.chlabels{opacity:0;animation:fadein .8s ease 1.6s forwards}
+  .chlabels{animation-delay:.2s}
+  @keyframes fadein{to{opacity:1}}
+  .sweep{animation:sweep 5s linear 2.4s infinite}
+  @keyframes sweep{from{transform:translateX(0)}to{transform:translateX(720px)}}
+  .bootlog{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--amber);
+    border-top:1px solid var(--border);padding:9px 12px;margin:0;min-height:34px;line-height:1.5;white-space:nowrap;overflow:hidden
+  }
+  .bootlog .cursor{animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* ---------- sections ---------- */
+  .section-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+  .section-head .site-kicker{margin-bottom:0}
+  .section-sub{font-size:12.5px;color:var(--dim);margin:0}
+
+  /* ---------- scroll reveal (JS adds rv-init only when motion is OK) ---------- */
+  .rv-init{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+  .rv-in{opacity:1;transform:none}
+
+  /* ---------- how it works ---------- */
+  .how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+  .how-card{border:1px solid var(--border);border-radius:8px;background:var(--bg2);padding:18px 16px}
+  .how-step{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em}
+  .how-card h3{font-size:14.5px;margin:8px 0 6px;color:var(--text)}
+  .how-card p{font-size:12.5px;color:#8b98a8;line-height:1.65;margin:0}
+
+  /* ---------- tracks ---------- */
+  .track-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+  .track-card{
+    position:relative;border:1px solid var(--border);border-radius:8px;
+    background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 4%,var(--bg2)),var(--bg2) 45%);
+    padding:18px 16px 14px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:8px;
+    min-height:164px;overflow:hidden;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease
+  }
+  .track-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent 80%);opacity:.9}
+  .track-card:hover{
+    border-color:var(--accent);transform:translateY(-3px);
+    box-shadow:0 18px 44px -18px color-mix(in srgb,var(--accent) 35%,transparent)
+  }
+  .track-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .track-top{display:flex;align-items:center;justify-content:space-between}
+  .track-icon{display:inline-flex;width:20px;height:20px;color:var(--accent);opacity:.9}
+  .track-icon :global(svg){width:100%;height:100%}
+  .track-index{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.1em}
+  .track-card h3{font-size:15px;margin:0;color:var(--text)}
+  .track-card p{font-size:12px;color:#8b98a8;line-height:1.6;margin:0}
+  .track-progress{margin-top:auto;display:flex;align-items:center;gap:10px;padding-top:10px}
+  .track-bar{flex:1;height:4px;border-radius:2px;background:var(--bg3);overflow:hidden}
+  .track-fill{display:block;height:100%;width:0;background:var(--accent);border-radius:2px;transition:width .4s ease;box-shadow:0 0 8px color-mix(in srgb,var(--accent) 60%,transparent)}
+  .site-meta-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8b98a8;white-space:nowrap}
+
+  /* ---------- featured ---------- */
+  .feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+  .feat-card{
+    position:relative;border:1px solid var(--border);border-radius:8px;background:var(--bg2);
+    padding:16px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:8px;
+    overflow:hidden;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease
+  }
+  .feat-card::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    opacity:0;transition:opacity .2s ease
+  }
+  .feat-card:hover{
+    border-color:var(--accent);transform:translateY(-3px);
+    box-shadow:0 18px 44px -18px color-mix(in srgb,var(--accent) 30%,transparent)
+  }
+  .feat-card:hover::after{opacity:.8}
+  .feat-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .feat-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .feat-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:.1em}
+  .feat-card h3{font-size:14px;margin:0;color:var(--text);line-height:1.35}
+  .feat-card p{font-size:12px;color:#8b98a8;line-height:1.6;margin:0}
+  .feat-go{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--dim);margin-top:auto;padding-top:6px;transition:color .15s}
+  .feat-card:hover .feat-go{color:var(--accent)}
+  .feat-spark{display:block;height:18px;color:var(--accent);opacity:.5;transition:opacity .2s ease}
+  .feat-spark :global(svg){width:100%;height:100%}
+  .feat-card:hover .feat-spark{opacity:.9}
+
+  /* ---------- lab index ---------- */
+  .index-count{margin-left:auto}
+  .chip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:6px}
+  .lab-chip{
+    display:flex;align-items:center;gap:7px;min-width:0;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;text-decoration:none;
+    border:1px solid var(--border);border-radius:5px;background:var(--bg2);padding:6px 9px;
+    transition:border-color .15s ease,background .15s ease
+  }
+  .lab-chip:hover{border-color:var(--accent);background:var(--bg3)}
+  .lab-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .chip-num{color:var(--accent);letter-spacing:.06em}
+  .chip-slug{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s ease}
+  .lab-chip:hover .chip-slug{color:var(--text)}
+  .chip-check{margin-left:auto;color:var(--green);opacity:0}
+  .lab-chip[data-done="true"]{border-color:color-mix(in srgb,var(--accent) 45%,var(--border));background:color-mix(in srgb,var(--accent) 6%,var(--bg2))}
+  .lab-chip[data-done="true"] .chip-slug{color:var(--text)}
+  .lab-chip[data-done="true"] .chip-check{opacity:1}
+
+  /* ---------- footer ---------- */
+  .foot{border-top:1px solid var(--border);margin-top:40px;padding:30px 0 18px}
+  .foot-grid{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr));gap:28px}
+  .foot-brand{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--teal);letter-spacing:.06em;text-transform:uppercase}
+  .foot-about p{font-size:12px;color:var(--dim);line-height:1.65;margin:8px 0 0;max-width:280px}
+  .foot-col{display:flex;flex-direction:column;gap:7px}
+  .foot-h{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+  .foot-col a{font-size:12px;color:#8b98a8;text-decoration:none;width:fit-content}
+  .foot-col a:hover{color:var(--teal)}
+  .foot-col a:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .foot-note{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin:26px 0 0;border-top:1px solid var(--border);padding-top:14px}
+
+  /* ---------- headline rotation ---------- */
+  #hero-rotate{transition:opacity .25s ease}
+
+  /* ---------- closer ---------- */
+  .closer{
+    position:relative;margin:48px 0 24px;text-align:center;border:1px solid var(--border2);border-radius:10px;
+    padding:52px 24px;overflow:hidden;
+    background:
+      radial-gradient(ellipse at 50% 0%,rgba(0,212,170,.09),transparent 60%),
+      radial-gradient(ellipse at 50% 120%,rgba(160,128,224,.06),transparent 60%),
+      #0c1014;
+    background-image:
+      radial-gradient(ellipse at 50% 0%,rgba(0,212,170,.09),transparent 60%),
+      radial-gradient(ellipse at 50% 120%,rgba(160,128,224,.06),transparent 60%),
+      linear-gradient(rgba(42,51,64,.25) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(42,51,64,.25) 1px,transparent 1px);
+    background-size:auto,auto,24px 24px,24px 24px
+  }
+  .closer h2{font-size:25px;margin:0 0 10px;letter-spacing:-.01em}
+  .closer p{font-size:13px;color:#8b98a8;max-width:520px;margin:0 auto 22px;line-height:1.7}
+
+  /* ---------- responsive ---------- */
+  @media(max-width:880px){
+    .hero{grid-template-columns:1fr;gap:24px;padding-top:18px}
+    .hero-title{font-size:30px}
+    .scope-screen svg{height:182px}
+  }
+  @media(max-width:480px){
+    .hero-title{font-size:26px}
+    .hero-stats{gap:18px}
+    .closer h2{font-size:20px}
+    .bootlog{white-space:normal}
+    .scope-status{display:none}
+    .chip-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  }
+  @media(max-width:700px){
+    .foot-grid{grid-template-columns:1fr;gap:20px}
+  }
+</style>
+
+<script>
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Track progress bars: same localStorage key as src/lib/progress.ts,
+  // which only renders text counters — bars need a width set here.
+  const KEY = "firmware-labs:completed";
+  let completed: Set<string>;
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    const values = raw ? JSON.parse(raw) : [];
+    completed = new Set(Array.isArray(values) ? values.filter((v) => typeof v === "string") : []);
+  } catch {
+    completed = new Set();
+  }
+  document.querySelectorAll<HTMLElement>("[data-progress-bar]").forEach((el) => {
+    const slugs = (el.dataset.progressLabs || "").split(",").filter(Boolean);
+    const done = slugs.filter((slug) => completed.has(slug)).length;
+    el.style.width = slugs.length ? `${Math.round((done / slugs.length) * 100)}%` : "0%";
+  });
+
+  // Lab index chips: light up completed labs and update the counter.
+  const chips = document.querySelectorAll<HTMLElement>("[data-lab-chip]");
+  let chipsDone = 0;
+  chips.forEach((el) => {
+    if (completed.has(el.dataset.labChip || "")) {
+      el.dataset.done = "true";
+      chipsDone++;
+    }
+  });
+  const indexCount = document.getElementById("index-count");
+  if (indexCount) indexCount.textContent = `${chipsDone}/${chips.length} complete`;
+
+  // Hero scope: hover moves a measurement cursor and reads the channels.
+  // Level functions are derived from the trace path breakpoints above.
+  const screen = document.querySelector<HTMLElement>(".scope-screen");
+  const scopeSvg = screen?.querySelector("svg");
+  const hoverCursor = document.getElementById("hover-cursor");
+  const readout = document.getElementById("scope-readout");
+  if (screen && scopeSvg && hoverCursor && readout) {
+    const sclAt = (x: number) => (Math.floor(x / 30) % 2 === 1 ? 1 : 0);
+    const sdaHigh: Array<[number, number]> = [[45, 105], [165, 195], [285, 345], [405, 465], [525, 555], [645, 690]];
+    const sdaAt = (x: number) => (sdaHigh.some(([a, b]) => x >= a && x < b) ? 1 : 0);
+    const irqAt = (x: number) => (x >= 330 && x < 354 ? 1 : 0);
+    screen.addEventListener("pointermove", (e) => {
+      const r = scopeSvg.getBoundingClientRect();
+      const x = Math.min(720, Math.max(0, ((e.clientX - r.left) / r.width) * 720));
+      hoverCursor.setAttribute("x1", String(x));
+      hoverCursor.setAttribute("x2", String(x));
+      hoverCursor.setAttribute("visibility", "visible");
+      readout.hidden = false;
+      readout.textContent = `t=${Math.round(x)} µs · SCL ${sclAt(x)} · SDA ${sdaAt(x)} · IRQ ${irqAt(x)}`;
+    });
+    screen.addEventListener("pointerleave", () => {
+      hoverCursor.setAttribute("visibility", "hidden");
+      readout.hidden = true;
+    });
+  }
+
+  // Hero stat count-up. Server renders final values, so no-JS and
+  // reduced-motion users always see the real numbers.
+  if (!reduced) {
+    document.querySelectorAll<HTMLElement>("[data-count]").forEach((el) => {
+      const target = Number(el.dataset.count || "0");
+      if (!target) return;
+      const t0 = performance.now();
+      const dur = 1100;
+      const step = (t: number) => {
+        const p = Math.min((t - t0) / dur, 1);
+        el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  // Scroll reveal: cards start visible; only hide-then-reveal when motion is OK.
+  if (!reduced && "IntersectionObserver" in window) {
+    const els = [...document.querySelectorAll<HTMLElement>(".rv")];
+    els.forEach((el) => {
+      const siblings = el.parentElement ? [...el.parentElement.children] : [el];
+      el.style.transitionDelay = `${(siblings.indexOf(el) % 6) * 60}ms`;
+      el.classList.add("rv-init");
+    });
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("rv-in");
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12 },
+    );
+    els.forEach((el) => io.observe(el));
+  }
+
+  // Headline rotation: cycle real failure modes once, settle on the
+  // server-rendered "failure modes" so no-JS/reduced-motion users see it.
+  const rotate = document.getElementById("hero-rotate");
+  if (rotate && !reduced) {
+    const words = ["race conditions", "HardFaults", "priority inversions", "dropped connections", "failure modes"];
+    let w = 0;
+    const swap = () => {
+      rotate.style.opacity = "0";
+      window.setTimeout(() => {
+        rotate.textContent = words[w];
+        rotate.style.opacity = "1";
+        w++;
+        if (w < words.length) window.setTimeout(swap, 1300);
+      }, 250);
+    };
+    window.setTimeout(swap, 1200);
+  }
+
+  // Boot-log typewriter under the hero scope.
+  const log = document.getElementById("home-bootlog");
+  if (log) {
+    const finalLine = log.dataset.final || "";
+    if (reduced) {
+      log.textContent = finalLine.replace(/_$/, "");
+    } else {
+      const lines = [
+        "[0.000] reset: SP=0x20020000 PC=0x080001C4",
+        "[0.004] clk: PLL locked, sysclk 80 MHz",
+        "[0.012] uart0: 115200 8N1 ok",
+        "[0.020] ble: advertising @ 152.5 ms",
+        finalLine,
+      ];
+      let i = 0;
+      const tick = () => {
+        const line = lines[i];
+        const isLast = i === lines.length - 1;
+        log.innerHTML = "";
+        log.append(isLast ? line.replace(/_$/, "") : line);
+        if (isLast) {
+          const cur = document.createElement("span");
+          cur.className = "cursor";
+          cur.textContent = "_";
+          log.append(cur);
+          return;
+        }
+        i++;
+        window.setTimeout(tick, 650);
+      };
+      window.setTimeout(tick, 900);
+    }
+  }
+</script>
