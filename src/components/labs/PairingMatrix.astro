@@ -1,0 +1,60 @@
+<!-- LAB 27 - extracted verbatim from golden/ti_ble_deep_dive.html.
+     Only change: element ids prefixed with the lab slug (pairing-matrix-). -->
+<div class="scope">
+  <div class="sliders">
+    <div class="sl"><label>Initiator IO (e.g. phone)</label><select id="pairing-matrix-pIo1" style="width:100%"><option>KeyboardDisplay</option><option>DisplayYesNo</option><option>DisplayOnly</option><option>KeyboardOnly</option><option>NoInputNoOutput</option></select></div>
+    <div class="sl"><label>Responder IO (your device)</label><select id="pairing-matrix-pIo2" style="width:100%"><option>NoInputNoOutput</option><option>DisplayOnly</option><option>DisplayYesNo</option><option>KeyboardOnly</option><option>KeyboardDisplay</option></select></div>
+  </div>
+  <div class="btnrow" style="margin-top:0">
+    <label class="sw"><input type="checkbox" id="pairing-matrix-pLesc" checked> LE Secure Connections (4.2+, ECDH P-256)</label>
+    <label class="sw"><input type="checkbox" id="pairing-matrix-pOob"> OOB data available (NFC tap, QR...)</label>
+  </div>
+  <div class="pair-out">
+    <h4 id="pairing-matrix-pMethod">-</h4>
+    <p id="pairing-matrix-pDesc"></p>
+    <div class="keys" id="pairing-matrix-pKeys"></div>
+  </div>
+</div>
+
+<style is:global>
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px}
+.sl label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:4px}
+.pair-out{margin-top:14px;padding:12px 14px;border-radius:6px;border:1px solid var(--border2);background:rgba(17,20,24,.9)}
+.pair-out h4{font-family:'IBM Plex Mono',monospace;font-size:14px;margin-bottom:4px}
+.pair-out p{font-size:12px;color:var(--dim)}
+.keys{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.key{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border-radius:3px;border:1px solid var(--border2);color:var(--dim)}
+.key b{color:var(--teal);font-weight:600}
+</style>
+
+<script is:inline>
+/* ===== B6 PAIRING ===== */
+(function(){
+  const $=id=>document.getElementById('pairing-matrix-'+id);
+  function calc(){
+    const i=$('pIo1').value,r=$('pIo2').value,lesc=$('pLesc').checked,oob=$('pOob').checked;
+    const kb=x=>x==='KeyboardOnly'||x==='KeyboardDisplay';
+    const disp=x=>x==='DisplayOnly'||x==='DisplayYesNo'||x==='KeyboardDisplay';
+    const yn=x=>x==='DisplayYesNo'||x==='KeyboardDisplay';
+    let m,mitm,d;
+    if(oob){m='Out of Band';mitm=true;d='Keys/confirmation exchanged over another channel (NFC tap, QR scan). MITM-protected as long as the OOB channel is — the answer for headless devices that need real security.';}
+    else if(i==='NoInputNoOutput'||r==='NoInputNoOutput'){m='Just Works';mitm=false;d=lesc?'ECDH protects against PASSIVE eavesdropping, but with no user confirmation an ACTIVE MITM during pairing is undetectable. Acceptable for low-stakes; pair in a controlled moment (first boot, button press).':'Legacy Just Works: TK = 0 → keys are passively sniffable with tools like crackle. Avoid on anything that matters.';}
+    else if(lesc&&yn(i)&&yn(r)){m='Numeric Comparison';mitm=true;d='Both sides display a 6-digit number derived from the ECDH exchange; the user confirms they match. LESC-only. The gold standard for two devices with screens.';}
+    else if(kb(i)&&disp(r)){m='Passkey Entry';mitm=true;d='Responder (your device) displays a 6-digit passkey; initiator (phone) types it. 20 bits of MITM protection per attempt.';}
+    else if(disp(i)&&kb(r)){m='Passkey Entry';mitm=true;d='Initiator displays the 6-digit passkey; responder enters it on its keypad.';}
+    else if(kb(i)&&kb(r)){m='Passkey Entry';mitm=true;d='Both sides enter the same passkey, conveyed out of band by the user/product (printed code etc.).';}
+    else{m='Just Works';mitm=false;d='Two display-only devices have no way to confirm or enter anything → falls back to Just Works. No MITM protection without OOB.';}
+    $('pMethod').textContent=m+(lesc&&!oob?' · LE Secure Connections':oob?'':' · Legacy pairing');
+    $('pMethod').style.color=mitm?'var(--green)':'var(--amber)';
+    $('pDesc').textContent=d;
+    $('pKeys').innerHTML='<span class="key">MITM protected: <b>'+(mitm?'YES':'NO')+'</b></span>'
+      +'<span class="key">eavesdrop-resistant: <b>'+(lesc||oob?'YES (ECDH)':'NO (legacy)')+'</b></span>'
+      +'<span class="key">bonding stores: <b>LTK</b> (encrypt reconnects)</span>'
+      +'<span class="key"><b>IRK</b> (resolve RPAs)</span>'
+      +'<span class="key"><b>CSRK</b> (signed writes)</span>';
+  }
+  ['pIo1','pIo2'].forEach(id=>$(id).addEventListener('change',calc));
+  ['pLesc','pOob'].forEach(id=>$(id).addEventListener('change',calc));
+  calc();
+})();
+</script>

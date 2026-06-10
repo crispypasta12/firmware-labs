@@ -177,4 +177,13 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#clock-tree-cAlert")).toHaveClass(/bad/);
     },
   },
+  {
+    num: "27",
+    slug: "pairing-matrix",
+    interact: async (page) => {
+      await page.locator("#pairing-matrix-pIo1").selectOption("NoInputNoOutput");
+      await page.locator("#pairing-matrix-pIo2").selectOption("NoInputNoOutput");
+      await expect(page.locator("#pairing-matrix-pMethod")).toContainText("Just Works");
+    },
+  },
 ];
