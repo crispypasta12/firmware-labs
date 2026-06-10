@@ -6,7 +6,7 @@ smoke test pass) → `committed`.
 
 ## Phases
 
-- [x] **Phase 0 — Foundation** (complete, awaiting checkpoint approval)
+- [x] **Phase 0 — Foundation** (approved)
   - [x] 0.1 Verify golden/ inventory (31 labs: 12 in vol2, 9 in vol2b, 10 in vol4)
   - [x] 0.2 Astro scaffold (minimal template, TypeScript, no UI frameworks)
   - [x] 0.3 src/styles/tokens.css from identical shared rules (see notes below)
@@ -15,7 +15,7 @@ smoke test pass) → `committed`.
   - [x] 0.6 tests/visual/compare.ts + tests/visual/visual.spec.ts + tests/smoke.spec.ts (registry-driven, empty until Phase 1)
   - [x] 0.7 PROGRESS.md + initial commits
 - [ ] **Phase 1 — Extraction** (5 batches, checkpoint after each)
-  - [ ] Batch A (08, 12, 21, 07, 10, 30)
+  - [x] Batch A (08, 12, 21, 07, 10, 30) — all committed, awaiting checkpoint approval
   - [ ] Batch B (05, 06, 15, 18, 20, 22)
   - [ ] Batch C (01, 03, 09, 16, 27, 28)
   - [ ] Batch D (02, 04, 11, 29, 31, 14)
@@ -34,12 +34,12 @@ smoke test pass) → `committed`.
 | 04 | vol2 | dma-pingpong | D | todo |
 | 05 | vol2 | cortex-boot | B | todo |
 | 06 | vol2 | hardfault-detective | B | todo |
-| 07 | vol2 | struct-padding | A | todo |
-| 08 | vol2 | endianness | A | todo |
+| 07 | vol2 | struct-padding | A | committed |
+| 08 | vol2 | endianness | A | committed |
 | 09 | vol2 | spi-modes | C | todo |
-| 10 | vol2 | layer-stack | A | todo |
+| 10 | vol2 | layer-stack | A | committed |
 | 11 | vol2 | ota-state-machine | D | todo |
-| 12 | vol2 | battery-calc | A | todo |
+| 12 | vol2 | battery-calc | A | committed |
 | 13 | vol2b | ble-connection-timing | E | todo |
 | 14 | vol2b | gatt-explorer | D | todo |
 | 15 | vol2b | rf-core | B | todo |
@@ -48,7 +48,7 @@ smoke test pass) → `committed`.
 | 18 | vol2b | zephyr-build | B | todo |
 | 19 | vol2b | thread-mesh | E | todo |
 | 20 | vol2b | context-switch | B | todo |
-| 21 | vol2b | rms-check | A | todo |
+| 21 | vol2b | rms-check | A | committed |
 | 22 | vol4 | ble-stack-packet | B | todo |
 | 23 | vol4 | ble-channel-map | E | todo |
 | 24 | vol4 | discovery-sim | E | todo |
@@ -57,7 +57,7 @@ smoke test pass) → `committed`.
 | 27 | vol4 | pairing-matrix | C | todo |
 | 28 | vol4 | rpa-privacy | C | todo |
 | 29 | vol4 | ll-state-machine | D | todo |
-| 30 | vol4 | ble-versions | A | todo |
+| 30 | vol4 | ble-versions | A | committed |
 | 31 | vol4 | ble-debug-playbook | D | todo |
 
 Source key: vol2 = ti_concepts_lab.html · vol2b = ti_concepts_lab_2b.html · vol4 = ti_ble_deep_dive.html.
@@ -85,10 +85,21 @@ variant, margin-top:12px), `@media(prefers-reduced-motion)`.
 - All per-lab visual classes (`.race-*`, `.gantt`, `.ring`, `.dma*`, `.boot*`, etc.).
 - Per-file `@media(max-width:700px/760px)` rules — contents are lab-specific; each goes with its lab.
 
-**Known risk for Phase 1:** Astro scoped `<style>` won't style DOM nodes the
-lab IIFEs create at runtime (innerHTML/createElement). Lab-specific styles will
-likely need `<style is:global>` (wrapped under the lab's root class/id) to stay
-faithful. Decide at first Batch A lab.
+**Resolved in Batch A:** lab-specific styles use `<style is:global>` inside each
+lab component (golden rules verbatim) so runtime-created DOM stays styled; each
+lab has its own page so collisions don't arise. Lab pages from vol4 pass
+`maxWidth={1000}` to LabLayout (vol2/vol2b default 980), mirroring each golden
+file's `.wrap`.
+
+**Golden capture method (fixed during Batch A):** each lab is captured on its
+own page load with all siblings + .hdr hidden *before first render*. Rendering
+the full document first changes (a) fractional y offsets and (b) Chromium's
+font-fallback state for symbol glyphs (▸ ▾ ▲), both of which shift rasterization
+vs the built single-lab pages. Verified 0px diff for an isolated capture.
+
+**Known flaky golden:** lab-24 (discovery-sim) renders randomized advertising
+positions on load — its golden changes between captures. Batch E must handle
+this (seed, freeze, or relaxed comparison) before lab 24 can be verified.
 
 **Testing:** `npm run shoot-golden` regenerates goldens. `npm test` = build +
 all Playwright tests; `npm run test:visual` = visual only. Labs register in
