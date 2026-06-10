@@ -1,0 +1,79 @@
+<!-- LAB 03 - extracted verbatim from golden/ti_concepts_lab.html.
+     Only change: element ids prefixed with the lab slug (ring-buffer-). -->
+<div class="scope">
+  <div class="ring" id="ring-buffer-ringCells"></div>
+  <div class="statline">
+    <span>head (write): <span class="v" id="ring-buffer-rbHead">0</span></span>
+    <span>tail (read): <span class="v" id="ring-buffer-rbTail">0</span></span>
+    <span>count: <span class="v" id="ring-buffer-rbCount">0</span></span>
+    <span>state: <span class="v" id="ring-buffer-rbState">EMPTY</span></span>
+    <span>overruns dropped: <span class="bad" id="ring-buffer-rbOver">0</span></span>
+  </div>
+  <div class="narr" id="ring-buffer-rbNarr">ISR/DMA writes at head. Task reads at tail. One slot is kept unused so full ≠ empty.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="ring-buffer-rbWrite">ISR: write byte</button>
+  <button class="primary" id="ring-buffer-rbRead">Task: read byte</button>
+  <button id="ring-buffer-rbBurst">Burst write ×5</button>
+  <button id="ring-buffer-rbReset2">Reset</button>
+</div>
+
+<style is:global>
+/* ring buffer */
+.ring{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.cell{width:52px;height:52px;border:1px solid var(--border2);border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);background:rgba(17,20,24,.85);position:relative;transition:.2s}
+.cell .idx{font-size:9px;color:var(--muted)}
+.cell.filled{border-color:var(--amber);color:var(--amber)}
+.cell .ptr{position:absolute;top:-18px;font-size:9px;letter-spacing:.04em}
+.cell .ptr.tailp{top:auto;bottom:-18px}
+.cell.headcell{box-shadow:0 0 0 1px var(--teal) inset}
+/* vol2 .statline variant (tokens.css carries the vol2b/vol4 12px margin) */
+.statline{margin-top:26px}
+.statline .bad{color:var(--red)}
+</style>
+
+<script is:inline>
+/* ===== 3. RING BUFFER ===== */
+(function(){
+  const N=8;let head=0,tail=0,over=0;const buf=new Array(N).fill(null);
+  const wrap=document.getElementById('ring-buffer-ringCells');
+  for(let i=0;i<N;i++){const c=document.createElement('div');c.className='cell';c.innerHTML='<span class="ptr"></span><span class="val">·</span><span class="idx">['+i+']</span><span class="ptr tailp"></span>';wrap.appendChild(c)}
+  const cells=[...wrap.children];
+  const narr=document.getElementById('ring-buffer-rbNarr');
+  function full(){return (head+1)%N===tail} function empty(){return head===tail}
+  function count(){return (head-tail+N)%N}
+  function draw(){
+    cells.forEach((c,i)=>{
+      c.classList.toggle('filled',buf[i]!==null);
+      c.classList.toggle('headcell',i===head);
+      c.querySelector('.val').textContent=buf[i]===null?'·':buf[i];
+      c.querySelector('.ptr').textContent=i===head?'HEAD ▼':'';
+      c.querySelector('.ptr').style.color='var(--teal)';
+      const tp=c.querySelector('.tailp');tp.textContent=i===tail?'▲ TAIL':'';tp.style.color='var(--purple)';
+    });
+    document.getElementById('ring-buffer-rbHead').textContent=head;
+    document.getElementById('ring-buffer-rbTail').textContent=tail;
+    document.getElementById('ring-buffer-rbCount').textContent=count();
+    document.getElementById('ring-buffer-rbState').textContent=empty()?'EMPTY':(full()?'FULL':'OK');
+    document.getElementById('ring-buffer-rbOver').textContent=over;
+  }
+  function wr(silent){
+    if(full()){over++;if(!silent)narr.textContent='Buffer FULL — (head+1)%N == tail. Byte dropped: overrun. In a real UART this sets the ORE flag.';draw();return}
+    buf[head]='0x'+Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase();
+    head=(head+1)%N;
+    if(!silent)narr.textContent='ISR wrote at head, then advanced it. Only the ISR ever writes head — single-writer keeps it lock-free.';
+    draw();
+  }
+  function rd(){
+    if(empty()){narr.textContent='Buffer EMPTY — head == tail. Task blocks (semaphore / task notification) instead of busy-polling.';return}
+    buf[tail]=null;tail=(tail+1)%N;
+    narr.textContent='Task consumed at tail, then advanced it. Only the task ever writes tail.';
+    draw();
+  }
+  document.getElementById('ring-buffer-rbWrite').onclick=()=>wr(false);
+  document.getElementById('ring-buffer-rbRead').onclick=rd;
+  document.getElementById('ring-buffer-rbBurst').onclick=()=>{for(let i=0;i<5;i++)wr(true);narr.textContent='Burst of 5 writes — if the task is slow, the buffer fills and further bytes drop. Size buffers for worst-case burst.';};
+  document.getElementById('ring-buffer-rbReset2').onclick=()=>{head=0;tail=0;over=0;buf.fill(null);narr.textContent='ISR/DMA writes at head. Task reads at tail. One slot is kept unused so full ≠ empty.';draw()};
+  draw();
+})();
+</script>

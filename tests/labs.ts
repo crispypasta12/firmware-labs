@@ -151,4 +151,14 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#race-condition-rcLost")).toContainText("LOST UPDATE");
     },
   },
+  {
+    num: "03",
+    slug: "ring-buffer",
+    interact: async (page) => {
+      await page.locator("#ring-buffer-rbWrite").click();
+      await expect(page.locator("#ring-buffer-rbHead")).toHaveText("1");
+      await page.locator("#ring-buffer-rbRead").click();
+      await expect(page.locator("#ring-buffer-rbTail")).toHaveText("1");
+    },
+  },
 ];
