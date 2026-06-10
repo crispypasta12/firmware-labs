@@ -1,0 +1,17 @@
+---
+import LabLayout from "../../layouts/LabLayout.astro";
+import LabShell from "../../components/LabShell.astro";
+import ClockTree from "../../components/labs/ClockTree.astro";
+---
+
+<LabLayout title="Lab 16 · Clock tree → baud rate (break it, then fix it) — Firmware Labs">
+  <LabShell
+    num="LAB 16"
+    title="Clock tree → baud rate (break it, then fix it)"
+    tag="Hub S1 reinforcement"
+    why='<b>Interview angle:</b> you already studied clocks — this makes it muscle memory. Configure the tree, then press "change clocks, forget BRR" and watch the UART silently break. That exact bug is a favorite interview scenario.'
+    takeaway='<b>The answer pattern:</b> "Baud is derived from the peripheral clock through BRR. Changing SYSCLK or a bus divider changes f_periph but BRR keeps its old value → actual baud diverges → framing errors / garbage. Fix: recalculate BRR after <i>any</i> clock change, and check which APB bus the UART hangs off in the clock tree." UART tolerates roughly ±2% baud error.'
+  >
+    <ClockTree />
+  </LabShell>
+</LabLayout>

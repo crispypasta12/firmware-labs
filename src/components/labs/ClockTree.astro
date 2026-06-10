@@ -1,0 +1,75 @@
+<!-- LAB 16 - extracted verbatim from golden/ti_concepts_lab_2b.html.
+     Only change: element ids prefixed with the lab slug (clock-tree-). -->
+<div class="scope">
+  <div class="ctree">
+    <div class="cnode"><h5>Source</h5><div class="freq" id="clock-tree-cSrcF">8 MHz</div><select id="clock-tree-cSrc"><option value="8">HSE crystal 8 MHz</option><option value="16">HSI RC 16 MHz</option></select></div>
+    <div class="farrow">→</div>
+    <div class="cnode"><h5>PLL ×N (wait PLLRDY!)</h5><div class="freq" id="clock-tree-cPllF">-</div><select id="clock-tree-cPll"><option>2</option><option>4</option><option selected>6</option><option>8</option><option>12</option><option>16</option></select></div>
+    <div class="farrow">→</div>
+    <div class="cnode" id="clock-tree-cSysNode"><h5>SYSCLK (max 80 MHz)</h5><div class="freq" id="clock-tree-cSysF">-</div></div>
+    <div class="farrow">→</div>
+    <div class="cnode"><h5>APB divider</h5><div class="freq" id="clock-tree-cApbF">-</div><select id="clock-tree-cApb"><option>1</option><option>2</option><option>4</option></select></div>
+    <div class="farrow">→</div>
+    <div class="cnode"><h5>UART @ 115200</h5><div class="freq" id="clock-tree-cBrr">-</div><p style="font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace" id="clock-tree-cErr"></p></div>
+  </div>
+  <div class="alert" id="clock-tree-cAlert"></div>
+  <div class="narr" id="clock-tree-cNarr">BRR = f_periph / baud. Recomputed live as you change the tree - that's the correct behavior.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="clock-tree-cBreak">⚡ Change clocks but FORGET to update BRR</button>
+  <button id="clock-tree-cFix">Fix: recompute BRR</button>
+</div>
+
+<style is:global>
+/* clock tree */
+.ctree{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.cnode{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:10px;min-width:120px;flex:1}
+.cnode h5{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+.cnode .freq{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--teal)}
+.cnode select{width:100%;margin-top:4px}
+.cnode.warn .freq{color:var(--red)}
+.farrow{display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:14px}
+.alert{margin-top:12px;padding:8px 12px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;display:none}
+.alert.bad{display:block;border:1px solid rgba(224,80,80,.5);background:rgba(224,80,80,.08);color:var(--red)}
+.alert.good{display:block;border:1px solid rgba(80,200,120,.5);background:rgba(80,200,120,.08);color:var(--green)}
+@media(max-width:700px){.farrow{transform:rotate(90deg);justify-content:center}}
+</style>
+
+<script is:inline>
+/* ===== 4. CLOCK TREE ===== */
+(function(){
+  const $=id=>document.getElementById('clock-tree-'+id);
+  const BAUD=115200;let storedBRR=null,broken=false;
+  function calc(){
+    const src=+$('cSrc').value, mult=+$('cPll').value, apb=+$('cApb').value;
+    const sys=src*mult, periph=sys/apb;
+    $('cSrcF').textContent=src+' MHz';
+    $('cPllF').textContent='×'+mult+' → '+sys+' MHz';
+    $('cSysF').textContent=sys+' MHz';
+    $('cSysNode').classList.toggle('warn',sys>80);
+    $('cApbF').textContent='÷'+apb+' → '+periph+' MHz';
+    const correctBRR=Math.round(periph*1e6/BAUD);
+    const brr=broken&&storedBRR?storedBRR:correctBRR;
+    const actual=periph*1e6/brr;
+    const err=(actual-BAUD)/BAUD*100;
+    $('cBrr').textContent='BRR='+brr;
+    $('cErr').textContent='actual '+Math.round(actual)+' Bd · err '+err.toFixed(2)+'%';
+    const al=$('cAlert');
+    if(sys>80){al.className='alert bad';al.textContent='⚠ SYSCLK over spec (80 MHz max) — flash wait states / hard limits violated. Real init code must respect device limits and wait for PLLRDY before switching.';}
+    else if(Math.abs(err)>2){al.className='alert bad';al.textContent='⚠ Baud error '+err.toFixed(1)+'% — outside UART\'s ~±2% tolerance. RX is now garbage / framing errors. THIS is the "UART broke after a clock change" bug.';}
+    else{al.className='alert good';al.textContent='✓ Baud error '+err.toFixed(2)+'% — within tolerance. UART healthy.';}
+    return correctBRR;
+  }
+  $('cBreak').onclick=()=>{
+    storedBRR=calc();broken=true;
+    // change the tree under it
+    const opts=[['cPll',['2','4','6','8','12','16']],['cApb',['1','2','4']]];
+    opts.forEach(([id,vals])=>{const el=$(id);let nv;do{nv=vals[Math.floor(Math.random()*vals.length)]}while(nv===el.value);el.value=nv});
+    $('cNarr').textContent='Clocks changed (e.g. power-mode switch reconfigured the PLL/dividers) — but BRR still holds the OLD value computed for the OLD peripheral clock.';
+    calc();
+  };
+  $('cFix').onclick=()=>{broken=false;storedBRR=null;$('cNarr').textContent='BRR recomputed from the new peripheral clock — baud error back near zero. Recalculate BRR after ANY clock change.';calc()};
+  ['cSrc','cPll','cApb'].forEach(id=>$(id).addEventListener('change',()=>{if(!broken)$('cNarr').textContent='BRR = f_periph / baud. Recomputed live as you change the tree — that\'s the correct behavior.';calc()}));
+  calc();
+})();
+</script>

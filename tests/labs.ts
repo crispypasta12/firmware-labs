@@ -169,4 +169,12 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#spi-modes-spiNarr")).toContainText("Mode 2");
     },
   },
+  {
+    num: "16",
+    slug: "clock-tree",
+    interact: async (page) => {
+      await page.locator("#clock-tree-cBreak").click();
+      await expect(page.locator("#clock-tree-cAlert")).toHaveClass(/bad/);
+    },
+  },
 ];
