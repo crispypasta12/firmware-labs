@@ -111,4 +111,15 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#rf-core-rf-m4")).toHaveClass(/hl/);
     },
   },
+  {
+    num: "18",
+    slug: "zephyr-build",
+    interact: async (page) => {
+      const narr = page.locator("#zephyr-build-zNarr");
+      const before = await narr.textContent();
+      await page.locator("#zephyr-build-zNext").click();
+      await expect(narr).not.toHaveText(before ?? "");
+      await expect(page.locator("#zephyr-build-z-in")).toHaveClass(/hl/);
+    },
+  },
 ];

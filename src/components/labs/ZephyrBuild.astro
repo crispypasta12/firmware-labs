@@ -1,0 +1,63 @@
+<!-- LAB 18 - extracted verbatim from golden/ti_concepts_lab_2b.html.
+     Only change: element ids prefixed with the lab slug (zephyr-build-). -->
+<div class="scope">
+  <div class="flow" style="flex-wrap:wrap">
+    <div class="fbox" id="zephyr-build-z-in"><h4>INPUTS</h4><p>app sources · <code>prj.conf</code> (Kconfig) · board <code>.dts</code> + <code>.dtsi</code> · app <code>.overlay</code></p></div>
+    <div class="farrow" id="zephyr-build-z-a1">→</div>
+    <div class="fbox" id="zephyr-build-z-west"><h4>WEST → CMAKE</h4><p>workspace meta-tool invokes CMake with the board's toolchain + config</p></div>
+    <div class="farrow" id="zephyr-build-z-a2">→</div>
+    <div class="fbox" id="zephyr-build-z-gen"><h4>GENERATED CONFIG</h4><p><code>autoconf.h</code> (from Kconfig merge) · <code>devicetree_generated.h</code> (from DTS + bindings)</p></div>
+    <div class="farrow" id="zephyr-build-z-a3">→</div>
+    <div class="fbox" id="zephyr-build-z-cc"><h4>COMPILE + LINK</h4><p>drivers selected by Kconfig compiled; DT macros resolve addresses/IRQs; linker script places it</p></div>
+    <div class="farrow" id="zephyr-build-z-a4">→</div>
+    <div class="fbox" id="zephyr-build-z-out"><h4>OUTPUT</h4><p><code>zephyr.elf / .bin / .hex</code> + map file → <code>west flash</code> / <code>west debug</code></p></div>
+  </div>
+  <div class="stepdots" id="zephyr-build-zDots"></div>
+  <div class="narr" id="zephyr-build-zNarr">Press Step. We'll trace one concrete thing through the pipeline: enabling the UART console.</div>
+</div>
+<div class="btnrow">
+  <button id="zephyr-build-zPrev">◂ Back</button>
+  <button class="primary" id="zephyr-build-zNext">Step ▸</button>
+</div>
+
+<style is:global>
+/* RF core + zephyr + ctx steppers */
+.flow{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.fbox{flex:1;min-width:150px;border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:10px 12px;transition:.25s}
+.fbox h4{font-family:'IBM Plex Mono',monospace;font-size:11px;margin-bottom:4px}
+.fbox p{font-size:11px;color:var(--dim);line-height:1.55}
+.fbox.hl{border-color:var(--teal);box-shadow:0 0 12px rgba(0,212,170,.2)}
+.fbox.hl h4{color:var(--teal)}
+.farrow{display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:14px}
+.farrow.hl{color:var(--teal);text-shadow:0 0 8px var(--teal)}
+.stepdots{display:flex;gap:6px;margin-top:14px}
+.sdot{width:26px;height:4px;border-radius:2px;background:var(--border2)}
+.sdot.on{background:var(--teal)}
+@media(max-width:700px){.flow{flex-direction:column}.farrow{transform:rotate(90deg);justify-content:center}}
+</style>
+
+<script is:inline>
+/* ===== 6. ZEPHYR BUILD ===== */
+(function(){
+  const steps=[
+    {hl:['zephyr-build-z-in'],n:'1/6 — Trace: you add CONFIG_SERIAL=y + CONFIG_UART_CONSOLE=y to prj.conf, and the board .dts already has a uart0 node with chosen { zephyr,console = &uart0; }.'},
+    {hl:['zephyr-build-z-in','zephyr-build-z-a1','zephyr-build-z-west'],n:'2/6 — west build -b <board> resolves the board, picks the toolchain, and drives CMake. West also manages the multi-repo workspace (west init / update).'},
+    {hl:['zephyr-build-z-gen'],n:'3/6 — Kconfig tree + prj.conf merge into autoconf.h (#define CONFIG_UART_CONSOLE 1). The DTS + bindings compile into devicetree_generated.h — uart0\'s base address, IRQ, and baud become C macros.'},
+    {hl:['zephyr-build-z-gen','zephyr-build-z-a3','zephyr-build-z-cc'],n:'4/6 — Because CONFIG_SERIAL is set, the UART driver source is compiled in at all. DEVICE_DT_DEFINE instantiates uart0 from the DT macros — config resolved at COMPILE time, no runtime discovery.'},
+    {hl:['zephyr-build-z-cc'],n:'5/6 — Link against Zephyr\'s linker script: vector table, .text/.data/.bss placed for this SoC. Map file generated alongside.'},
+    {hl:['zephyr-build-z-out'],n:'6/6 — zephyr.elf/.bin out → west flash programs it, west debug attaches. In CI, Twister builds and runs tests on native_posix/QEMU — printk now appears on uart0 because of the three files you touched in step 1.'}
+  ];
+  let i=-1;const dots=document.getElementById('zephyr-build-zDots');
+  steps.forEach(()=>{const d=document.createElement('div');d.className='sdot';dots.appendChild(d)});
+  function draw(){
+    ['zephyr-build-z-in','zephyr-build-z-west','zephyr-build-z-gen','zephyr-build-z-cc','zephyr-build-z-out','zephyr-build-z-a1','zephyr-build-z-a2','zephyr-build-z-a3','zephyr-build-z-a4'].forEach(id=>document.getElementById(id).classList.remove('hl'));
+    [...dots.children].forEach((d,k)=>d.classList.toggle('on',k<=i));
+    if(i<0){document.getElementById('zephyr-build-zNarr').textContent='Press Step. We\'ll trace one concrete thing through the pipeline: enabling the UART console.';return}
+    steps[i].hl.forEach(id=>document.getElementById(id).classList.add('hl'));
+    document.getElementById('zephyr-build-zNarr').textContent=steps[i].n;
+  }
+  document.getElementById('zephyr-build-zNext').onclick=()=>{if(i<steps.length-1){i++;draw()}};
+  document.getElementById('zephyr-build-zPrev').onclick=()=>{if(i>-1){i--;draw()}};
+  draw();
+})();
+</script>
