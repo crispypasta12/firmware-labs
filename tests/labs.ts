@@ -132,4 +132,13 @@ export const LABS: LabEntry[] = [
       await expect(frames).toHaveCount(before + 1);
     },
   },
+  {
+    num: "22",
+    slug: "ble-stack-packet",
+    interact: async (page) => {
+      await page.locator("#ble-stack-packet-stNext").click();
+      await expect(page.locator("#ble-stack-packet-pktbar .pseg")).toHaveCount(1);
+      await expect(page.locator("#ble-stack-packet-pkBytes")).toHaveText("20");
+    },
+  },
 ];

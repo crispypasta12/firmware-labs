@@ -1,0 +1,17 @@
+---
+import LabLayout from "../../layouts/LabLayout.astro";
+import LabShell from "../../components/LabShell.astro";
+import BleStackPacket from "../../components/labs/BleStackPacket.astro";
+---
+
+<LabLayout title="Lab 22 · The BLE protocol stack — and what each layer adds to a packet — Firmware Labs" maxWidth={1000}>
+  <LabShell
+    num="LAB 22"
+    title="The BLE protocol stack — and what each layer adds to a packet"
+    tag="Architecture"
+    why='<b>Interview angle:</b> "walk me through the BLE stack" is the opener for any connectivity role. Click layers for their job, then press <b>Send a notification</b> and watch the packet grow headers as it descends — the byte-level view is what makes the answer senior.'
+    takeaway='<b>One-breath version:</b> "App and profiles sit on GAP/GATT; GATT rides ATT; ATT rides L2CAP channel 0x0004; HCI splits Host from Controller; the Link Layer owns timing, hopping and encryption; the PHY is GFSK on 40 channels at 2.4 GHz. On TI parts the Controller runs on the dedicated RF core, which is why app code can&apos;t break radio timing."'
+  >
+    <BleStackPacket />
+  </LabShell>
+</LabLayout>

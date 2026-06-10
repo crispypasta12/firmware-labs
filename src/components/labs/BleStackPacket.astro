@@ -1,0 +1,72 @@
+<!-- LAB 22 - extracted verbatim from golden/ti_ble_deep_dive.html.
+     Only change: element ids prefixed with the lab slug (ble-stack-packet-). -->
+<div class="scope">
+  <div class="bstack">
+    <div class="blayer" id="ble-stack-packet-ly-app" onclick="this.classList.toggle('open')"><h4 style="color:var(--text)">APPLICATION / PROFILES <span class="side">HOST</span></h4><div class="det"><b>Your code + SIG profiles</b> (Heart Rate, Environmental Sensing...). Decides <i>what</i> to send and <i>when</i>. On TI: your app task talking to the BLE5-Stack via ICall messages.</div></div>
+    <div class="blayer" id="ble-stack-packet-ly-gap" onclick="this.classList.toggle('open')"><h4 style="color:var(--purple)">GAP · GATT <span class="side">HOST</span></h4><div class="det"><b>GAP:</b> roles (central / peripheral / broadcaster / observer), advertising, connecting, security modes. <b>GATT:</b> the data model - services, characteristics, descriptors - built on ATT. GATT Server holds data; GATT Client reads/writes/subscribes.</div></div>
+    <div class="blayer" id="ble-stack-packet-ly-att" onclick="this.classList.toggle('open')"><h4 style="color:var(--blue)">ATT · SMP <span class="side">HOST</span></h4><div class="det"><b>ATT:</b> the wire protocol - opcodes like Read Request (0x0A), Write Request (0x12), Handle Value Notification (0x1B). One outstanding transaction at a time, <b>30 s ATT timeout = disconnect</b>. <b>SMP:</b> pairing, key generation/distribution.</div></div>
+    <div class="blayer" id="ble-stack-packet-ly-l2" onclick="this.classList.toggle('open')"><h4 style="color:var(--teal)">L2CAP <span class="side">HOST</span></h4><div class="det">Multiplexing + fragmentation. Fixed channels: <b>CID 0x0004 = ATT</b>, 0x0006 = SMP, 0x0005 = signaling (connection parameter update request lives here). <b>CoC</b> (connection-oriented channels) give credit-based flow control for high-throughput streams (used by OTA on some stacks).</div></div>
+    <div class="blayer" id="ble-stack-packet-ly-hci" onclick="this.classList.toggle('open')"><h4 style="color:var(--dim)">HCI <span class="side">BOUNDARY</span></h4><div class="det">Standardized command/event interface between Host and Controller. On single-chip designs (CC26xx/CC23xx) it's an internal API; on dual-chip (network processor) it runs over UART/SPI. Useful in debugging: HCI logs show exactly what the host asked the controller to do.</div></div>
+    <div class="blayer" id="ble-stack-packet-ly-ll" onclick="this.classList.toggle('open')"><h4 style="color:var(--amber)">LINK LAYER <span class="side">CONTROLLER</span></h4><div class="det">The hard real-time core: advertising/scanning/connection state machines, channel hopping, encryption (AES-CCM), LL control procedures (connection update, channel map update, PHY update, <b>LL_TERMINATE_IND</b>). On CC26xx this runs on the dedicated <b>M0 RF core</b>.</div></div>
+    <div class="blayer" id="ble-stack-packet-ly-phy" onclick="this.classList.toggle('open')"><h4 style="color:var(--red)">PHY <span class="side">CONTROLLER</span></h4><div class="det">2.4 GHz ISM, GFSK, 40 channels x 2 MHz. <b>1M</b> (mandatory), <b>2M</b> (throughput), <b>Coded S=2/S=8</b> (range, -4/-12 dB sensitivity gain). TX power, receiver sensitivity (~-97 dBm @1M on CC2340) set the link budget.</div></div>
+  </div>
+  <div class="pktbar" id="ble-stack-packet-pktbar"></div>
+  <div class="statline"><span>on-air bytes: <span class="v" id="ble-stack-packet-pkBytes">-</span></span><span>airtime @ 1M PHY: <span class="v" id="ble-stack-packet-pkAir">-</span></span></div>
+  <div class="narr" id="ble-stack-packet-stNarr">Press "Send a notification" - a 20-byte sensor value leaves the app and gains headers on the way down.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="ble-stack-packet-stNext">Send a notification ▸</button>
+  <button id="ble-stack-packet-stReset">Reset</button>
+</div>
+
+<style is:global>
+/* stack */
+.bstack{display:flex;flex-direction:column;gap:5px}
+.blayer{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:9px 14px;cursor:pointer;transition:.2s}
+.blayer:hover{border-color:var(--teal)}
+.blayer.hl{border-color:var(--teal);box-shadow:0 0 12px rgba(0,212,170,.2)}
+.blayer h4{font-family:'IBM Plex Mono',monospace;font-size:12px;display:flex;gap:10px;align-items:baseline}
+.blayer h4 .side{margin-left:auto;font-size:9px;color:var(--muted);letter-spacing:.06em}
+.blayer .det{display:none;font-size:12px;color:var(--dim);margin-top:5px;line-height:1.7}
+.blayer.open .det{display:block}
+.blayer .det b{color:var(--text);font-weight:500}
+.pktbar{display:flex;gap:2px;margin-top:14px;min-height:34px;align-items:stretch}
+.pseg{display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#0a0c0f;font-weight:600;border-radius:3px;padding:0 4px;white-space:nowrap;overflow:hidden;animation:pop .3s}
+@keyframes pop{from{transform:scaleX(.6);opacity:0}to{transform:scaleX(1);opacity:1}}
+</style>
+
+<script is:inline>
+/* ===== B1 STACK PACKET ===== */
+(function(){
+  const segs=[
+    {b:20,c:'#c8d4e0',l:'VALUE 20B',layer:'ble-stack-packet-ly-app',n:'1/6 — App: a 20-byte sensor reading. GATT wraps it as a Handle Value Notification on a characteristic the client subscribed to (CCCD = 0x0001).'},
+    {b:3,c:'#0099cc',l:'ATT 3B',layer:'ble-stack-packet-ly-att',n:'2/6 — ATT prepends opcode 0x1B (Handle Value Notification) + the 2-byte attribute handle. Total ATT PDU = MTU-limited.'},
+    {b:4,c:'#00d4aa',l:'L2CAP 4B',layer:'ble-stack-packet-ly-l2',n:'3/6 — L2CAP prepends length + channel ID 0x0004 (the fixed ATT channel). Would fragment here if the PDU exceeded the LL payload.'},
+    {b:2,c:'#ffb454',l:'LL 2B',layer:'ble-stack-packet-ly-ll',n:'4/6 — Link Layer adds a 2-byte header (LLID, length). If the link is encrypted, the payload is AES-CCM encrypted and a 4-byte MIC is added. Whitening applied.'},
+    {b:3,c:'#e05050',l:'CRC 3B',layer:'ble-stack-packet-ly-ll',n:'5/6 — ...and a 3-byte CRC at the tail. Receiver silently drops CRC failures — they become retransmissions at the next opportunity.'},
+    {b:5,c:'#a080e0',l:'PRE+AA 5B',layer:'ble-stack-packet-ly-phy',n:'6/6 — PHY prepends 1-byte preamble + 4-byte Access Address (unique per connection — how receivers know this packet is theirs) and transmits GFSK on the current hopped channel.'}
+  ];
+  let i=-1;const bar=document.getElementById('ble-stack-packet-pktbar');
+  function draw(){
+    bar.innerHTML='';let total=0;
+    // draw in on-air order: from PHY headers (last added) to payload - but build progressively
+    const added=segs.slice(0,i+1);
+    // on-air order: PRE+AA, LL, L2CAP, ATT, VALUE, CRC - approximate display: headers left of payload, CRC right
+    const order=['PRE+AA 5B','LL 2B','L2CAP 4B','ATT 3B','VALUE 20B','CRC 3B'];
+    order.forEach(lbl=>{
+      const s=added.find(x=>x.l===lbl);
+      if(!s)return;total+=s.b;
+      const d=document.createElement('div');d.className='pseg';d.style.background=s.c;d.style.flex=String(s.b);d.textContent=s.l;bar.appendChild(d);
+    });
+    document.querySelectorAll('.blayer').forEach(b=>b.classList.remove('hl'));
+    if(i>=0){document.getElementById(segs[i].layer).classList.add('hl');
+      document.getElementById('ble-stack-packet-stNarr').textContent=segs[i].n;}
+    else document.getElementById('ble-stack-packet-stNarr').textContent='Press "Send a notification" - a 20-byte sensor value leaves the app and gains headers on the way down.';
+    document.getElementById('ble-stack-packet-pkBytes').textContent=i<0?'-':total;
+    document.getElementById('ble-stack-packet-pkAir').textContent=i<0?'-':((total*8)/1000).toFixed(2)+' ms';
+  }
+  document.getElementById('ble-stack-packet-stNext').onclick=()=>{if(i<segs.length-1){i++;draw()}};
+  document.getElementById('ble-stack-packet-stReset').onclick=()=>{i=-1;draw()};
+  draw();
+})();
+</script>
