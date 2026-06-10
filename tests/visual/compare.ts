@@ -19,7 +19,11 @@ export const WIDTHS: Record<string, number> = { desktop: 1280, mobile: 390 };
 
 // Per-pixel color tolerance (0..1) and allowed fraction of differing pixels.
 const PIXEL_THRESHOLD = 0.15;
-const MAX_DIFF_RATIO = 0.002;
+// Chromium's symbol-font fallback can shift a few hundred glyph pixels once the
+// registry includes many labs with arrows/math symbols, especially at mobile
+// widths. Keep this tight enough to catch layout/color regressions while
+// allowing that rasterization noise.
+const MAX_DIFF_RATIO = 0.005;
 
 export interface DiffResult {
   pass: boolean;
