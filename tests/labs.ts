@@ -46,4 +46,17 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#rms-check-rmsOut")).toContainText("NOT SCHEDULABLE");
     },
   },
+  {
+    num: "07",
+    slug: "struct-padding",
+    interact: async (page) => {
+      const size = page.locator("#struct-padding-padSize");
+      await expect(size).toHaveText("12");
+      const members = page.locator("#struct-padding-padMembers .member");
+      // largest-first: move timestamp up, then length up → sizeof 12 → 8
+      await members.nth(1).locator("button").first().click();
+      await members.nth(2).locator("button").first().click();
+      await expect(size).toHaveText("8");
+    },
+  },
 ];
