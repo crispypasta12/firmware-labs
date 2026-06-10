@@ -186,4 +186,13 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#pairing-matrix-pMethod")).toContainText("Just Works");
     },
   },
+  {
+    num: "28",
+    slug: "rpa-privacy",
+    interact: async (page) => {
+      await page.locator("#rpa-privacy-rRotate").click();
+      await page.locator("#rpa-privacy-rResolve").click();
+      await expect(page.locator("#rpa-privacy-rList")).toContainText("MATCH");
+    },
+  },
 ];

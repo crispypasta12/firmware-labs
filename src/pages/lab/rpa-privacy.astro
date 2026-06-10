@@ -1,0 +1,17 @@
+---
+import LabLayout from "../../layouts/LabLayout.astro";
+import LabShell from "../../components/LabShell.astro";
+import RpaPrivacy from "../../components/labs/RpaPrivacy.astro";
+---
+
+<LabLayout title="Lab 28 · Privacy — resolvable private addresses — Firmware Labs" maxWidth={1000}>
+  <LabShell
+    num="LAB 28"
+    title="Privacy — resolvable private addresses"
+    tag="GAP privacy"
+    why='<b>Interview angle:</b> "why can&apos;t my device reconnect to the phone after a while?" — because the phone&apos;s address <i>changed</i>. Rotate a few RPAs and resolve them with the bonded IRK to see why bonding matters beyond encryption.'
+    takeaway="<b>Why firmware engineers care:</b> if you whitelist/filter by address without storing the <b>IRK</b>, reconnection breaks the moment the phone rotates its RPA — a very common field bug. Controllers resolve RPAs in hardware against the <b>resolving list</b>. RPA = 24-bit prand (top bits 01) + 24-bit hash <code>ah(IRK, prand)</code>; the peer recomputes the hash with each stored IRK and compares."
+  >
+    <RpaPrivacy />
+  </LabShell>
+</LabLayout>

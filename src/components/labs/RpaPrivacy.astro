@@ -1,0 +1,58 @@
+<!-- LAB 28 - extracted verbatim from golden/ti_ble_deep_dive.html.
+     Only change: element ids prefixed with the lab slug (rpa-privacy-). -->
+<div class="scope">
+  <div>
+    <div class="acard"><b>Public address</b>IEEE-assigned, fixed, trackable. Rare in consumer devices.</div>
+    <div class="acard"><b>Random static</b>Fixed until reboot/lifetime. Common default for peripherals (TI default).</div>
+    <div class="acard"><b>RPA (resolvable)</b>prand(24b) + ah(IRK, prand). Rotates ~every 15 min. Bonded peers resolve it with your IRK.</div>
+    <div class="acard"><b>Non-resolvable</b>Pure random, nobody can resolve. Beacons that want zero trackability.</div>
+  </div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-top:12px">bonded IRK = <span style="color:var(--purple)" id="rpa-privacy-rIrk"></span></div>
+  <div class="addrlist" id="rpa-privacy-rList"></div>
+  <div class="narr" id="rpa-privacy-rNarr">The phone generates a fresh RPA periodically. Press rotate, then resolve.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="rpa-privacy-rRotate">⟳ Rotate address (new RPA)</button>
+  <button id="rpa-privacy-rResolve">Resolve with bonded IRK</button>
+  <button id="rpa-privacy-rStranger">Try resolving a stranger's address</button>
+</div>
+
+<style is:global>
+/* rpa */
+.addrlist{font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-top:10px;line-height:2}
+.addrlist .a{color:var(--amber)} .addrlist .ok{color:var(--green)} .addrlist .no{color:var(--red)}
+.acard{display:inline-block;border:1px solid var(--border2);border-radius:5px;padding:8px 12px;margin:4px 6px 4px 0;background:rgba(17,20,24,.9);font-size:11.5px;color:var(--dim);max-width:230px;vertical-align:top}
+.acard b{font-family:'IBM Plex Mono',monospace;color:var(--text);display:block;font-size:11px;margin-bottom:2px}
+</style>
+
+<script is:inline>
+/* ===== B7 RPA ===== */
+(function(){
+  const $=id=>document.getElementById('rpa-privacy-'+id);
+  const IRK='6F:3A:91:C4:88:0D:5E:B2';
+  $('rIrk').textContent=IRK;
+  let last=null,lastIsOurs=true;
+  const hx=n=>n.toString(16).padStart(2,'0').toUpperCase();
+  function hash(p){ // toy ah() for illustration
+    let h=0x5A;for(const b of p)h=((h*31)+b+0x6F)&0xFFFFFF;
+    return[(h>>16)&255,(h>>8)&255,h&255];
+  }
+  function gen(ours){
+    const prand=[0x40|Math.floor(Math.random()*0x3F),Math.floor(Math.random()*256),Math.floor(Math.random()*256)];
+    const hsh=ours?hash(prand):[Math.floor(Math.random()*256),Math.floor(Math.random()*256),Math.floor(Math.random()*256)];
+    return{prand,hsh,str:prand.map(hx).join(':')+':'+hsh.map(hx).join(':')};
+  }
+  function add(line){const l=$('rList');const d=document.createElement('div');d.innerHTML=line;l.appendChild(d);while(l.children.length>5)l.removeChild(l.firstChild)}
+  $('rRotate').onclick=()=>{last=gen(true);lastIsOurs=true;
+    add('phone now advertises as <span class="a">'+last.str+'</span>  (prand | ah(IRK, prand))');
+    $('rNarr').textContent='New random address on the air. To everyone without the IRK this is an unrelated device — that\'s the anti-tracking point.';};
+  $('rResolve').onclick=()=>{
+    if(!last){$('rNarr').textContent='Rotate an address first.';return}
+    const ok=lastIsOurs&&hash(last.prand).join()===last.hsh.join();
+    add('resolve: recompute ah(IRK, prand) → '+(ok?'<span class="ok">MATCH — it\'s our bonded phone, reconnect ✓</span>':'<span class="no">no match — unknown device</span>'));
+    $('rNarr').textContent=ok?'Hash recomputed from the stored IRK matches the address — identity confirmed without a fixed address. The controller does this in hardware via the resolving list.':'No IRK produces this hash — not a bonded peer.';};
+  $('rStranger').onclick=()=>{last=gen(false);lastIsOurs=false;
+    add('some device advertises as <span class="a">'+last.str+'</span>');
+    $('rNarr').textContent='An address we did not generate. Try resolving it.';};
+})();
+</script>
