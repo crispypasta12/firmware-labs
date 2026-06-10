@@ -1,0 +1,47 @@
+<!-- LAB 29 - extracted verbatim from golden/ti_ble_deep_dive.html.
+     Only change: element ids prefixed with the lab slug (ll-state-machine-). -->
+<div class="scope">
+  <div class="llstates" id="ll-state-machine-llNodes"></div>
+  <div class="btnrow" id="ll-state-machine-llBtns" style="margin-top:0"></div>
+  <div class="lllog" id="ll-state-machine-llLog"></div>
+</div>
+
+<style is:global>
+/* LL state machine */
+.llstates{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.llnode{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 12px;border:1px solid var(--border2);border-radius:5px;color:var(--dim);background:rgba(17,20,24,.85);transition:.2s}
+.llnode.active{border-color:var(--teal);color:var(--teal);box-shadow:0 0 10px rgba(0,212,170,.25)}
+.lllog{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);background:rgba(10,12,15,.8);border:1px solid var(--border2);border-radius:5px;padding:10px 12px;height:110px;overflow-y:auto;margin-top:10px;line-height:1.7}
+.lllog .ok{color:var(--green)}
+</style>
+
+<script is:inline>
+/* ===== B8 LL STATE MACHINE ===== */
+(function(){
+  const names=['STANDBY','ADVERTISING','SCANNING','INITIATING','CONNECTION · PERIPHERAL','CONNECTION · CENTRAL'];
+  const wrap=document.getElementById('ll-state-machine-llNodes');
+  names.forEach(n=>{const d=document.createElement('div');d.className='llnode';d.textContent=n;wrap.appendChild(d)});
+  const nodes=[...wrap.children];
+  const log=document.getElementById('ll-state-machine-llLog'),btns=document.getElementById('ll-state-machine-llBtns');
+  let st=0;
+  function addLog(t,cls){const d=document.createElement('div');if(cls)d.className=cls;d.textContent='> '+t;log.appendChild(d);log.scrollTop=log.scrollHeight}
+  function btn(label,fn,primary){const b=document.createElement('button');if(primary)b.className='primary';b.textContent=label;b.onclick=fn;btns.appendChild(b)}
+  function set(s){st=s;nodes.forEach((n,i)=>n.classList.toggle('active',i===s));drawBtns()}
+  function drawBtns(){
+    btns.innerHTML='';
+    if(st===0){btn('Start advertising (ADV_IND)',()=>{addLog('TX ADV_IND on ch 37→38→39 every interval');set(1)},true);
+      btn('Start scanning',()=>{addLog('RX windows opened, cycling 37/38/39');set(2)});}
+    else if(st===1){btn('CONNECT_IND received',()=>{addLog('Initiator sent CONNECT_IND with AccessAddr, CRC init, hop, channel map, interval/latency/timeout — we are the PERIPHERAL','ok');set(4)},true);
+      btn('Stop',()=>{addLog('Advertising stopped');set(0)});}
+    else if(st===2){btn('Found target → initiate',()=>{addLog('Device of interest seen; switching to initiating: listen for its next ADV_IND');set(3)},true);
+      btn('Stop',()=>{addLog('Scanning stopped');set(0)});}
+    else if(st===3){btn('Send CONNECT_IND',()=>{addLog('CONNECT_IND sent in the 150 µs after its ADV_IND — we are the CENTRAL: we choose parameters and own the channel map','ok');set(5)},true);
+      btn('Abort',()=>set(0));}
+    else{btn('LL_TERMINATE_IND / timeout',()=>{addLog('Connection closed → back to standby. Peripheral typically resumes advertising for reconnect.');set(0)},true);
+      if(st===4)btn('Request new conn params',()=>addLog('Peripheral can only REQUEST (L2CAP param update / LL conn param req) — the central decides. iOS famously enforces its own rules.'));
+      if(st===5)btn('Update channel map',()=>addLog('Central distributes LL_CHANNEL_MAP_IND — AFH in action.'));}
+  }
+  addLog('Link Layer simulator. Reach CONNECTION via both doors: Advertising → Peripheral, Initiating → Central.');
+  set(0);
+})();
+</script>

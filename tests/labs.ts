@@ -221,4 +221,13 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#ota-state-machine-otaProg")).toHaveAttribute("style", /12\.5%/);
     },
   },
+  {
+    num: "29",
+    slug: "ll-state-machine",
+    interact: async (page) => {
+      await page.locator("#ll-state-machine-llBtns button", { hasText: "Start advertising" }).click();
+      await page.locator("#ll-state-machine-llBtns button", { hasText: "CONNECT_IND received" }).click();
+      await expect(page.locator("#ll-state-machine-llNodes .llnode.active")).toContainText("PERIPHERAL");
+    },
+  },
 ];
