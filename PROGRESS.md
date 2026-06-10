@@ -18,7 +18,7 @@ smoke test pass) → `committed`.
   - [x] Batch A (08, 12, 21, 07, 10, 30) — all committed, awaiting checkpoint approval
   - [x] Batch B (05, 06, 15, 18, 20, 22) — all committed, awaiting checkpoint approval
   - [x] Batch C (01, 03, 09, 16, 27, 28) — all committed, awaiting checkpoint approval
-  - [ ] Batch D (02, 04, 11, 29, 31, 14)
+  - [x] Batch D (02, 04, 11, 29, 31, 14) — all committed, awaiting checkpoint approval
   - [ ] Batch E (23, 25, 26, 24, 19, 17, 13)
 - [ ] **Phase 2 — Site shell** (tracks, home, prev/next, progress.ts, genericize copy, full suite re-run)
 - [ ] **Phase 3 — Drill engine** (DrillDeck.astro, generic deck, /deck page)
@@ -29,19 +29,19 @@ smoke test pass) → `committed`.
 | # | Source | Slug | Batch | Status |
 |---|--------|------|-------|--------|
 | 01 | vol2 | race-condition | C | committed |
-| 02 | vol2 | priority-inversion | D | todo |
+| 02 | vol2 | priority-inversion | D | committed |
 | 03 | vol2 | ring-buffer | C | committed |
-| 04 | vol2 | dma-pingpong | D | todo |
+| 04 | vol2 | dma-pingpong | D | committed |
 | 05 | vol2 | cortex-boot | B | committed |
 | 06 | vol2 | hardfault-detective | B | committed |
 | 07 | vol2 | struct-padding | A | committed |
 | 08 | vol2 | endianness | A | committed |
 | 09 | vol2 | spi-modes | C | committed |
 | 10 | vol2 | layer-stack | A | committed |
-| 11 | vol2 | ota-state-machine | D | todo |
+| 11 | vol2 | ota-state-machine | D | committed |
 | 12 | vol2 | battery-calc | A | committed |
 | 13 | vol2b | ble-connection-timing | E | todo |
-| 14 | vol2b | gatt-explorer | D | todo |
+| 14 | vol2b | gatt-explorer | D | committed |
 | 15 | vol2b | rf-core | B | committed |
 | 16 | vol2b | clock-tree | C | committed |
 | 17 | vol2b | i2c-anatomy | E | todo |
@@ -56,9 +56,9 @@ smoke test pass) → `committed`.
 | 26 | vol4 | throughput-calc | E | todo |
 | 27 | vol4 | pairing-matrix | C | committed |
 | 28 | vol4 | rpa-privacy | C | committed |
-| 29 | vol4 | ll-state-machine | D | todo |
+| 29 | vol4 | ll-state-machine | D | committed |
 | 30 | vol4 | ble-versions | A | committed |
-| 31 | vol4 | ble-debug-playbook | D | todo |
+| 31 | vol4 | ble-debug-playbook | D | committed |
 
 Source key: vol2 = ti_concepts_lab.html · vol2b = ti_concepts_lab_2b.html · vol4 = ti_ble_deep_dive.html.
 Drill engine source: ti_drill_mode.html (Phase 3, not a numbered lab).
