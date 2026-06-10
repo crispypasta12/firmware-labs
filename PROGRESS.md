@@ -97,9 +97,10 @@ the full document first changes (a) fractional y offsets and (b) Chromium's
 font-fallback state for symbol glyphs (▸ ▾ ▲), both of which shift rasterization
 vs the built single-lab pages. Verified 0px diff for an isolated capture.
 
-**Known flaky golden:** lab-24 (discovery-sim) renders randomized advertising
-positions on load — its golden changes between captures. Batch E must handle
-this (seed, freeze, or relaxed comparison) before lab 24 can be verified.
+**Resolved in Batch E:** lab-24 (discovery-sim) renders randomized advertising
+positions on load, so its visual harness now seeds `Math.random` during Lab 24
+golden capture and visual comparison. The lab component itself remains the
+extracted golden logic.
 
 **Testing:** `npm run shoot-golden` regenerates goldens. `npm test` = build +
 all Playwright tests; `npm run test:visual` = visual only. Labs register in
