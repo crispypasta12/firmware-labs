@@ -122,4 +122,14 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#zephyr-build-z-in")).toHaveClass(/hl/);
     },
   },
+  {
+    num: "20",
+    slug: "context-switch",
+    interact: async (page) => {
+      const frames = page.locator("#context-switch-stA .sframe");
+      const before = await frames.count();
+      await page.locator("#context-switch-xNext").click();
+      await expect(frames).toHaveCount(before + 1);
+    },
+  },
 ];

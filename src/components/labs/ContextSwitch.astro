@@ -1,0 +1,70 @@
+<!-- LAB 20 - extracted verbatim from golden/ti_concepts_lab_2b.html.
+     Only change: element ids prefixed with the lab slug (context-switch-). -->
+<div class="scope">
+  <div class="ctxgrid">
+    <div class="stackcol"><h4>Task A stack (PSP_A)</h4><div class="stackitems" id="context-switch-stA"></div></div>
+    <div class="cpubox" id="context-switch-cpuBox"></div>
+    <div class="stackcol"><h4>Task B stack (PSP_B)</h4><div class="stackitems" id="context-switch-stB"></div></div>
+  </div>
+  <div class="stepdots" id="context-switch-xDots"></div>
+  <div class="narr" id="context-switch-xNarr">Task A is running. Press Step - SysTick is about to fire.</div>
+</div>
+<div class="btnrow">
+  <button id="context-switch-xPrev">◂ Back</button>
+  <button class="primary" id="context-switch-xNext">Step ▸</button>
+</div>
+
+<style is:global>
+/* RF core + zephyr + ctx steppers */
+.stepdots{display:flex;gap:6px;margin-top:14px}
+.sdot{width:26px;height:4px;border-radius:2px;background:var(--border2)}
+.sdot.on{background:var(--teal)}
+/* ctx switch */
+.ctxgrid{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:12px}
+.stackcol{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);overflow:hidden}
+.stackcol h4{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--border);text-transform:uppercase}
+.stackitems{display:flex;flex-direction:column-reverse;padding:8px;gap:4px;min-height:170px;justify-content:flex-start}
+.sframe{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 8px;border-radius:3px;border:1px solid var(--border2);color:var(--dim);text-align:center}
+.sframe.hw{border-color:rgba(0,153,204,.5);color:var(--blue)}
+.sframe.sw{border-color:rgba(160,128,224,.5);color:var(--purple)}
+.sframe.new{animation:pop .3s}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.cpubox{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim)}
+.cpubox b{color:var(--text);font-weight:500}
+.cpubox .mode{color:var(--amber)}
+.cpubox .psp{color:var(--teal)}
+@media(max-width:700px){.ctxgrid{grid-template-columns:1fr}}
+</style>
+
+<script is:inline>
+/* ===== 8. CONTEXT SWITCH ===== */
+(function(){
+  const HW=['xPSR','PC','LR','R12','R3','R2','R1','R0'].join(' · ');
+  const states=[
+    {a:['locals'],b:['locals','hw','sw'],cpu:{mode:'THREAD mode · PSP (Task A)',psp:'PSP = top of Task A stack',note:'Task A executing. Task B was switched out earlier — its registers wait on its own stack.'},n:'1/6 — Task A runs in thread mode on PSP. Press Step: SysTick fires.'},
+    {a:['locals','hw'],b:['locals','hw','sw'],cpu:{mode:'HANDLER mode · MSP',psp:'PSP = A (frame pushed)',note:'HARDWARE auto-pushed the exception frame (xPSR PC LR R12 R3-R0) onto Task A\'s stack. Handler itself runs on MSP.'},n:'2/6 — SysTick entry: the blue frame appeared with zero software involvement — the CPU did it.'},
+    {a:['locals','hw'],b:['locals','hw','sw'],cpu:{mode:'HANDLER mode · MSP',psp:'PSP = A',note:'SysTick handler decides a switch is due and PENDS PendSV — the lowest-priority exception — then returns.'},n:'3/6 — Why PendSV? So the switch runs only when NO other ISR is active. A context switch can never corrupt an in-flight interrupt.'},
+    {a:['locals','hw','sw'],b:['locals','hw','sw'],cpu:{mode:'HANDLER mode · MSP (PendSV)',psp:'PSP_A saved → TCB_A',note:'PendSV (kernel code) pushes the remaining registers R4-R11 (purple) and stores PSP into Task A\'s TCB. Task A is now fully frozen.'},n:'4/6 — Software saves what hardware didn\'t: R4-R11. Hardware frame + software frame = complete context.'},
+    {a:['locals','hw','sw'],b:['locals','hw'],cpu:{mode:'HANDLER mode · MSP (PendSV)',psp:'PSP ← TCB_B',note:'Scheduler picks Task B (highest-priority ready). Kernel loads PSP from TCB_B and POPS R4-R11 from Task B\'s stack.'},n:'5/6 — Mirror image: restore B\'s software frame, point PSP at B\'s stack.'},
+    {a:['locals','hw','sw'],b:['locals'],cpu:{mode:'THREAD mode · PSP (Task B)',psp:'PSP = top of Task B stack',note:'Exception return (magic EXC_RETURN value → thread mode, PSP): HARDWARE pops B\'s exception frame. PC = where B left off. Task B is running.'},n:'6/6 — Done. Task A\'s full context sleeps on its stack until its turn. Note the symmetry: hardware push ↔ hardware pop, kernel push ↔ kernel pop.'}
+  ];
+  let i=0;const dots=document.getElementById('context-switch-xDots');
+  states.forEach(()=>{const d=document.createElement('div');d.className='sdot';dots.appendChild(d)});
+  function frame(t){
+    if(t==='hw')return'<div class="sframe hw new">HW frame: '+HW+'</div>';
+    if(t==='sw')return'<div class="sframe sw new">SW frame: R11 … R4</div>';
+    return'<div class="sframe">task locals / return addrs</div>';
+  }
+  function draw(){
+    const s=states[i];
+    document.getElementById('context-switch-stA').innerHTML=s.a.map(frame).join('');
+    document.getElementById('context-switch-stB').innerHTML=s.b.map(frame).join('');
+    document.getElementById('context-switch-cpuBox').innerHTML='<b>CPU</b><br><span class="mode">'+s.cpu.mode+'</span><br><span class="psp">'+s.cpu.psp+'</span><br><br>'+s.cpu.note;
+    document.getElementById('context-switch-xNarr').textContent=s.n;
+    [...dots.children].forEach((d,k)=>d.classList.toggle('on',k<=i));
+  }
+  document.getElementById('context-switch-xNext').onclick=()=>{if(i<states.length-1){i++;draw()}};
+  document.getElementById('context-switch-xPrev').onclick=()=>{if(i>0){i--;draw()}};
+  draw();
+})();
+</script>
