@@ -48,6 +48,13 @@ for (const file of GOLDEN_FILES) {
     for (let i = 0; i < nums.length; i++) {
       const page = await browser.newPage({ viewport: { width, height: 900 } });
       await page.addInitScript(`
+        if (${JSON.stringify(nums[i])} === "24") {
+          let seed = 0x2437;
+          Math.random = () => {
+            seed = (1664525 * seed + 1013904223) >>> 0;
+            return seed / 0x100000000;
+          };
+        }
         document.addEventListener("DOMContentLoaded", () => {
           const st = document.createElement("style");
           st.textContent = ".hdr{display:none!important}";
