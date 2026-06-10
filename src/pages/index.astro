@@ -29,6 +29,7 @@ const featSparks: Record<string, string> = {
 ---
 
 <SiteLayout title="Firmware Labs — interactive firmware engineering simulators">
+  <div class="grain" aria-hidden="true"></div>
   <!-- ============ HERO ============ -->
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero-copy">
@@ -121,7 +122,7 @@ const featSparks: Record<string, string> = {
   </section>
 
   <!-- ============ HOW IT WORKS ============ -->
-  <section class="site-section" aria-labelledby="how-title">
+  <section class="site-section" aria-labelledby="how-title" style="--rule:var(--teal)">
     <h2 id="how-title" class="site-kicker">How every lab works</h2>
     <div class="how-grid">
       <div class="how-card rv">
@@ -143,7 +144,7 @@ const featSparks: Record<string, string> = {
   </section>
 
   <!-- ============ TRACKS ============ -->
-  <section id="tracks" class="site-section" aria-labelledby="tracks-title">
+  <section id="tracks" class="site-section" aria-labelledby="tracks-title" style="--rule:var(--amber)">
     <div class="section-head">
       <h2 id="tracks-title" class="site-kicker">Engineering tracks</h2>
       <p class="section-sub">Pick the area you debug most — progress is saved locally as you complete labs.</p>
@@ -189,7 +190,7 @@ const featSparks: Record<string, string> = {
   </section>
 
   <!-- ============ FEATURED ============ -->
-  <section class="site-section" aria-labelledby="featured-title">
+  <section class="site-section" aria-labelledby="featured-title" style="--rule:var(--blue)">
     <div class="section-head">
       <h2 id="featured-title" class="site-kicker">Featured labs</h2>
       <p class="section-sub">A sampler across the tracks — each one runs in your browser, no setup.</p>
@@ -211,7 +212,7 @@ const featSparks: Record<string, string> = {
   </section>
 
   <!-- ============ LAB INDEX ============ -->
-  <section class="site-section" aria-labelledby="index-title">
+  <section class="site-section" aria-labelledby="index-title" style="--rule:var(--purple)">
     <div class="section-head">
       <h2 id="index-title" class="site-kicker">Lab index</h2>
       <p class="section-sub">The full map — completed labs light up.</p>
@@ -271,8 +272,13 @@ const featSparks: Record<string, string> = {
       radial-gradient(480px 280px at 6% 92%,rgba(160,128,224,.05),transparent 70%);
   }
   .hero>*{position:relative;z-index:1}
-  .hero-title{font-size:42px;line-height:1.1;font-weight:600;letter-spacing:-.015em;margin:0 0 14px}
-  .hero-title em{font-style:normal;color:var(--teal);position:relative;text-shadow:0 0 28px rgba(0,212,170,.35)}
+  .hero-title{
+    font-size:42px;line-height:1.1;font-weight:600;letter-spacing:-.015em;margin:0 0 14px;
+    background:linear-gradient(180deg,#f4f8fc 0%,var(--text) 100%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent
+  }
+  .hero-title em{font-style:normal;color:var(--teal);-webkit-text-fill-color:var(--teal);position:relative;text-shadow:0 0 28px rgba(0,212,170,.35)}
   .hero-title em::after{
     content:"";position:absolute;left:0;right:0;bottom:2px;height:2px;
     background:linear-gradient(90deg,var(--teal),transparent);opacity:.7
@@ -310,12 +316,25 @@ const featSparks: Record<string, string> = {
     background-image:linear-gradient(rgba(42,51,64,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(42,51,64,.25) 1px,transparent 1px);
     background-size:24px 24px
   }
+  /* CRT phosphor: scanlines + center bloom + corner vignette */
+  .scope-screen::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0,rgba(0,0,0,.16) 1px,transparent 1px,transparent 3px);
+    opacity:.55
+  }
+  .scope-screen::after{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+    background:
+      radial-gradient(ellipse at 50% 45%,rgba(0,212,170,.055),transparent 55%),
+      radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.42) 100%)
+  }
   .scope-screen svg{display:block;width:100%;height:222px}
   .scope-status{
     position:absolute;right:10px;bottom:6px;font-family:'IBM Plex Mono',monospace;
-    font-size:8.5px;color:var(--muted);letter-spacing:.04em
+    font-size:8.5px;color:var(--muted);letter-spacing:.04em;z-index:3
   }
   .scope-readout{
+    z-index:3;
     position:absolute;right:10px;top:6px;font-family:'IBM Plex Mono',monospace;
     font-size:9px;color:var(--green);letter-spacing:.04em;
     background:rgba(12,16,20,.85);border:1px solid var(--border2);border-radius:3px;padding:2px 6px
@@ -337,7 +356,18 @@ const featSparks: Record<string, string> = {
   .bootlog .cursor{animation:blink 1s steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
 
+  /* ---------- film grain over the whole page ---------- */
+  .grain{
+    position:fixed;inset:0;z-index:90;pointer-events:none;opacity:.032;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+    background-size:160px 160px
+  }
+
   /* ---------- sections ---------- */
+  .site-section::before{
+    content:"";display:block;height:1px;margin-bottom:28px;opacity:.3;
+    background:linear-gradient(90deg,transparent,var(--rule,var(--teal)) 30%,var(--rule,var(--teal)) 50%,transparent)
+  }
   .section-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:16px}
   .section-head .site-kicker{margin-bottom:0}
   .section-sub{font-size:12.5px;color:var(--dim);margin:0}
@@ -447,14 +477,19 @@ const featSparks: Record<string, string> = {
     background:
       radial-gradient(ellipse at 50% 0%,rgba(0,212,170,.09),transparent 60%),
       radial-gradient(ellipse at 50% 120%,rgba(160,128,224,.06),transparent 60%),
-      #0c1014;
-    background-image:
-      radial-gradient(ellipse at 50% 0%,rgba(0,212,170,.09),transparent 60%),
-      radial-gradient(ellipse at 50% 120%,rgba(160,128,224,.06),transparent 60%),
-      linear-gradient(rgba(42,51,64,.25) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(42,51,64,.25) 1px,transparent 1px);
-    background-size:auto,auto,24px 24px,24px 24px
+      #0c1014
   }
+  /* the scope grid "loses signal" toward the bottom edge */
+  .closer::before{
+    content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(42,51,64,.3) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(42,51,64,.3) 1px,transparent 1px);
+    background-size:24px 24px;
+    -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 40%,transparent 96%);
+    mask-image:linear-gradient(180deg,#000 0%,#000 40%,transparent 96%)
+  }
+  .closer>*{position:relative;z-index:1}
   .closer h2{font-size:25px;margin:0 0 10px;letter-spacing:-.01em}
   .closer p{font-size:13px;color:#8b98a8;max-width:520px;margin:0 auto 22px;line-height:1.7}
 
