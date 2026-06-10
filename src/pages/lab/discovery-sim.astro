@@ -3,7 +3,7 @@ import LabLayout from "../../layouts/LabLayout.astro";
 import LabShell from "../../components/LabShell.astro";
 import DiscoverySim from "../../components/labs/DiscoverySim.astro";
 
-const why = `<b>Interview angle:</b> discovery is probabilistic — an advertiser and a scanner have to <i>overlap in time</i>. Tune the three knobs, run it a few times, and watch discovery latency change. This is the power-vs-latency tradeoff you tune in every product.`;
+const why = `<b>Where this bites you:</b> discovery is probabilistic — an advertiser and a scanner have to <i>overlap in time</i>. Tune the three knobs, run it a few times, and watch discovery latency change. This is the power-vs-latency tradeoff you tune in every product.`;
 const takeaway = `<b>Senior notes:</b> the 0–10 ms random advDelay exists to prevent two advertisers colliding forever in lockstep. Active scanning adds SCAN_REQ → SCAN_RSP for extra payload; passive just listens. <b>ADV_IND</b> = connectable/scannable (the normal one); <b>ADV_NONCONN_IND</b> = beacons; <b>ADV_DIRECT_IND</b> = fast reconnect to a known peer. BLE 5 <b>extended advertising</b> moves big payloads off 37/38/39 onto data channels (ADV_EXT_IND points to AUX_ADV_IND).`;
 ---
 

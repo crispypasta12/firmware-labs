@@ -9,7 +9,7 @@ import PairingMatrix from "../../components/labs/PairingMatrix.astro";
     num="LAB 27"
     title="Pairing &amp; security — the IO-capability matrix"
     tag="SMP"
-    why='<b>Interview angle:</b> "your device has no display or buttons — how does pairing work, and what&apos;s the risk?" Pick the IO capabilities and read the resulting method straight off. Then say the LESC sentence below.'
+    why='<b>Where this bites you:</b> "your device has no display or buttons — how does pairing work, and what&apos;s the risk?" Pick the IO capabilities and read the resulting method straight off. Then say the LESC sentence below.'
     takeaway='<b>The LESC sentence:</b> "Legacy pairing derives keys from a TK that Just-Works sets to zero — passively sniffable. LE Secure Connections does an <b>ECDH P-256</b> exchange, so even Just Works resists passive eavesdropping; it just can&apos;t stop an active MITM without numeric comparison, passkey, or OOB." <b>Pairing</b> = creating keys for this session; <b>bonding</b> = storing them (LTK to encrypt reconnects, IRK to resolve private addresses, CSRK for signed writes). BLE link encryption itself is <b>AES-128-CCM</b> in the Link Layer.'
   >
     <PairingMatrix />

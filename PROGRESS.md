@@ -20,7 +20,7 @@ smoke test pass) → `committed`.
   - [x] Batch C (01, 03, 09, 16, 27, 28) — all committed, awaiting checkpoint approval
   - [x] Batch D (02, 04, 11, 29, 31, 14) — all committed, awaiting checkpoint approval
   - [x] Batch E (23, 25, 26, 24, 19, 17, 13) — all committed, awaiting checkpoint approval
-- [ ] **Phase 2 — Site shell** (tracks, home, prev/next, progress.ts, genericize copy, full suite re-run)
+- [x] **Phase 2 — Site shell** (tracks, home, prev/next, progress.ts, genericize copy, full suite re-run) — committed, awaiting checkpoint approval
 - [ ] **Phase 3 — Drill engine** (DrillDeck.astro, generic deck, /deck page)
 - [ ] **Phase 4 — Hardening** (Lighthouse, mobile QA, SEO/OG, reduced-motion audit)
 
@@ -101,6 +101,11 @@ vs the built single-lab pages. Verified 0px diff for an isolated capture.
 positions on load, so its visual harness now seeds `Math.random` during Lab 24
 golden capture and visual comparison. The lab component itself remains the
 extracted golden logic.
+
+**Resolved in Phase 2:** page-level shell copy is now genericized, so visual
+goldens and visual comparisons hide `.lab-head`, `.lab-why`, and `.takeaway`
+before first paint. The visual suite continues to compare the extracted lab
+body, controls, and interactive visuals against `golden/`.
 
 **Testing:** `npm run shoot-golden` regenerates goldens. `npm test` = build +
 all Playwright tests; `npm run test:visual` = visual only. Labs register in

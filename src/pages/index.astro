@@ -1,21 +1,52 @@
 ---
-import "../styles/tokens.css";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { featuredLabNums, labByNum, labsForTrack, tracks } from "../lib/labs";
+
+const featured = featuredLabNums.map((num) => labByNum(num)).filter(Boolean);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="generator" content={Astro.generator} />
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link
-			href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
-			rel="stylesheet"
-		/>
-		<title>Firmware Labs</title>
-	</head>
-	<body>
-		<h1>Firmware Labs</h1>
-		<p>Site shell arrives in Phase 2. Labs land under /lab/&lt;slug&gt; in Phase 1.</p>
-	</body>
-</html>
+<SiteLayout title="Firmware Labs">
+  <div class="site-kicker">Interactive firmware labs</div>
+  <h1 class="site-title">Practice the failure modes that make firmware hard.</h1>
+  <p class="site-copy">
+    Firmware Labs is organized by engineering track. Each lab is a focused simulator for a concrete debugging,
+    architecture, timing, or wireless behavior.
+  </p>
+
+  <section class="site-section" aria-labelledby="tracks-title">
+    <h2 id="tracks-title" class="site-kicker">Tracks</h2>
+    <div class="site-grid">
+      {tracks.map((track) => {
+        const trackLabs = labsForTrack(track.slug);
+        return (
+          <a class="site-card" href={`/track/${track.slug}`}>
+            <h3>{track.title}</h3>
+            <p>{track.summary}</p>
+            <div class="site-meta">
+              <span>{trackLabs.length} labs</span>
+              <span data-progress-track={track.slug} data-progress-labs={trackLabs.map((lab) => lab.slug).join(",")}>
+                0/{trackLabs.length}
+              </span>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="site-section" aria-labelledby="featured-title">
+    <h2 id="featured-title" class="site-kicker">Featured labs</h2>
+    <div class="site-list">
+      {featured.map((lab) => lab && (
+        <a class="site-lab-row" href={`/lab/${lab.slug}`}>
+          <span class="site-num">LAB {lab.num}</span>
+          <span>
+            <h2>{lab.title}</h2>
+            <p>{lab.description}</p>
+          </span>
+          <span class="site-check" data-progress-lab={lab.slug}>Not complete</span>
+        </a>
+      ))}
+    </div>
+  </section>
+</SiteLayout>

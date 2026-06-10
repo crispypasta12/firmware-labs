@@ -9,7 +9,7 @@ import HardfaultDetective from "../../components/labs/HardfaultDetective.astro";
     num="LAB 06"
     title="HardFault detective — a worked investigation"
     tag="PDF Q29 · Q49"
-    why='<b>Interview angle:</b> "how do you debug a HardFault?" separates juniors from seniors. The senior answer names the registers. Walk this real-style case until the register names are automatic.'
+    why='<b>Where this bites you:</b> "how do you debug a HardFault?" separates juniors from seniors. The senior answer names the registers. Walk this real-style case until the register names are automatic.'
     takeaway="<b>Register cheat line:</b> CFSR 0xE000ED28 (which sub-fault) → HFSR 0xE000ED2C (escalated?) → MMFAR/BFAR 0xE000ED34/38 (faulting address) → stacked PC (faulting instruction) → map file (which function). Causes to list: NULL pointer, stack overflow, bad function pointer, invalid ISR priority calling RTOS APIs, DMA writing out of bounds."
   >
     <HardfaultDetective />

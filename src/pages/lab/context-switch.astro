@@ -9,7 +9,7 @@ import ContextSwitch from "../../components/labs/ContextSwitch.astro";
     num="LAB 20"
     title="FreeRTOS context switch — MSP, PSP &amp; the two stack frames"
     tag="PDF Q32 · Q35"
-    why='<b>Interview angle:</b> "what is a context switch?" answered at register level is a senior flex. Watch which frame the <i>hardware</i> pushes vs which the <i>kernel</i> pushes, and where MSP vs PSP is in use.'
+    why='<b>Where this bites you:</b> "what is a context switch?" answered at register level is a senior flex. Watch which frame the <i>hardware</i> pushes vs which the <i>kernel</i> pushes, and where MSP vs PSP is in use.'
     takeaway="<b>Three facts to drop:</b> ① hardware auto-pushes xPSR·PC·LR·R12·R3–R0 on exception entry; the kernel (PendSV) saves only R4–R11 + PSP. ② Handlers run on <b>MSP</b>; tasks run on <b>PSP</b> — that's why each task needs its own stack sized for its worst case. ③ The switch happens in <b>PendSV at the lowest priority</b>, so a context switch can never preempt another ISR mid-flight."
   >
     <ContextSwitch />

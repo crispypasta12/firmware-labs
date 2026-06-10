@@ -3,7 +3,7 @@ import LabLayout from "../../layouts/LabLayout.astro";
 import LabShell from "../../components/LabShell.astro";
 import ThroughputCalc from "../../components/labs/ThroughputCalc.astro";
 
-const why = `<b>Interview angle:</b> "why is my OTA so slow?" is throughput math. Three levers: MTU, PHY, packets per event. Move them and watch the number — the jump from default MTU 23 to 247 is the punchline.`;
+const why = `<b>Where this bites you:</b> "why is my OTA so slow?" is throughput math. Three levers: MTU, PHY, packets per event. Move them and watch the number — the jump from default MTU 23 to 247 is the punchline.`;
 const takeaway = `<b>The recipe to recite for fast OTA:</b> negotiate <b>MTU 247</b> + <b>Data Length Extension</b> (LL payload 27→251 B, BLE 4.2) + <b>2M PHY</b> + short connection interval + notifications/Write-Without-Response with app-level ACKs every N chunks (not indications — one round trip each). Practical ceiling ~1.4 Mbps app throughput on 2M. And remember: an unanswered indication or read hits the <b>30 s ATT timeout → disconnect</b>.`;
 ---
 

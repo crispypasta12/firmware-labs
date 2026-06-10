@@ -3,7 +3,7 @@ import LabLayout from "../../layouts/LabLayout.astro";
 import LabShell from "../../components/LabShell.astro";
 import BleConnectionTiming from "../../components/labs/BleConnectionTiming.astro";
 
-const why = `<b>Interview angle:</b> "Embedded Connectivity" is in the hiring manager's title — and "device disconnects every 5 seconds" debugging starts here. Move the sliders until you can predict the timeline before it draws. Then flip on interference and watch the supervision timer kill the link.`;
+const why = `<b>Where this bites you:</b> "Embedded Connectivity" is in the hiring manager's title — and "device disconnects every 5 seconds" debugging starts here. Move the sliders until you can predict the timeline before it draws. Then flip on interference and watch the supervision timer kill the link.`;
 const takeaway = `<b>The rule to recite:</b> <code>(1 + slave_latency) × conn_interval &lt; supervision_timeout / 2</code> — the ÷2 gives margin for a couple of lost packets. "Disconnects every ~5 s" almost always means a supervision timeout (5–6 s is a common default): check the parameter math first, then sniffer, then RSSI, then 2.4 GHz interference (Wi-Fi ch. 6 overlaps BLE 37/38/39).`;
 ---
 

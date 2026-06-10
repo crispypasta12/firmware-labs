@@ -3,7 +3,7 @@ import LabLayout from "../../layouts/LabLayout.astro";
 import LabShell from "../../components/LabShell.astro";
 import ChannelHopping from "../../components/labs/ChannelHopping.astro";
 
-const why = `<b>Interview angle:</b> every connection event hops to a new data channel — that's BLE's interference armor. Watch CSA#1's hop pattern, then toggle interference and see the channel map shrink and remap around the blocked region.`;
+const why = `<b>Where this bites you:</b> every connection event hops to a new data channel — that's BLE's interference armor. Watch CSA#1's hop pattern, then toggle interference and see the channel map shrink and remap around the blocked region.`;
 const takeaway = `<b>Say it like this:</b> "Both sides hop to a new data channel each connection event, following the channel map the central distributes via <code>LL_CHANNEL_MAP_IND</code>. When the host sees high PER on certain channels it excludes them — adaptive frequency hopping. BLE 5 adds <b>CSA#2</b>, a pseudo-random hop that decorrelates better than the +increment pattern. Minimum 2 channels must stay in the map."`;
 ---
 

@@ -10,6 +10,13 @@ for (const lab of LABS) {
   for (const widthName of Object.keys(WIDTHS)) {
     test(`visual lab-${lab.num} ${widthName}`, async ({ page }) => {
       await page.setViewportSize({ width: WIDTHS[widthName], height: 900 });
+      await page.addInitScript(() => {
+        document.addEventListener("DOMContentLoaded", () => {
+          const st = document.createElement("style");
+          st.textContent = ".site-topbar,.lab-head,.lab-why,.takeaway{display:none!important}";
+          document.head.appendChild(st);
+        });
+      });
       if (lab.num === "24") {
         await page.addInitScript(() => {
           let seed = 0x2437;

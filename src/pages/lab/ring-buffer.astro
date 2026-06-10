@@ -9,7 +9,7 @@ import RingBuffer from "../../components/labs/RingBuffer.astro";
     num="LAB 03"
     title="Ring buffer — head, tail, full vs empty"
     tag="PDF Q20 · Q47"
-    why='<b>Interview angle:</b> "design a UART RX path" almost always lands here. The trap question: how do you tell <i>full</i> from <i>empty</i> when head == tail? (Answer: leave one slot unused, or keep a count.)'
+    why='<b>Where this bites you:</b> "design a UART RX path" almost always lands here. The trap question: how do you tell <i>full</i> from <i>empty</i> when head == tail? (Answer: leave one slot unused, or keep a count.)'
     takeaway="<b>Conditions to recite:</b> empty when <code>head == tail</code>; full when <code>(head+1) % N == tail</code>. Indexes shared between ISR and task must be <code>volatile</code> and updated single-writer (ISR owns head, task owns tail) — that's what makes the lock-free version safe."
   >
     <RingBuffer />

@@ -9,7 +9,7 @@ import ZephyrBuild from "../../components/labs/ZephyrBuild.astro";
     num="LAB 18"
     title="Zephyr build flow — how DTS + Kconfig + West become a binary"
     tag="JD gap closer"
-    why='<b>Interview angle:</b> Zephyr is your flagged gap. Being able to narrate this pipeline turns "I know the concepts" into "I know how the pieces actually combine." Step through what <code>west build -b lp_em_cc2340r5</code> does.'
+    why='<b>Where this bites you:</b> Zephyr can be unfamiliar until you have used the build pipeline directly. Being able to narrate this pipeline turns "I know the concepts" into "I know how the pieces actually combine." Step through what <code>west build -b lp_em_cc2340r5</code> does.'
     takeaway='<b>The sentence that lands:</b> "Devicetree describes what hardware exists, Kconfig selects what software gets built, West orchestrates it — at build time they meet as generated headers, so drivers are configured at compile time with zero runtime discovery cost." Tests run under <b>Twister</b> on native_posix/QEMU in CI, hardware reserved for RF/timing tests.'
   >
     <ZephyrBuild />

@@ -9,7 +9,7 @@ import GattExplorer from "../../components/labs/GattExplorer.astro";
     num="LAB 14"
     title="GATT hierarchy explorer + notify vs indicate race"
     tag="Hub S8"
-    why='<b>Interview angle:</b> "How is data organized in BLE?" Click through a real Heart Rate Service, then run the notify-vs-indicate race to see why OTA uses indications and sensor streams use notifications.'
+    why='<b>Where this bites you:</b> "How is data organized in BLE?" Click through a real Heart Rate Service, then run the notify-vs-indicate race to see why OTA uses indications and sensor streams use notifications.'
     takeaway="<b>One-liner:</b> Profile → Service → Characteristic → Descriptor. <b>Notify</b> = fire-and-forget, fast, no guarantee — sensor streams. <b>Indicate</b> = wait for ATT confirmation per packet, guaranteed but one round-trip each — OTA chunks, config changes. The client opts in by writing 0x0001 (notify) or 0x0002 (indicate) to the <b>CCCD</b>."
   >
     <GattExplorer />

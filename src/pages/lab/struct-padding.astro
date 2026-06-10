@@ -9,7 +9,7 @@ import StructPadding from "../../components/labs/StructPadding.astro";
     num="LAB 07"
     title="Struct padding playground"
     tag="PDF Q18"
-    why="<b>Interview angle:</b> reorder the members and watch the size change — a great thing to demonstrate aloud. Largest-first ordering minimizes padding."
+    why="<b>Where this bites you:</b> reorder the members and watch the size change — a great thing to demonstrate aloud. Largest-first ordering minimizes padding."
     takeaway="<b>Why it matters:</b> mapping structs onto registers/packets/flash needs exact layout — but packed structs can cause <b>unaligned accesses</b> that are slow on M3/M4 and fault on M0. Prefer explicit serialization or careful member ordering over packing."
   >
     <StructPadding />

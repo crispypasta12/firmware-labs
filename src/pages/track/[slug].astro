@@ -1,0 +1,38 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { labsForTrack, trackBySlug, tracks } from "../../lib/labs";
+
+export function getStaticPaths() {
+  return tracks.map((track) => ({ params: { slug: track.slug } }));
+}
+
+const slug = Astro.params.slug || "";
+const track = trackBySlug(slug);
+if (!track) throw new Error(`Unknown track: ${slug}`);
+const trackLabs = labsForTrack(track.slug);
+---
+
+<SiteLayout title={`${track.title} - Firmware Labs`}>
+  <a class="site-back" href="/">Back to tracks</a>
+  <div class="site-kicker">Track</div>
+  <h1 class="site-title">{track.title}</h1>
+  <p class="site-copy">{track.summary}</p>
+
+  <div class="site-list">
+    {trackLabs.map((lab) => (
+      <a class="site-lab-row" href={`/lab/${lab.slug}`}>
+        <span class="site-num">LAB {lab.num}</span>
+        <span>
+          <h2>{lab.title}</h2>
+          <p>{lab.description}</p>
+        </span>
+        <span class="site-check" data-progress-lab={lab.slug}>Not complete</span>
+      </a>
+    ))}
+  </div>
+</SiteLayout>
+
+<style is:global>
+  .site-back{display:inline-flex;margin-bottom:18px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);text-decoration:none}
+  .site-back:hover{color:var(--teal)}
+</style>

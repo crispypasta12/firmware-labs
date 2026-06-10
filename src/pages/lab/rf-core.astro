@@ -9,8 +9,8 @@ import RfCore from "../../components/labs/RfCore.astro";
     num="LAB 15"
     title="CC26xx RF core — dual-CPU architecture"
     tag="Highest-ROI differentiator"
-    why="<b>Interview angle:</b> most candidates won't know this. Knowing why TI put a <i>second CPU</i> inside the chip — and what it implies for your application code — signals you studied their silicon specifically. Step through one radio command."
-    takeaway="<b>Why it matters (say all four):</b> ① RF timing is deterministic — your app bugs can't break a connection event. ② RF certification is handled at TI level — you never touch RF firmware. ③ The M4 can <b>sleep through connection events</b> — huge for power. ④ Rule: never call RF APIs from arbitrary ISRs — use RF driver callbacks. On <b>CC23xx</b> the same philosophy continues on a Cortex-M33 + TrustZone (BLE stack secure, app non-secure)."
+    why="<b>Where this bites you:</b> most candidates won't know this. Knowing why some wireless MCUs include a <i>second CPU</i> for radio work — and what it implies for your application code — signals you understand the silicon split. Step through one radio command."
+    takeaway="<b>Why it matters (say all four):</b> ① RF timing is deterministic — your app bugs can't break a connection event. ② RF certification is handled at silicon-vendor level — you never touch RF firmware. ③ The M4 can <b>sleep through connection events</b> — huge for power. ④ Rule: never call RF APIs from arbitrary ISRs — use RF driver callbacks. On newer secure MCUs, the same split may be reinforced with TrustZone boundaries."
   >
     <RfCore />
   </LabShell>

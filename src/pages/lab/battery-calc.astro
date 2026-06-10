@@ -9,8 +9,8 @@ import BatteryCalc from "../../components/labs/BatteryCalc.astro";
     num="LAB 12"
     title="Coin-cell budget calculator"
     tag="System design"
-    why='<b>Interview angle:</b> "design a 5-year battery sensor" is a classic TI system-design question. Be able to do this arithmetic on a whiteboard: average current = sleep + active × duty cycle.'
-    takeaway="<b>Mention the margin:</b> real designs derate for self-discharge, cold-temperature capacity loss, and TX current spikes on a high-ESR coin cell (decoupling caps!). Verify with a power profiler (TI EnergyTrace) before tapeout."
+    why='<b>Where this bites you:</b> "design a 5-year battery sensor" is a classic system-design question. Be able to do this arithmetic on a whiteboard: average current = sleep + active × duty cycle.'
+    takeaway="<b>Mention the margin:</b> real designs derate for self-discharge, cold-temperature capacity loss, and TX current spikes on a high-ESR coin cell (decoupling caps!). Verify with a power profiler (a power profiler) before tapeout."
   >
     <BatteryCalc />
   </LabShell>

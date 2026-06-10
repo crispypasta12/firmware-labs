@@ -45,6 +45,9 @@ export async function diffLabAgainstGolden(
 
   await page.setViewportSize({ width: WIDTHS[widthName], height: 900 });
   await page.evaluate(() => (document as any).fonts.ready);
+  await page.addStyleTag({
+    content: ".lab-head,.lab-why,.takeaway{display:none!important}",
+  });
   await lab.scrollIntoViewIfNeeded();
   await page.waitForTimeout(100);
   const actualBuf = await lab.screenshot({ animations: "disabled" });

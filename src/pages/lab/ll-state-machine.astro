@@ -9,7 +9,7 @@ import LlStateMachine from "../../components/labs/LlStateMachine.astro";
     num="LAB 29"
     title="Link Layer state machine — drive it"
     tag="Link Layer"
-    why="<b>Interview angle:</b> roles fall out of this machine: enter Connection from Advertising and you're the <b>peripheral</b>; from Initiating and you're the <b>central</b>. Drive both routes."
+    why="<b>Where this bites you:</b> roles fall out of this machine: enter Connection from Advertising and you're the <b>peripheral</b>; from Initiating and you're the <b>central</b>. Drive both routes."
     takeaway="<b>GAP roles map:</b> Broadcaster = advertising only (beacon). Observer = scanning only. Peripheral = advertise → accept connection. Central = scan → initiate → own the connection (decides parameters, distributes the channel map). One device can hold multiple roles at once on modern stacks — e.g. a CC2652 can be peripheral to a phone while central to a sensor."
   >
     <LlStateMachine />

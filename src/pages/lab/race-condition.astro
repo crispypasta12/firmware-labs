@@ -9,7 +9,7 @@ import RaceCondition from "../../components/labs/RaceCondition.astro";
     num="LAB 01"
     title="Why <code>counter++</code> loses updates"
     tag="PDF Q13 · Q40"
-    why='<b>Interview angle:</b> they show you <code>volatile uint32_t counter; counter++;</code> and ask "is this safe?" Step through the exact interleaving below until you can narrate it from memory.'
+    why='<b>Where this bites you:</b> they show you <code>volatile uint32_t counter; counter++;</code> and ask "is this safe?" Step through the exact interleaving below until you can narrate it from memory.'
     takeaway='<b>Say this in the interview:</b> "<code>volatile</code> forces the read and write to happen, but <code>++</code> is still LOAD → ADD → STORE. A preemption between LOAD and STORE loses an update. Fix: critical section (<code>taskENTER_CRITICAL</code>), interrupt masking, an atomic (LDREX/STREX), or a single-writer design."'
   >
     <RaceCondition />

@@ -9,7 +9,7 @@ import CortexBoot from "../../components/labs/CortexBoot.astro";
     num="LAB 05"
     title="Cortex-M reset → main()"
     tag="PDF Q26–Q27"
-    why='<b>Interview angle:</b> "what happens when the MCU resets?" is a favorite fundamentals probe. Step through and watch which memory region is touched at each stage.'
+    why='<b>Where this bites you:</b> "what happens when the MCU resets?" is a favorite fundamentals probe. Step through and watch which memory region is touched at each stage.'
     takeaway="<b>Bootloader bonus:</b> a custom bootloader jumping to an app must also disable interrupts/DMA, set <code>SCB-&gt;VTOR</code> to the app's vector table, load the app's SP, then jump to its reset handler — forget VTOR and every interrupt vectors back into the bootloader."
   >
     <CortexBoot />

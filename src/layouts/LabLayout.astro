@@ -3,12 +3,17 @@
 // maxWidth mirrors the source golden file's .wrap (vol2/vol2b: 980, vol4: 1000)
 // so lab visual diffs stay pixel-faithful.
 import "../styles/tokens.css";
+import { labBySlug, labNav } from "../lib/labs";
 
 interface Props {
   title: string;
   maxWidth?: number;
 }
 const { title, maxWidth = 980 } = Astro.props;
+const slug = Astro.url.pathname.split("/").filter(Boolean).at(-1) || "";
+const lab = labBySlug(slug);
+const nav = lab ? labNav(slug) : {};
+const pageTitle = lab ? `Lab ${lab.num} - ${lab.title} - Firmware Labs` : title;
 ---
 
 <html lang="en">
@@ -21,15 +26,88 @@ const { title, maxWidth = 980 } = Astro.props;
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
-    <title>{title}</title>
+    <title>{pageTitle}</title>
   </head>
   <body>
+    <header class="site-topbar">
+      <a class="site-brand" href="/">Firmware Labs</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/">Tracks</a>
+        {nav.track && <a href={`/track/${nav.track.slug}`}>{nav.track.title}</a>}
+      </nav>
+    </header>
     <div class="wrap" style={`max-width:${maxWidth}px`}>
       <slot />
+      {lab && (
+        <section class="lab-page-panel" aria-labelledby="lab-progress-title">
+          <div>
+            <p class="lab-page-kicker">{nav.track?.title}</p>
+            <h2 id="lab-progress-title">Progress</h2>
+            <p class="lab-page-muted">Completion is stored locally in this browser.</p>
+          </div>
+          <button class="primary lab-page-complete" data-progress-toggle={lab.slug} aria-pressed="false">Mark complete</button>
+        </section>
+      )}
+      {lab && (
+        <nav class="lab-page-nav" aria-label="Track navigation">
+          {nav.prev ? (
+            <a href={`/lab/${nav.prev.slug}`}>
+              <span>Previous</span>
+              <b>LAB {nav.prev.num}: {nav.prev.title}</b>
+            </a>
+          ) : <span />}
+          {nav.next ? (
+            <a href={`/lab/${nav.next.slug}`}>
+              <span>Next</span>
+              <b>LAB {nav.next.num}: {nav.next.title}</b>
+            </a>
+          ) : <span />}
+        </nav>
+      )}
+      {lab && (
+        <section class="lab-page-panel lab-page-notes" aria-labelledby="lab-notes-title">
+          <p class="lab-page-kicker">For review</p>
+          <h2 id="lab-notes-title">Simplifications</h2>
+          <ul>
+            {lab.simplifications.map((item) => <li>{item}</li>)}
+          </ul>
+        </section>
+      )}
     </div>
+    <script>
+      import { setupProgressControls } from "../lib/progress";
+      setupProgressControls();
+    </script>
   </body>
 </html>
 
 <style is:global>
   .wrap{margin:0 auto;padding:1.5rem}
+  .site-topbar{
+    position:sticky;top:0;z-index:80;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:14px 24px;border-bottom:1px solid var(--border);background:rgba(10,12,15,.94);backdrop-filter:blur(6px)
+  }
+  .site-brand{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--teal);text-decoration:none;letter-spacing:.06em;text-transform:uppercase}
+  .site-nav{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .site-nav a{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:5px 9px}
+  .site-nav a:hover{color:var(--teal);border-color:var(--teal)}
+  .lab-page-panel{display:flex;justify-content:space-between;gap:16px;align-items:center;border:1px solid var(--border);border-radius:8px;background:var(--bg2);padding:14px 16px;margin:14px 0}
+  .lab-page-panel h2{font-size:15px;margin:0}
+  .lab-page-kicker{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px}
+  .lab-page-muted{font-size:12px;color:var(--dim);margin:4px 0 0}
+  .lab-page-complete{white-space:nowrap}
+  .lab-page-nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+  .lab-page-nav a{border:1px solid var(--border);border-radius:8px;background:var(--bg2);padding:12px;text-decoration:none;color:inherit;min-height:74px}
+  .lab-page-nav a:hover{border-color:var(--teal)}
+  .lab-page-nav a:last-child{text-align:right}
+  .lab-page-nav span{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase}
+  .lab-page-nav b{font-size:13px;font-weight:500;color:var(--text)}
+  .lab-page-notes{display:block}
+  .lab-page-notes ul{margin:8px 0 0 18px;color:var(--dim);font-size:12px;line-height:1.7}
+  @media(max-width:700px){
+    .site-topbar{padding:12px 16px}
+    .lab-page-panel{align-items:flex-start;flex-direction:column}
+    .lab-page-nav{grid-template-columns:1fr}
+    .lab-page-nav a:last-child{text-align:left}
+  }
 </style>

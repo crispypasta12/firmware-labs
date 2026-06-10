@@ -3,7 +3,7 @@ import LabLayout from "../../layouts/LabLayout.astro";
 import LabShell from "../../components/LabShell.astro";
 import ThreadMesh from "../../components/labs/ThreadMesh.astro";
 
-const why = `<b>Interview angle:</b> TI's CC13xx/CC26xx push Thread + Matter hard. Deliver a message to a sleeping sensor, then kill a router and watch the mesh route around it — the two behaviors that define Thread.`;
+const why = `<b>Where this bites you:</b> Thread + Matter-capable wireless MCUs rely on these behaviors. Deliver a message to a sleeping sensor, then kill a router and watch the mesh route around it — the two behaviors that define Thread.`;
 const takeaway = `<b>SED in one breath:</b> "It doesn't route and isn't always-on — it polls its parent every few seconds; the parent buffers downstream messages; the mesh routes around it. That's how a CC2652 sensor runs for years on a battery. Contrast: MTD polls faster, FTD is always-on and routes." Matter then runs <i>over</i> Thread (or Wi-Fi/Ethernet) as the application layer, with the border router bridging to IP.`;
 ---
 

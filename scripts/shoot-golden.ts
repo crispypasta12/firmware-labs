@@ -57,7 +57,7 @@ for (const file of GOLDEN_FILES) {
         }
         document.addEventListener("DOMContentLoaded", () => {
           const st = document.createElement("style");
-          st.textContent = ".hdr{display:none!important}";
+          st.textContent = ".hdr,.lab-head,.lab-why,.takeaway{display:none!important}";
           document.head.appendChild(st);
           const target = document.querySelectorAll("section.lab")[${i}];
           for (const el of document.querySelectorAll(".wrap > *")) {

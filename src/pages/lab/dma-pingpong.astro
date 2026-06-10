@@ -9,7 +9,7 @@ import DmaPingpong from "../../components/labs/DmaPingpong.astro";
     num="LAB 04"
     title="Circular DMA + half/full interrupts (ping-pong)"
     tag="PDF Q8–Q9 · Q45"
-    why='<b>Interview angle:</b> your CV claims circular DMA on UART/ADC — expect "walk me through it" and "what goes wrong?" Toggle the slow CPU and watch the overrun happen: that&apos;s the failure mode to name unprompted.'
+    why='<b>Where this bites you:</b> UART/ADC DMA often works until load rises — expect "walk me through it" and "what goes wrong?" Toggle the slow CPU and watch the overrun happen: that&apos;s the failure mode to name unprompted.'
     takeaway="<b>The rule:</b> ping-pong only works if processing time per half &lt; fill time per half. Bugs to list: wrong address/length/width, missed flag clear, ISR/task index races, wraparound math, and cache coherency on MCUs with D-cache."
   >
     <DmaPingpong />
