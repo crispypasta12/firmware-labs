@@ -1,0 +1,38 @@
+/* Shared design tokens + lab chrome.
+   Extracted verbatim from golden/ti_concepts_lab.html, ti_concepts_lab_2b.html,
+   ti_ble_deep_dive.html (identical rules only — see PROGRESS.md / Phase 0 report
+   for the selectors deliberately left lab-specific). */
+
+:root{
+  --bg:#0a0c0f; --bg2:#111418; --bg3:#181d23; --border:#1e2530; --border2:#2a3340;
+  --text:#c8d4e0; --dim:#5a6a7a; --muted:#3a4a5a;
+  --teal:#00d4aa; --blue:#0099cc; --amber:#ffb454; --red:#e05050; --purple:#a080e0; --green:#50c878;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+.lab{margin:0 0 2.5rem;border:1px solid var(--border);border-radius:8px;background:var(--bg2);overflow:hidden}
+.lab-head{display:flex;align-items:baseline;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.lab-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+.lab-title{font-size:15px;font-weight:600}
+.lab-tag{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:.06em;text-transform:uppercase}
+.lab-body{padding:16px 18px}
+.lab-why{font-size:12px;color:var(--dim);margin-bottom:14px;border-left:3px solid var(--teal);padding:6px 12px;background:rgba(0,212,170,.04);border-radius:0 4px 4px 0}
+.lab-why b{color:var(--teal);font-weight:500}
+.scope{background:#0c1014;border:1px solid var(--border2);border-radius:6px;padding:14px;
+  background-image:linear-gradient(rgba(42,51,64,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(42,51,64,.25) 1px,transparent 1px);
+  background-size:24px 24px;position:relative}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+button{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 14px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;transition:.15s}
+button:hover{border-color:var(--teal);color:var(--teal)}
+button.primary{border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.08)}
+button:disabled{opacity:.35;cursor:default}
+button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.narr{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--amber);min-height:38px;margin-top:12px;line-height:1.6}
+.takeaway{margin-top:14px;font-size:12px;color:var(--dim);border-left:3px solid var(--amber);background:rgba(255,180,84,.05);padding:8px 12px;border-radius:0 4px 4px 0}
+.takeaway b{color:var(--amber);font-weight:500}
+code{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;color:var(--teal)}
+select,input[type=number],input[type=text],input[type=range]{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:6px 8px}
+label.sw{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);cursor:pointer}
+.statline{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--dim);margin-top:12px;display:flex;gap:18px;flex-wrap:wrap}
+.statline .v{color:var(--text)} .statline .good{color:var(--green)} .statline .bad{color:var(--red)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
