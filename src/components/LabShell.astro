@@ -1,0 +1,25 @@
+---
+// Renders the shared .lab chrome (head / why / takeaway) around a lab body.
+// why/takeaway/title accept HTML (golden copy contains <code>, <b> etc.).
+interface Props {
+  num: string;
+  title: string;
+  tag: string;
+  why: string;
+  takeaway: string;
+  id?: string;
+}
+const { num, title, tag, why, takeaway, id } = Astro.props;
+---
+<section class="lab" id={id}>
+  <div class="lab-head">
+    <span class="lab-num">{num}</span>
+    <span class="lab-title" set:html={title} />
+    <span class="lab-tag">{tag}</span>
+  </div>
+  <div class="lab-body">
+    <div class="lab-why" set:html={why} />
+    <slot />
+    <div class="takeaway" set:html={takeaway} />
+  </div>
+</section>
