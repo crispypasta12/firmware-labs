@@ -59,4 +59,14 @@ export const LABS: LabEntry[] = [
       await expect(size).toHaveText("8");
     },
   },
+  {
+    num: "10",
+    slug: "layer-stack",
+    interact: async (page) => {
+      const layer = page.locator(".stack .layer").first();
+      await expect(layer.locator(".det")).toBeHidden();
+      await layer.click();
+      await expect(layer.locator(".det")).toBeVisible();
+    },
+  },
 ];

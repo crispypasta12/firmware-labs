@@ -1,0 +1,23 @@
+<!-- LAB 10 — extracted verbatim from golden/ti_concepts_lab.html.
+     No element ids in this lab; no changes. Inline onclick handlers are part
+     of the golden source and stay as-is. -->
+<div class="scope">
+  <div class="stack">
+    <div class="layer" onclick="this.classList.toggle('open')"><h4 style="color:var(--purple)">APPLICATION ▾</h4><div class="det"><b>Owns:</b> product behavior, business logic, state machines. <b>Must not know:</b> register addresses, clock trees, DMA channel numbers. <b>Example:</b> "send telemetry every 10 s" — calls <code>uart_write()</code>, never <code>USART1-&gt;TDR</code>.</div></div>
+    <div class="layer" onclick="this.classList.toggle('open')"><h4 style="color:var(--blue)">HAL ▾</h4><div class="det"><b>Owns:</b> a common interface over hardware-specific implementations. <b>Example:</b> the same <code>uart_write()</code> works whether the MCU underneath is STM32 or Silicon Labs — exactly how your multi-platform firmware stayed portable.</div></div>
+    <div class="layer" onclick="this.classList.toggle('open')"><h4 style="color:var(--teal)">DRIVER ▾</h4><div class="det"><b>Owns:</b> one peripheral or device — config, TX/RX, interrupts, DMA, error flags, callbacks. <b>Example:</b> UART driver handling baud, ORE/FE/PE flags, ring buffer; a sensor driver doing I2C register reads.</div></div>
+    <div class="layer" onclick="this.classList.toggle('open')"><h4 style="color:var(--amber)">BSP ▾</h4><div class="det"><b>Owns:</b> everything board-specific — pin muxing, clock setup, power sequencing, memory layout, interrupt mapping, board init. <b>Example:</b> bringing up a new board revision = BSP changes only; drivers and app untouched.</div></div>
+    <div class="layer" onclick="this.classList.toggle('open')"><h4 style="color:var(--dim)">HARDWARE ▾</h4><div class="det">Registers, silicon, errata. Zephyr's equivalent split: <b>Devicetree</b> describes this layer, <b>Kconfig</b> selects what software above it gets compiled in, the <b>driver model</b> binds them.</div></div>
+  </div>
+</div>
+
+<style is:global>
+/* layers */
+.stack{display:flex;flex-direction:column;gap:6px}
+.layer{border:1px solid var(--border2);border-radius:6px;padding:10px 14px;background:rgba(17,20,24,.85);cursor:pointer;transition:.15s}
+.layer:hover{border-color:var(--teal)}
+.layer h4{font-family:'IBM Plex Mono',monospace;font-size:12px;display:flex;align-items:center;gap:8px}
+.layer .det{display:none;font-size:12px;color:var(--dim);margin-top:6px;line-height:1.7}
+.layer.open .det{display:block}
+.layer .det b{color:var(--text);font-weight:500}
+</style>
