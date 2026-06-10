@@ -16,7 +16,7 @@ smoke test pass) → `committed`.
   - [x] 0.7 PROGRESS.md + initial commits
 - [ ] **Phase 1 — Extraction** (5 batches, checkpoint after each)
   - [x] Batch A (08, 12, 21, 07, 10, 30) — all committed, awaiting checkpoint approval
-  - [ ] Batch B (05, 06, 15, 18, 20, 22)
+  - [x] Batch B (05, 06, 15, 18, 20, 22) — all committed, awaiting checkpoint approval
   - [ ] Batch C (01, 03, 09, 16, 27, 28)
   - [ ] Batch D (02, 04, 11, 29, 31, 14)
   - [ ] Batch E (23, 25, 26, 24, 19, 17, 13)
@@ -32,8 +32,8 @@ smoke test pass) → `committed`.
 | 02 | vol2 | priority-inversion | D | todo |
 | 03 | vol2 | ring-buffer | C | todo |
 | 04 | vol2 | dma-pingpong | D | todo |
-| 05 | vol2 | cortex-boot | B | todo |
-| 06 | vol2 | hardfault-detective | B | todo |
+| 05 | vol2 | cortex-boot | B | committed |
+| 06 | vol2 | hardfault-detective | B | committed |
 | 07 | vol2 | struct-padding | A | committed |
 | 08 | vol2 | endianness | A | committed |
 | 09 | vol2 | spi-modes | C | todo |
@@ -42,14 +42,14 @@ smoke test pass) → `committed`.
 | 12 | vol2 | battery-calc | A | committed |
 | 13 | vol2b | ble-connection-timing | E | todo |
 | 14 | vol2b | gatt-explorer | D | todo |
-| 15 | vol2b | rf-core | B | todo |
+| 15 | vol2b | rf-core | B | committed |
 | 16 | vol2b | clock-tree | C | todo |
 | 17 | vol2b | i2c-anatomy | E | todo |
-| 18 | vol2b | zephyr-build | B | todo |
+| 18 | vol2b | zephyr-build | B | committed |
 | 19 | vol2b | thread-mesh | E | todo |
-| 20 | vol2b | context-switch | B | todo |
+| 20 | vol2b | context-switch | B | committed |
 | 21 | vol2b | rms-check | A | committed |
-| 22 | vol4 | ble-stack-packet | B | todo |
+| 22 | vol4 | ble-stack-packet | B | committed |
 | 23 | vol4 | ble-channel-map | E | todo |
 | 24 | vol4 | discovery-sim | E | todo |
 | 25 | vol4 | channel-hopping | E | todo |
