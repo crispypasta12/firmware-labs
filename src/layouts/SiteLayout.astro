@@ -1,5 +1,6 @@
 ---
 import "../styles/tokens.css";
+import Analytics from "@vercel/analytics/astro";
 
 interface Props {
   title: string;
@@ -50,6 +51,7 @@ const ogImage = new URL("/og.svg", Astro.site ?? Astro.url.origin).toString();
     <main class="site-wrap">
       <slot />
     </main>
+    <Analytics />
     <script>
       import { setupProgressControls } from "../lib/progress";
       setupProgressControls();

@@ -15,6 +15,7 @@
     "shoot-golden": "tsx scripts/shoot-golden.ts"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "astro": "^6.4.5"
   },
   "devDependencies": {
