@@ -1,0 +1,48 @@
+<!-- LAB 12 — extracted verbatim from golden/ti_concepts_lab.html.
+     Only change: element ids prefixed with the lab slug (battery-calc-). -->
+<div class="scope">
+  <div class="calcgrid">
+    <div class="cfield"><label>Sleep current (µA)</label><input type="number" id="battery-calc-bSleep" value="0.85" step="0.05"></div>
+    <div class="cfield"><label>Active current (mA)</label><input type="number" id="battery-calc-bAct" value="5" step="0.5"></div>
+    <div class="cfield"><label>Active time per wake (ms)</label><input type="number" id="battery-calc-bMs" value="2" step="0.5"></div>
+    <div class="cfield"><label>Wake period (s)</label><input type="number" id="battery-calc-bPer" value="10" step="1"></div>
+    <div class="cfield"><label>Battery capacity (mAh)</label><input type="number" id="battery-calc-bCap" value="225" step="5"></div>
+  </div>
+  <div class="calc-out">
+    <div><div class="big" id="battery-calc-bAvg">—</div><div class="lbl">average current</div></div>
+    <div><div class="big" id="battery-calc-bYears">—</div><div class="lbl">battery life (ideal)</div></div>
+    <div><div class="big" id="battery-calc-bDerate">—</div><div class="lbl">with 30% derating margin</div></div>
+  </div>
+</div>
+
+<style is:global>
+/* battery */
+.calcgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.cfield label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:4px}
+.cfield input{width:100%}
+.calc-out{margin-top:14px;display:flex;gap:24px;flex-wrap:wrap}
+.calc-out .big{font-family:'IBM Plex Mono',monospace;font-size:22px;color:var(--teal)}
+.calc-out .lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+</style>
+
+<script is:inline>
+/* ===== 12. BATTERY ===== */
+(function(){
+  const ids=['battery-calc-bSleep','battery-calc-bAct','battery-calc-bMs','battery-calc-bPer','battery-calc-bCap'];
+  function calc(){
+    const sl=+document.getElementById('battery-calc-bSleep').value||0;
+    const act=+document.getElementById('battery-calc-bAct').value||0;
+    const ms=+document.getElementById('battery-calc-bMs').value||0;
+    const per=+document.getElementById('battery-calc-bPer').value||1;
+    const cap=+document.getElementById('battery-calc-bCap').value||0;
+    const duty=(ms/1000)/per;
+    const avg=sl+act*1000*duty; // µA
+    const years=cap*1000/avg/8760;
+    document.getElementById('battery-calc-bAvg').textContent=avg.toFixed(2)+' µA';
+    document.getElementById('battery-calc-bYears').textContent=isFinite(years)?years.toFixed(1)+' yr':'—';
+    document.getElementById('battery-calc-bDerate').textContent=isFinite(years)?(years*0.7).toFixed(1)+' yr':'—';
+  }
+  ids.forEach(id=>document.getElementById(id).addEventListener('input',calc));
+  calc();
+})();
+</script>

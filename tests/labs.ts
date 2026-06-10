@@ -27,4 +27,14 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#endianness-endBE .ecell").first()).toContainText("0xDE");
     },
   },
+  {
+    num: "12",
+    slug: "battery-calc",
+    interact: async (page) => {
+      const years = page.locator("#battery-calc-bYears");
+      const before = await years.textContent();
+      await page.locator("#battery-calc-bPer").fill("100");
+      await expect(years).not.toHaveText(before ?? "");
+    },
+  },
 ];
