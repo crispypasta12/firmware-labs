@@ -1,0 +1,87 @@
+<!-- LAB 02 - extracted verbatim from golden/ti_concepts_lab.html.
+     Only change: element ids prefixed with the lab slug (priority-inversion-). -->
+<div class="scope">
+  <div class="gwrap" id="priority-inversion-gwrap">
+    <div class="gantt">
+      <div class="grow"><div class="glabel" style="color:var(--red)">H (high)</div><div class="gtrack" data-row="0"></div></div>
+      <div class="grow"><div class="glabel" style="color:var(--amber)">M (medium)</div><div class="gtrack" data-row="1"></div></div>
+      <div class="grow"><div class="glabel" style="color:var(--green)">L (low)</div><div class="gtrack" data-row="2"></div></div>
+    </div>
+    <div class="glegend">
+      <span><i class="sw-dot" style="background:rgba(80,200,120,.55)"></i>running</span>
+      <span><i class="sw-dot" style="background:rgba(255,180,84,.65)"></i>holding mutex</span>
+      <span><i class="sw-dot" style="background:repeating-linear-gradient(45deg,rgba(224,80,80,.5),rgba(224,80,80,.5) 4px,rgba(224,80,80,.2) 4px,rgba(224,80,80,.2) 8px)"></i>blocked</span>
+      <span><i class="sw-dot" style="background:rgba(160,128,224,.65)"></i>inherited priority</span>
+    </div>
+  </div>
+  <div class="narr" id="priority-inversion-piNarr">Press Play. Inheritance is OFF — this is the failure case.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="priority-inversion-piPlay">▶ Play</button>
+  <button id="priority-inversion-piReset">Reset</button>
+  <label class="sw"><input type="checkbox" id="priority-inversion-piInherit"> priority inheritance (mutex, not binary semaphore)</label>
+</div>
+
+<style is:global>
+/* gantt */
+.gantt{margin-top:4px}
+.grow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.glabel{width:120px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);text-align:right;flex-shrink:0}
+.gtrack{position:relative;flex:1;height:26px;background:rgba(17,20,24,.8);border:1px solid var(--border2);border-radius:3px;overflow:hidden}
+.gseg{position:absolute;top:0;bottom:0;border-radius:2px}
+.gseg.run{background:rgba(80,200,120,.55)}
+.gseg.mutex{background:rgba(255,180,84,.65)}
+.gseg.blocked{background:repeating-linear-gradient(45deg,rgba(224,80,80,.5),rgba(224,80,80,.5) 4px,rgba(224,80,80,.2) 4px,rgba(224,80,80,.2) 8px)}
+.gseg.inherit{background:rgba(160,128,224,.65)}
+.playhead{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--teal);box-shadow:0 0 8px var(--teal);z-index:5}
+.gwrap{position:relative;padding:6px 0}
+.glegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+.glegend span{display:inline-flex;align-items:center;gap:5px}
+.sw-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+@media(max-width:700px){.glabel{width:74px;font-size:9px}}
+</style>
+
+<script is:inline>
+/* ===== 2. PRIORITY INVERSION ===== */
+(function(){
+  const DUR=9;
+  const scen={
+    off:{segs:[{r:2,s:0,e:1,c:'run'},{r:2,s:1,e:2,c:'mutex'},{r:0,s:2,e:3,c:'run'},{r:0,s:3,e:7,c:'blocked'},{r:1,s:3,e:6,c:'run'},{r:2,s:6,e:7,c:'mutex'},{r:0,s:7,e:9,c:'run'}],
+      notes:[[0,'L (low) starts running.'],[1,'L takes the mutex (amber).'],[2,'H (high) becomes ready and preempts L.'],[3,'H needs the mutex → BLOCKS. M (medium) becomes ready and runs — it outranks L, so L can\'t release.'],[6,'M finally finishes. L runs and releases the mutex.'],[7,'H gets the mutex — stalled 4 ticks by a task that never touched it. That is priority inversion.'],[8.9,'Done. H effectively ran at M\'s priority.']]},
+    on:{segs:[{r:2,s:0,e:1,c:'run'},{r:2,s:1,e:2,c:'mutex'},{r:0,s:2,e:3,c:'run'},{r:0,s:3,e:4,c:'blocked'},{r:2,s:3,e:4,c:'inherit'},{r:0,s:4,e:6,c:'run'},{r:1,s:6,e:9,c:'run'}],
+      notes:[[0,'L starts running.'],[1,'L takes the mutex.'],[2,'H preempts L.'],[3,'H blocks → L INHERITS H\'s priority (purple) and outranks M.'],[4,'L releases, drops back to low priority. H runs immediately.'],[6,'H done — blocked only 1 tick. Now M finally runs.'],[8.9,'Inheritance bounded the inversion to the critical section length.']]}
+  };
+  const tracks=[...document.querySelectorAll('#priority-inversion-gwrap .gtrack')];
+  const narr=document.getElementById('priority-inversion-piNarr');
+  const head=document.createElement('div');head.className='playhead';head.style.left='0%';head.style.display='none';
+  tracks[0].appendChild(head);
+  let timer=null,t=0;
+  function key(){return document.getElementById('priority-inversion-piInherit').checked?'on':'off'}
+  function render(){
+    const sc=scen[key()];
+    tracks.forEach((tr,row)=>{
+      tr.querySelectorAll('.gseg').forEach(x=>x.remove());
+      sc.segs.filter(s=>s.r===row&&t>s.s).forEach(s=>{
+        const d=document.createElement('div');d.className='gseg '+s.c;
+        d.style.left=(s.s/DUR*100)+'%';d.style.width=((Math.min(s.e,t)-s.s)/DUR*100)+'%';
+        tr.appendChild(d);
+      });
+    });
+    tracks[0].appendChild(head);
+    head.style.left=(Math.min(t,DUR)/DUR*100)+'%';
+    const n=sc.notes.filter(x=>x[0]<=t).pop();
+    if(n)narr.textContent=n[1];
+  }
+  function play(){
+    if(timer)return;
+    head.style.display='block';
+    timer=setInterval(()=>{t+=0.08;if(t>=DUR){t=DUR;clearInterval(timer);timer=null}render()},55);
+  }
+  function reset(){if(timer){clearInterval(timer);timer=null}t=0;head.style.display='none';
+    tracks.forEach(tr=>tr.querySelectorAll('.gseg').forEach(x=>x.remove()));
+    narr.textContent=document.getElementById('priority-inversion-piInherit').checked?'Inheritance is ON — watch how short H\'s block becomes.':'Inheritance is OFF — this is the failure case. Press Play.'}
+  document.getElementById('priority-inversion-piPlay').onclick=play;
+  document.getElementById('priority-inversion-piReset').onclick=reset;
+  document.getElementById('priority-inversion-piInherit').onchange=reset;
+})();
+</script>

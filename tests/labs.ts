@@ -195,4 +195,12 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#rpa-privacy-rList")).toContainText("MATCH");
     },
   },
+  {
+    num: "02",
+    slug: "priority-inversion",
+    interact: async (page) => {
+      await page.locator("#priority-inversion-piPlay").click();
+      await expect(page.locator("#priority-inversion-gwrap .gseg").first()).toBeVisible({ timeout: 1000 });
+    },
+  },
 ];

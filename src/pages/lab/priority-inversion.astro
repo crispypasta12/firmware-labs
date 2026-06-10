@@ -1,0 +1,17 @@
+---
+import LabLayout from "../../layouts/LabLayout.astro";
+import LabShell from "../../components/LabShell.astro";
+import PriorityInversion from "../../components/labs/PriorityInversion.astro";
+---
+
+<LabLayout title="Lab 02 · Priority inversion & priority inheritance — Firmware Labs">
+  <LabShell
+    num="LAB 02"
+    title="Priority inversion &amp; priority inheritance"
+    tag="PDF Q36–Q37"
+    why='<b>Interview angle:</b> the classic follow-up to "mutex vs semaphore." Watch how the medium task hijacks the CPU, then flip inheritance on and watch the block shrink. Mention Mars Pathfinder (1997) as the famous case.'
+    takeaway='<b>Key sentence:</b> "Only FreeRTOS <i>mutexes</i> do priority inheritance — binary semaphores don&apos;t, because they have no ownership concept. That&apos;s the real difference between them, beyond signaling vs mutual exclusion."'
+  >
+    <PriorityInversion />
+  </LabShell>
+</LabLayout>
