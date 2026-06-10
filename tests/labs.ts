@@ -300,4 +300,14 @@ export const LABS: LabEntry[] = [
       await expect.poll(async () => svg.innerHTML()).not.toBe(before);
     },
   },
+  {
+    num: "13",
+    slug: "ble-connection-timing",
+    interact: async (page) => {
+      await page.locator("#ble-connection-timing-bSup").fill("300");
+      await page.locator("#ble-connection-timing-bRF").check();
+      await page.locator("#ble-connection-timing-bPlay").click();
+      await expect(page.locator("#ble-connection-timing-bLink")).toContainText("DISCONNECTED", { timeout: 5000 });
+    },
+  },
 ];

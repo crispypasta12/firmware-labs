@@ -1,0 +1,118 @@
+<!-- LAB 13 - extracted verbatim from golden/ti_concepts_lab_2b.html.
+     Only change: element ids prefixed with the lab slug (ble-connection-timing-). -->
+<div class="scope">
+  <div class="sliders">
+    <div class="sl"><label>Connection interval: <span class="val" id="ble-connection-timing-bIntV">100</span> ms</label><input type="range" id="ble-connection-timing-bInt" min="30" max="400" step="10" value="100"></div>
+    <div class="sl"><label>Slave latency: <span class="val" id="ble-connection-timing-bLatV">4</span> skipped events</label><input type="range" id="ble-connection-timing-bLat" min="0" max="9" step="1" value="4"></div>
+    <div class="sl"><label>Supervision timeout: <span class="val" id="ble-connection-timing-bSupV">2000</span> ms</label><input type="range" id="ble-connection-timing-bSup" min="300" max="6000" step="100" value="2000"></div>
+  </div>
+  <div class="formula" id="ble-connection-timing-bForm"></div>
+  <div class="blerow"><div class="blelabel">CENTRAL<br>(anchors)</div><div class="bletrack" id="ble-connection-timing-bCent"></div></div>
+  <div class="blerow"><div class="blelabel">PERIPHERAL<br>(radio)</div><div class="bletrack" id="ble-connection-timing-bPeri"></div></div>
+  <div class="suprow"><div class="blelabel">supervision<br>timer</div><div class="supbar"><div id="ble-connection-timing-bSupBar"></div></div></div>
+  <div class="statline">
+    <span>peripheral wakes every: <span class="v" id="ble-connection-timing-bSync">—</span></span>
+    <span>radio wakes/min: <span class="v" id="ble-connection-timing-bWakes">—</span></span>
+    <span>est. avg current: <span class="v" id="ble-connection-timing-bCur">—</span></span>
+    <span>link: <span class="v" id="ble-connection-timing-bLink">—</span></span>
+  </div>
+  <div class="narr" id="ble-connection-timing-bNarr">The central transmits an anchor every interval. With slave latency, the peripheral may sleep through events and stay connected. Press Play.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="ble-connection-timing-bPlay">▶ Play</button>
+  <button id="ble-connection-timing-bReset">Reset</button>
+  <label class="sw"><input type="checkbox" id="ble-connection-timing-bRF"> 2.4 GHz interference (all packets lost)</label>
+</div>
+
+<style is:global>
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+.sl label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:4px}
+.sl input{width:100%}
+.sl .val{color:var(--teal)}
+.formula{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 12px;border-radius:4px;border:1px solid var(--border2);background:rgba(17,20,24,.85);margin-bottom:12px}
+.formula.ok{border-color:rgba(80,200,120,.5)} .formula.ok .verdict{color:var(--green)}
+.formula.fail{border-color:rgba(224,80,80,.5)} .formula.fail .verdict{color:var(--red)}
+.blerow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.blelabel{width:110px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);text-align:right;flex-shrink:0}
+.bletrack{position:relative;flex:1;height:34px;background:rgba(17,20,24,.8);border:1px solid var(--border2);border-radius:3px;overflow:hidden}
+.evt{position:absolute;top:4px;bottom:4px;width:6px;border-radius:2px}
+.evt.anchor{background:var(--blue)}
+.evt.wake{background:var(--teal);box-shadow:0 0 6px var(--teal)}
+.evt.sleepmark{background:#22303c}
+.evt.miss{background:var(--red)}
+.suprow{display:flex;align-items:center;gap:10px;margin-top:6px}
+.supbar{flex:1;height:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;overflow:hidden}
+.supbar div{height:100%;width:0;background:linear-gradient(90deg,var(--amber),var(--red));transition:width .2s}
+</style>
+
+<script is:inline>
+/* ===== 1. BLE TIMING ===== */
+(function(){
+  const $=id=>document.getElementById('ble-connection-timing-'+id);
+  let timer=null,evt=0,supMs=0,dead=false;
+  const WINDOW=16; // events shown
+  function params(){return{itv:+$('bInt').value,lat:+$('bLat').value,sup:+$('bSup').value,rf:$('bRF').checked}}
+  function formula(){
+    const{itv,lat,sup}=params();
+    const lhs=(1+lat)*itv, ok=lhs<sup/2;
+    $('bForm').className='formula '+(ok?'ok':'fail');
+    $('bForm').innerHTML='(1 + '+lat+') × '+itv+' ms = <b>'+lhs+' ms</b> '+(ok?'&lt;':'≥')+' timeout/2 = <b>'+(sup/2)+' ms</b> → <span class="verdict">'+(ok?'VALID — link survives a couple of lost packets':'INVALID — central may drop the link; most stacks reject these parameters')+'</span>';
+    const wakesPerMin=60000/((1+lat)*itv);
+    $('bSync').textContent=((1+lat)*itv)+' ms';
+    $('bWakes').textContent=wakesPerMin.toFixed(1);
+    // est: 5 mA for 2.5 ms per wake + 1 µA sleep
+    const avg=1+5000*(2.5/((1+lat)*itv));
+    $('bCur').textContent=avg.toFixed(1)+' µA';
+    return ok;
+  }
+  function drawStatic(){
+    const{lat}=params();
+    const c=$('bCent'),p=$('bPeri');c.innerHTML='';p.innerHTML='';
+    for(let i=0;i<WINDOW;i++){
+      const x=(i/(WINDOW-1))*96+2;
+      const a=document.createElement('div');a.className='evt anchor';a.style.left=x+'%';c.appendChild(a);
+      const w=document.createElement('div');
+      w.className='evt '+(i%(lat+1)===0?'wake':'sleepmark');
+      w.style.left=x+'%';w.dataset.i=i;p.appendChild(w);
+    }
+  }
+  function step(){
+    const{itv,lat,sup,rf}=params();
+    const i=evt%WINDOW;
+    if(i===0){drawStatic();}
+    const peri=$('bPeri').children[i];
+    const listens=(evt%(lat+1)===0);
+    if(listens){
+      if(rf){peri.className='evt miss';supMs+=0;/*accrued below*/}
+      else{peri.className='evt wake';supMs=0;$('bLink').innerHTML='<span class="good">CONNECTED</span>';
+        $('bNarr').textContent='Event '+evt+': peripheral woke, exchanged packets, supervision timer reset. It now sleeps through the next '+lat+' event(s).';}
+    }
+    if(rf){$('bNarr').textContent='Event '+evt+': interference — packet lost. Supervision timer accumulating: '+supMs+' / '+sup+' ms.';}
+    supMs+=rf?itv:(listens?0:0);
+    // accumulate also for skipped events under interference handled above; for clean link skipped events don't accrue (central got response last wake within timeout window)
+    if(!rf&&!listens){supMs+=itv;if(supMs>=sup){/*shouldn't happen if params valid*/}}
+    if(!rf&&listens)supMs=0;
+    $('bSupBar').style.width=Math.min(100,supMs/sup*100)+'%';
+    if(supMs>=sup){
+      dead=true;clearInterval(timer);timer=null;$('bPlay').textContent='▶ Play';
+      $('bLink').innerHTML='<span class="bad">SUPERVISION TIMEOUT — DISCONNECTED</span>';
+      $('bNarr').textContent='No successful packet within '+sup+' ms → both sides declare the link dead. Peripheral falls back to advertising. This is the "disconnects every 5 seconds" bug.';
+      return;
+    }
+    evt++;
+  }
+  function play(){
+    if(dead)reset();
+    if(timer){clearInterval(timer);timer=null;$('bPlay').textContent='▶ Play';return}
+    $('bPlay').textContent='❚❚ Pause';timer=setInterval(step,380);
+  }
+  function reset(){if(timer){clearInterval(timer);timer=null;$('bPlay').textContent='▶ Play'}
+    evt=0;supMs=0;dead=false;$('bSupBar').style.width='0%';$('bLink').textContent='—';
+    formula();drawStatic();
+    $('bNarr').textContent='The central transmits an anchor every interval. With slave latency, the peripheral may sleep through events and stay connected. Press Play.'}
+  ['bInt','bLat','bSup'].forEach(id=>{$(id).addEventListener('input',()=>{ $('bIntV').textContent=$('bInt').value;$('bLatV').textContent=$('bLat').value;$('bSupV').textContent=$('bSup').value;reset()})});
+  $('bRF').onchange=()=>{supMs=0;$('bSupBar').style.width='0%'};
+  $('bPlay').onclick=play;$('bReset').onclick=reset;
+  reset();
+})();
+</script>
