@@ -1,0 +1,77 @@
+<!-- LAB 19 - extracted verbatim from golden/ti_concepts_lab_2b.html.
+     Only change: element ids prefixed with the lab slug (thread-mesh-). -->
+<div class="scope">
+  <svg id="thread-mesh-meshSvg" class="meshsvg" width="100%" height="240" viewBox="0 0 760 240" preserveAspectRatio="xMidYMid meet"></svg>
+  <div class="narr" id="thread-mesh-mNarr">BR = border router (bridges to IP/Wi-Fi). R1/R2 = always-on routers. R3 = the SED's parent. SED = sleepy end device — radio OFF between polls.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="thread-mesh-mSend">▶ Deliver message to the sleepy sensor</button>
+  <label class="sw"><input type="checkbox" id="thread-mesh-mKill"> router R1 fails</label>
+</div>
+
+<style is:global>
+/* thread mesh */
+.meshsvg text{font-family:'IBM Plex Mono',monospace}
+</style>
+
+<script is:inline>
+/* ===== 7. THREAD MESH ===== */
+(function(){
+  const svg=document.getElementById('thread-mesh-meshSvg');
+  const nodes={BR:{x:80,y:120,label:'BR',sub:'border router'},R1:{x:280,y:55,label:'R1',sub:'router'},R2:{x:280,y:185,label:'R2',sub:'router'},R3:{x:480,y:120,label:'R3',sub:'parent router'},SED:{x:660,y:120,label:'SED',sub:'sleepy sensor'}};
+  const links=[['BR','R1'],['BR','R2'],['R1','R2'],['R1','R3'],['R2','R3']];
+  let running=false;
+  function killed(){return document.getElementById('thread-mesh-mKill').checked}
+  function draw(){
+    let s='';
+    links.forEach(([a,b],i)=>{
+      const dead=killed()&&(a==='R1'||b==='R1');
+      s+='<line id="L'+i+'" x1="'+nodes[a].x+'" y1="'+nodes[a].y+'" x2="'+nodes[b].x+'" y2="'+nodes[b].y+'" stroke="'+(dead?'#2a3340':'#3a4a5a')+'" stroke-width="2" '+(dead?'stroke-dasharray="2,6"':'')+'/>';
+    });
+    s+='<line id="Lsed" x1="'+nodes.R3.x+'" y1="'+nodes.R3.y+'" x2="'+nodes.SED.x+'" y2="'+nodes.SED.y+'" stroke="#3a4a5a" stroke-width="2" stroke-dasharray="5,5"/>';
+    Object.entries(nodes).forEach(([k,n])=>{
+      const dead=killed()&&k==='R1';
+      const col=k==='SED'?'#a080e0':(k==='BR'?'#0099cc':'#00d4aa');
+      s+='<circle id="N'+k+'" cx="'+n.x+'" cy="'+n.y+'" r="22" fill="#111418" stroke="'+(dead?'#2a3340':col)+'" stroke-width="2"/>'
+       +'<text x="'+n.x+'" y="'+(n.y+4)+'" fill="'+(dead?'#3a4a5a':col)+'" font-size="12" text-anchor="middle" font-weight="600">'+n.label+'</text>'
+       +'<text x="'+n.x+'" y="'+(n.y+40)+'" fill="#5a6a7a" font-size="9" text-anchor="middle">'+n.sub+(dead?' ✕ FAILED':'')+'</text>';
+    });
+    s+='<circle id="thread-mesh-mPkt" r="6" fill="#ffb454" opacity="0"/>';
+    s+='<text id="thread-mesh-mBadge" x="'+nodes.R3.x+'" y="'+(nodes.R3.y-32)+'" fill="#ffb454" font-size="10" text-anchor="middle" opacity="0"></text>';
+    s+='<text x="'+nodes.SED.x+'" y="'+(nodes.SED.y-32)+'" fill="#5a6a7a" font-size="9" text-anchor="middle">radio OFF between polls</text>';
+    svg.innerHTML=s;
+  }
+  function move(pkt,from,to,ms){return new Promise(res=>{
+    const t0=performance.now();pkt.setAttribute('opacity','1');
+    function f(t){const k=Math.min(1,(t-t0)/ms);
+      pkt.setAttribute('cx',from.x+(to.x-from.x)*k);pkt.setAttribute('cy',from.y+(to.y-from.y)*k);
+      if(k<1)requestAnimationFrame(f);else res()}
+    requestAnimationFrame(f)})}
+  document.getElementById('thread-mesh-mSend').onclick=async function(){
+    if(running)return;running=true;this.disabled=true;
+    draw();
+    const pkt=document.getElementById('thread-mesh-mPkt'),badge=document.getElementById('thread-mesh-mBadge'),narr=document.getElementById('thread-mesh-mNarr');
+    const via=killed()?'R2':'R1';
+    narr.textContent='Message enters from IP via the border router, routed '+(killed()?'around the failed R1 via R2 (self-healing mesh)':'via R1')+' toward the SED\'s parent…';
+    pkt.setAttribute('cx',nodes.BR.x);pkt.setAttribute('cy',nodes.BR.y);
+    await move(pkt,nodes.BR,nodes[via],700);
+    await move(pkt,nodes[via],nodes.R3,700);
+    pkt.setAttribute('opacity','0');
+    badge.textContent='BUFFERED — SED is asleep';badge.setAttribute('opacity','1');
+    narr.textContent='The parent (R3) buffers the message. The SED\'s radio is OFF — nothing can be delivered until it polls. Average current stays in the single-digit µA range.';
+    await new Promise(r=>setTimeout(r,1400));
+    // poll
+    narr.textContent='SED wakes for its periodic poll (every few seconds): "anything for me?"';
+    pkt.setAttribute('fill','#a080e0');
+    await move(pkt,nodes.SED,nodes.R3,500);
+    pkt.setAttribute('fill','#ffb454');badge.setAttribute('opacity','0');
+    narr.textContent='Parent delivers the buffered message in the poll response. SED processes it and goes straight back to sleep.';
+    await move(pkt,nodes.R3,nodes.SED,500);
+    pkt.setAttribute('opacity','0');
+    narr.textContent='Delivered. Total SED radio-on time: a few ms. '+(killed()?'And the mesh never noticed R1 was gone — routers re-route, end devices keep working.':'Toggle "router R1 fails" and run it again to see self-healing.');
+    running=false;this.disabled=false;
+  };
+  document.getElementById('thread-mesh-mKill').onchange=()=>{draw();document.getElementById('thread-mesh-mNarr').textContent=killed()?'R1 has failed. Routers detect the lost neighbor and recompute routes — deliver a message to see it.':'R1 restored.'};
+  draw();
+})();
+</script>

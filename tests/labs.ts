@@ -282,4 +282,12 @@ export const LABS: LabEntry[] = [
       await expect(time).not.toHaveText(before ?? "");
     },
   },
+  {
+    num: "19",
+    slug: "thread-mesh",
+    interact: async (page) => {
+      await page.locator("#thread-mesh-mSend").click();
+      await expect(page.locator("#thread-mesh-mNarr")).toContainText("Delivered.", { timeout: 6000 });
+    },
+  },
 ];
