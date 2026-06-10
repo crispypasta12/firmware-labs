@@ -1,0 +1,81 @@
+<!-- LAB 14 - extracted verbatim from golden/ti_concepts_lab_2b.html.
+     Only change: element ids prefixed with the lab slug (gatt-explorer-). -->
+<div class="scope">
+  <div class="gatt-tree" id="gatt-explorer-gattTree"></div>
+  <div class="lane-wrap">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:6px">GATT SERVER (peripheral) → GATT CLIENT (central) · purple = ATT confirmation</div>
+    <div class="lane" id="gatt-explorer-laneN"><span class="who">NOTIFY</span></div>
+    <div class="lane" id="gatt-explorer-laneI"><span class="who">INDICATE</span></div>
+    <div class="statline"><span>notify ×3: <span class="v" id="gatt-explorer-tN">—</span></span><span>indicate ×3: <span class="v" id="gatt-explorer-tI">—</span></span></div>
+  </div>
+  <div class="narr" id="gatt-explorer-gNarr">Click tree nodes to expand. Then race the two delivery modes.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="gatt-explorer-gRace">▶ Race: send 3 packets each way</button>
+</div>
+
+<style is:global>
+/* GATT */
+.gatt-tree{font-family:'IBM Plex Mono',monospace;font-size:12px}
+.gnode{border:1px solid var(--border2);border-radius:5px;background:rgba(17,20,24,.9);margin-bottom:6px;overflow:hidden}
+.gnode-head{padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.gnode-head:hover{background:rgba(0,212,170,.05)}
+.gnode-head .arrow{color:var(--muted);font-size:10px;transition:transform .2s}
+.gnode.open > .gnode-head .arrow{transform:rotate(90deg)}
+.gnode-body{display:none;padding:4px 10px 10px 26px}
+.gnode.open > .gnode-body{display:block}
+.gdesc{font-family:'IBM Plex Sans',sans-serif;font-size:11.5px;color:var(--dim);padding:0 12px 8px 30px;display:none}
+.gnode.open > .gdesc{display:block}
+.gtype{font-size:9px;padding:1px 6px;border-radius:3px;border:1px solid var(--border2);color:var(--dim);letter-spacing:.05em}
+.lane-wrap{margin-top:16px}
+.lane{position:relative;height:36px;border:1px solid var(--border2);border-radius:4px;background:rgba(17,20,24,.8);margin-bottom:8px}
+.lane .who{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);z-index:2}
+.pkt{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);transition:left .55s linear;z-index:3}
+.pkt.n{background:var(--teal);box-shadow:0 0 8px var(--teal)}
+.pkt.ind{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.pkt.ack{background:var(--purple);width:10px;height:10px;box-shadow:0 0 6px var(--purple)}
+</style>
+
+<script is:inline>
+/* ===== 2. GATT ===== */
+(function(){
+  const tree={label:'PROFILE · Heart Rate Profile',type:'profile',desc:'A profile is a spec: which services a device must implement to be e.g. a "heart rate monitor". Profiles aren\'t on the wire — services are.',children:[
+    {label:'SERVICE · Heart Rate Service · UUID 0x180D',type:'service',desc:'Groups related characteristics. Registered on TI BLE5-Stack via GATTServApp_RegisterService(). Standard SIG services use 16-bit UUIDs; custom ones use 128-bit.',children:[
+      {label:'CHARACTERISTIC · Heart Rate Measurement · 0x2A37 · props: NOTIFY',type:'char',desc:'Has a UUID, a value, and properties (read/write/notify/indicate). This one streams — the server pushes notifications when the client opts in.',children:[
+        {label:'DESCRIPTOR · CCCD · 0x2902',type:'desc',desc:'Client Characteristic Configuration Descriptor. The CLIENT writes 0x0001 to enable notifications or 0x0002 for indications. "Notifications don\'t arrive" bug #1: nobody wrote the CCCD.',children:[]}]},
+      {label:'CHARACTERISTIC · Body Sensor Location · 0x2A38 · props: READ',type:'char',desc:'A static readable value (wrist, chest...). Simple ATT read request/response.',children:[]}]},
+    {label:'SERVICE · Battery Service · 0x180F',type:'service',desc:'Devices expose multiple services. Battery Level (0x2A19) is the classic second service on a sensor.',children:[]}
+  ]};
+  function build(node,depth){
+    const d=document.createElement('div');d.className='gnode'+(depth<2?' open':'');
+    const colors={profile:'var(--purple)',service:'var(--teal)',char:'var(--amber)',desc:'var(--blue)'};
+    d.innerHTML='<div class="gnode-head"><span class="arrow">▶</span><span style="color:'+colors[node.type]+'">'+node.label+'</span></div><div class="gdesc">'+node.desc+'</div><div class="gnode-body"></div>';
+    d.querySelector('.gnode-head').onclick=e=>{e.stopPropagation();d.classList.toggle('open')};
+    const body=d.querySelector('.gnode-body');
+    node.children.forEach(c=>body.appendChild(build(c,depth+1)));
+    if(!node.children.length)body.remove();
+    return d;
+  }
+  document.getElementById('gatt-explorer-gattTree').appendChild(build(tree,0));
+  // race
+  let racing=false;
+  function dot(lane,cls,fromPct,toPct,ms){return new Promise(res=>{
+    const p=document.createElement('div');p.className='pkt '+cls;p.style.left=fromPct+'%';lane.appendChild(p);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{p.style.transition='left '+ms+'ms linear';p.style.left=toPct+'%'}));
+    setTimeout(()=>{p.remove();res()},ms+30);
+  })}
+  document.getElementById('gatt-explorer-gRace').onclick=async function(){
+    if(racing)return;racing=true;this.disabled=true;
+    const lN=document.getElementById('gatt-explorer-laneN'),lI=document.getElementById('gatt-explorer-laneI');
+    document.getElementById('gatt-explorer-tN').textContent='...';document.getElementById('gatt-explorer-tI').textContent='...';
+    document.getElementById('gatt-explorer-gNarr').textContent='Notify fires back-to-back. Indicate must wait for each ATT confirmation before the next packet.';
+    const t0=performance.now();
+    const notif=(async()=>{for(let k=0;k<3;k++){dot(lN,'n',8,95,550);await new Promise(r=>setTimeout(r,260))}await new Promise(r=>setTimeout(r,560));
+      document.getElementById('gatt-explorer-tN').textContent=((performance.now()-t0)/1000).toFixed(1)+' s'})();
+    const ind=(async()=>{for(let k=0;k<3;k++){await dot(lI,'ind',8,95,550);await dot(lI,'ack',95,8,550)}
+      document.getElementById('gatt-explorer-tI').textContent=((performance.now()-t0)/1000).toFixed(1)+' s';
+      document.getElementById('gatt-explorer-gNarr').textContent='Indicate took ~2× longer for the same 3 packets — that round-trip is the price of guaranteed delivery. Throughput tools like OTA batch carefully or use notify + app-level ACKs.'})();
+    await Promise.all([notif,ind]);racing=false;this.disabled=false;
+  };
+})();
+</script>

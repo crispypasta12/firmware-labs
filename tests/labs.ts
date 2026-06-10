@@ -239,4 +239,13 @@ export const LABS: LabEntry[] = [
       await expect(first.locator(".symp-body")).toBeVisible();
     },
   },
+  {
+    num: "14",
+    slug: "gatt-explorer",
+    interact: async (page) => {
+      await page.locator("#gatt-explorer-gRace").click();
+      await expect(page.locator("#gatt-explorer-tN")).not.toHaveText("—", { timeout: 2500 });
+      await expect(page.locator("#gatt-explorer-tI")).not.toHaveText("—", { timeout: 4000 });
+    },
+  },
 ];
