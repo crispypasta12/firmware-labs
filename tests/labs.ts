@@ -256,4 +256,12 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#ble-channel-map-specSvg text", { hasText: "Wi-Fi 1" })).toHaveCount(1);
     },
   },
+  {
+    num: "25",
+    slug: "channel-hopping",
+    interact: async (page) => {
+      await page.locator("#channel-hopping-hStep").click();
+      await expect(page.locator("#channel-hopping-hCh")).toHaveText("7");
+    },
+  },
 ];

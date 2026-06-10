@@ -1,0 +1,68 @@
+<!-- LAB 25 - extracted verbatim from golden/ti_ble_deep_dive.html.
+     Only change: element ids prefixed with the lab slug (channel-hopping-). -->
+<div class="scope">
+  <div class="hopgrid" id="channel-hopping-hopGrid"></div>
+  <div class="statline">
+    <span>event #: <span class="v" id="channel-hopping-hEvt">0</span></span>
+    <span>channel: <span class="v" id="channel-hopping-hCh">—</span></span>
+    <span>hop increment: <span class="v">7</span></span>
+    <span>channels in map: <span class="v" id="channel-hopping-hMap">37</span></span>
+  </div>
+  <div class="narr" id="channel-hopping-hNarr">CSA#1: nextChannel = (lastChannel + hopIncrement) mod 37 — then remapped if that channel is excluded from the map.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="channel-hopping-hPlay">▶ Auto-hop</button>
+  <button id="channel-hopping-hStep">Step one event</button>
+  <button id="channel-hopping-hReset">Reset</button>
+  <label class="sw"><input type="checkbox" id="channel-hopping-hWifi"> Wi-Fi ch 6 interference → host updates channel map</label>
+</div>
+
+<style is:global>
+/* hopping */
+.hopgrid{display:grid;grid-template-columns:repeat(37,1fr);gap:3px}
+.hcell{height:30px;border:1px solid var(--border2);border-radius:3px;background:rgba(17,20,24,.85);position:relative;font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--muted);display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px}
+.hcell.cur{background:var(--teal);border-color:var(--teal);color:#0a0c0f;box-shadow:0 0 8px var(--teal)}
+.hcell.prev1{background:rgba(0,212,170,.45)}
+.hcell.prev2{background:rgba(0,212,170,.2)}
+.hcell.blk{background:repeating-linear-gradient(45deg,rgba(224,80,80,.35),rgba(224,80,80,.35) 3px,rgba(17,20,24,.85) 3px,rgba(17,20,24,.85) 6px);border-color:rgba(224,80,80,.4)}
+@media(max-width:760px){.hopgrid{grid-template-columns:repeat(19,1fr)}}
+</style>
+
+<script is:inline>
+/* ===== B4 HOPPING ===== */
+(function(){
+  const grid=document.getElementById('channel-hopping-hopGrid');
+  for(let k=0;k<37;k++){const d=document.createElement('div');d.className='hcell';d.textContent=k;grid.appendChild(d)}
+  const cells=[...grid.children];
+  let cur=0,evt=0,timer=null,hist=[];
+  function blocked(){return document.getElementById('channel-hopping-hWifi').checked}
+  function map(){const bl=blocked();const used=[];for(let k=0;k<37;k++){if(!(bl&&k>=11&&k<=20))used.push(k)}return used}
+  function draw(){
+    const bl=blocked(),used=map();
+    cells.forEach((c,k)=>{c.className='hcell'+(bl&&k>=11&&k<=20?' blk':'')});
+    hist.slice(-3).forEach((h,ix,arr)=>{if(ix<arr.length-1)cells[h].classList.add(ix===arr.length-2?'prev1':'prev2')});
+    if(hist.length)cells[hist[hist.length-1]].classList.add('cur');
+    document.getElementById('channel-hopping-hEvt').textContent=evt;
+    document.getElementById('channel-hopping-hCh').textContent=hist.length?hist[hist.length-1]:'—';
+    document.getElementById('channel-hopping-hMap').textContent=used.length;
+  }
+  function step(){
+    const used=map();
+    cur=(cur+7)%37;
+    let ch=cur;
+    if(!used.includes(ch)){ch=used[cur%used.length];
+      document.getElementById('channel-hopping-hNarr').textContent='Event '+(evt+1)+': unmapped channel '+cur+' → REMAPPED to '+ch+' (index cur mod usedCount). The hop never lands on an excluded channel.';}
+    else{document.getElementById('channel-hopping-hNarr').textContent='Event '+(evt+1)+': hop (prev + 7) mod 37 → channel '+ch+'.';}
+    hist.push(ch);evt++;draw();
+  }
+  document.getElementById('channel-hopping-hStep').onclick=step;
+  document.getElementById('channel-hopping-hPlay').onclick=function(){
+    if(timer){clearInterval(timer);timer=null;this.textContent='▶ Auto-hop';return}
+    this.textContent='❚❚ Pause';timer=setInterval(step,420);
+  };
+  document.getElementById('channel-hopping-hReset').onclick=()=>{if(timer){clearInterval(timer);timer=null;document.getElementById('channel-hopping-hPlay').textContent='▶ Auto-hop'}cur=0;evt=0;hist=[];draw();
+    document.getElementById('channel-hopping-hNarr').textContent='CSA#1: nextChannel = (lastChannel + hopIncrement) mod 37 — then remapped if that channel is excluded from the map.'};
+  document.getElementById('channel-hopping-hWifi').onchange=draw;
+  draw();
+})();
+</script>
