@@ -1,0 +1,32 @@
+<!-- LAB 08 — extracted verbatim from golden/ti_concepts_lab.html.
+     Only change: element ids prefixed with the lab slug (endianness-). -->
+<div class="scope">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px">uint32_t x = 0x<input type="text" id="endianness-endIn" value="12345678" maxlength="8" style="width:110px">;</div>
+  <div class="endrow"><div class="lab">little-endian (ARM)</div><div id="endianness-endLE" style="display:flex;gap:6px"></div></div>
+  <div class="endrow"><div class="lab">big-endian (network)</div><div id="endianness-endBE" style="display:flex;gap:6px"></div></div>
+  <div class="narr">LSB at the lowest address = little-endian. Bugs show up when casting byte arrays to ints or parsing protocol packets.</div>
+</div>
+
+<style is:global>
+/* endian */
+.endrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.endrow .lab{width:130px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+.ecell{width:64px;border:1px solid var(--border2);border-radius:4px;background:rgba(17,20,24,.85);text-align:center;padding:5px 0;font-family:'IBM Plex Mono',monospace}
+.ecell .b{font-size:13px;color:var(--amber)}
+.ecell .a{font-size:9px;color:var(--muted)}
+</style>
+
+<script is:inline>
+/* ===== 8. ENDIANNESS ===== */
+(function(){
+  const inp=document.getElementById('endianness-endIn');
+  function draw(){
+    let v=inp.value.replace(/[^0-9a-fA-F]/g,'').padStart(8,'0').slice(-8).toUpperCase();
+    const b=[v.slice(0,2),v.slice(2,4),v.slice(4,6),v.slice(6,8)]; // MSB..LSB
+    const mk=(arr)=>arr.map((x,i)=>'<div class="ecell"><div class="b">0x'+x+'</div><div class="a">addr+'+i+'</div></div>').join('');
+    document.getElementById('endianness-endLE').innerHTML=mk([...b].reverse());
+    document.getElementById('endianness-endBE').innerHTML=mk(b);
+  }
+  inp.addEventListener('input',draw);draw();
+})();
+</script>

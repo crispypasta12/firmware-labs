@@ -6,7 +6,8 @@ interface Props {
   title: string;
   tag: string;
   why: string;
-  takeaway: string;
+  /** optional — some golden labs (e.g. LAB 08) have no takeaway box */
+  takeaway?: string;
   id?: string;
 }
 const { num, title, tag, why, takeaway, id } = Astro.props;
@@ -20,6 +21,6 @@ const { num, title, tag, why, takeaway, id } = Astro.props;
   <div class="lab-body">
     <div class="lab-why" set:html={why} />
     <slot />
-    <div class="takeaway" set:html={takeaway} />
+    {takeaway && <div class="takeaway" set:html={takeaway} />}
   </div>
 </section>

@@ -6,7 +6,7 @@
  * `interact` is the lab's batch-defined smoke interaction; it runs against
  * the lab page and should assert its own expectations.
  */
-import { type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 export interface LabEntry {
   /** zero-padded inventory number, e.g. "08" */
@@ -18,10 +18,13 @@ export interface LabEntry {
 }
 
 export const LABS: LabEntry[] = [
-  // Phase 1 entries land here, e.g.:
-  // {
-  //   num: "08",
-  //   slug: "endianness",
-  //   interact: async (page) => { ... },
-  // },
+  {
+    num: "08",
+    slug: "endianness",
+    interact: async (page) => {
+      await page.locator("#endianness-endIn").fill("DEADBEEF");
+      await expect(page.locator("#endianness-endLE .ecell").first()).toContainText("0xEF");
+      await expect(page.locator("#endianness-endBE .ecell").first()).toContainText("0xDE");
+    },
+  },
 ];

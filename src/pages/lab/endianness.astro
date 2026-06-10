@@ -1,0 +1,16 @@
+---
+import LabLayout from "../../layouts/LabLayout.astro";
+import LabShell from "../../components/LabShell.astro";
+import Endianness from "../../components/labs/Endianness.astro";
+---
+
+<LabLayout title="Lab 08 · Endianness visualizer — Firmware Labs">
+  <LabShell
+    num="LAB 08"
+    title="Endianness visualizer"
+    tag="PDF Q17"
+    why="<b>Interview angle:</b> ARM Cortex-M is little-endian; network/BLE multi-byte fields are often the opposite of what you expect. Type any value and read the bytes off."
+  >
+    <Endianness />
+  </LabShell>
+</LabLayout>

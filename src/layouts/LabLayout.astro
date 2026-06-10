@@ -1,0 +1,35 @@
+---
+// Page wrapper for lab routes: fonts + tokens + the .wrap content column.
+// maxWidth mirrors the source golden file's .wrap (vol2/vol2b: 980, vol4: 1000)
+// so lab visual diffs stay pixel-faithful.
+import "../styles/tokens.css";
+
+interface Props {
+  title: string;
+  maxWidth?: number;
+}
+const { title, maxWidth = 980 } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="wrap" style={`max-width:${maxWidth}px`}>
+      <slot />
+    </div>
+  </body>
+</html>
+
+<style is:global>
+  .wrap{margin:0 auto;padding:1.5rem}
+</style>
