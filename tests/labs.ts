@@ -141,4 +141,14 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#ble-stack-packet-pkBytes")).toHaveText("20");
     },
   },
+  {
+    num: "01",
+    slug: "race-condition",
+    interact: async (page) => {
+      for (let i = 0; i < 6; i++) {
+        await page.locator("#race-condition-rcStep").click();
+      }
+      await expect(page.locator("#race-condition-rcLost")).toContainText("LOST UPDATE");
+    },
+  },
 ];
