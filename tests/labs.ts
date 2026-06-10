@@ -230,4 +230,13 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#ll-state-machine-llNodes .llnode.active")).toContainText("PERIPHERAL");
     },
   },
+  {
+    num: "31",
+    slug: "ble-debug-playbook",
+    interact: async (page) => {
+      const first = page.locator("#ble-debug-playbook-playList .symp").first();
+      await first.locator(".symp-head").click();
+      await expect(first.locator(".symp-body")).toBeVisible();
+    },
+  },
 ];

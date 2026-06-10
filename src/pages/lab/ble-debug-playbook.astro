@@ -1,0 +1,17 @@
+---
+import LabLayout from "../../layouts/LabLayout.astro";
+import LabShell from "../../components/LabShell.astro";
+import BleDebugPlaybook from "../../components/labs/BleDebugPlaybook.astro";
+---
+
+<LabLayout title="Lab 31 · Senior debugging playbook — symptom → cause — Firmware Labs" maxWidth={1000}>
+  <LabShell
+    num="LAB 31"
+    title="Senior debugging playbook — symptom → cause"
+    tag="Field experience"
+    why="<b>Interview angle:</b> these are the bugs that actually happen. Quiz yourself: read the symptom, name causes out loud, then expand and compare. Tooling baseline: sniffer (TI Packet Sniffer 2 / nRF Sniffer + Wireshark), HCI logs, RSSI, and a spectrum view."
+    takeaway="<b>The sniffer habit:</b> capture over-the-air first, then look at <code>LL_TERMINATE_IND</code> — it tells you <b>which side</b> dropped the link and the <b>reason code</b> (0x08 supervision timeout, 0x13 remote user terminated, 0x16 local host terminated, 0x3D MIC failure = encryption/key mismatch). Half of all BLE debugging is knowing who hung up and why."
+  >
+    <BleDebugPlaybook />
+  </LabShell>
+</LabLayout>

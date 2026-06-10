@@ -1,0 +1,41 @@
+<!-- LAB 31 - extracted verbatim from golden/ti_ble_deep_dive.html.
+     Only change: element ids prefixed with the lab slug (ble-debug-playbook-). -->
+<div class="scope" id="ble-debug-playbook-playList"></div>
+
+<style is:global>
+/* playbook */
+.symp{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);margin-bottom:8px;overflow:hidden}
+.symp-head{padding:9px 14px;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:12px;display:flex;gap:10px;align-items:center}
+.symp-head:hover{background:rgba(0,212,170,.05)}
+.symp-head .tg{margin-left:auto;color:var(--muted);font-size:10px;transition:transform .2s}
+.symp.open .symp-head .tg{transform:rotate(90deg)}
+.symp-body{display:none;padding:4px 16px 12px;font-size:12px;color:var(--dim);line-height:1.75;border-top:1px solid var(--border)}
+.symp.open .symp-body{display:block}
+.symp-body b{color:var(--text);font-weight:500}
+.symp-body .cause{color:var(--amber)}
+</style>
+
+<script is:inline>
+/* ===== B10 PLAYBOOK ===== */
+(function(){
+  const items=[
+    {s:'Notifications never arrive at the central',c:'<span class="cause">#1: nobody wrote 0x0001 to the CCCD</span> — subscription is per-bond/per-connection state. Also check: characteristic actually has NOTIFY property; on reconnection without bonding, CCCD resets; stack TX queue full (notifications silently dropped — check the return code of your notify call).'},
+    {s:'Link drops after exactly ~30 seconds',c:'<span class="cause">ATT transaction timeout.</span> An indication, read response, or write response never got answered — ATT allows ONE outstanding transaction and kills the link after 30 s. Classic cause: app callback returns without sending the response, or indication confirm lost in a task-priority problem.'},
+    {s:'Disconnects every ~5 seconds',c:'<span class="cause">Supervision timeout</span> (defaults are often 5–6 s). Check (1+latency)×interval < timeout/2 first; then sniffer for who sent LL_TERMINATE_IND; then RSSI vs sensitivity; then 2.4 GHz interference; on TI parts, check the app isn\'t starving the RF driver/stack task.'},
+    {s:'Throughput stuck around 1–2 kB/s',c:'<span class="cause">Default MTU 23 + one packet per interval.</span> Fix in order: MTU exchange to 247, Data Length Extension, 2M PHY request, shorter connection interval, multiple notifications per event, Write-Without-Response for uplink. Also: iOS/Android central policies cap parameters — verify what was GRANTED, not what you requested.'},
+    {s:'Pairing fails immediately or keys mismatch (0x3D MIC failure)',c:'<span class="cause">Stale bond on one side.</span> One device deleted the bond, the other still encrypts with the old LTK → MIC failure → instant disconnect. Field fix: detect encryption failure → delete bond → re-pair. Also check IO-capability combo produces the method you assumed, and that bond storage (NV) isn\'t full.'},
+    {s:'Cannot reconnect to a bonded phone after a few minutes',c:'<span class="cause">RPA rotation.</span> The phone changed its random address (~every 15 min) and your firmware filters/whitelists by address instead of resolving with the stored IRK. Use the controller\'s resolving list / identity address, not the OTA address.'},
+    {s:'Device invisible to the scanner app',c:'Check in order: actually advertising (sniffer/current profile shows the 3-channel burst)? Advertising interval vs scanner duty (discovery starvation — see Lab 24)? <span class="cause">Legacy vs extended advertising</span> — some scanners don\'t show extended-only advertisers? Filtered by flags/UUID in the scanner? TX power/antenna issue (RSSI sanity check at 1 m ≈ −45 to −55 dBm)?'},
+    {s:'Works on the bench, fails at the customer site',c:'<span class="cause">RF environment.</span> Spectrum scan for Wi-Fi/microwave congestion; check channel map adaptation is actually happening; RSSI margin to sensitivity (want >10 dB); antenna detuning by enclosure/hand; coded PHY as range rescue. Bring the packet sniffer to the site — over-the-air truth beats logs.'},
+    {s:'Central ignores the connection parameters I set',c:'The <span class="cause">central owns the parameters</span> — a peripheral only REQUESTS (L2CAP param update or LL connection param request). iOS enforces documented rules (e.g. interval ≥ 15 ms, specific latency/timeout relationships); request compliant values or you get silently rejected. Always log the parameters from the connection-updated event, not your request.'},
+    {s:'Random crashes during heavy BLE traffic',c:'Usually not RF: <span class="cause">callback context abuse.</span> Stack callbacks often run in the stack task/ISR context — doing heavy work or calling blocking APIs there starves the controller. Marshal events to your app task (the ISR→task pattern). On TI: never call stack/RF APIs from arbitrary ISRs; watch ICall heap exhaustion under load.'}
+  ];
+  const wrap=document.getElementById('ble-debug-playbook-playList');
+  items.forEach(it=>{
+    const d=document.createElement('div');d.className='symp';
+    d.innerHTML='<div class="symp-head">▸ '+it.s+'<span class="tg">▶</span></div><div class="symp-body">'+it.c+'</div>';
+    d.querySelector('.symp-head').onclick=()=>d.classList.toggle('open');
+    wrap.appendChild(d);
+  });
+})();
+</script>
