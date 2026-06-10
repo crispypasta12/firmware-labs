@@ -4,14 +4,16 @@
  * NN comes from the lab's own ".lab-num" text (LAB 01..31), so numbering
  * matches the migration inventory regardless of file order.
  *
- * The sticky page header (.hdr) is hidden during capture so it can't bleed
- * into element screenshots — the golden files themselves are never touched.
- *
- * Each lab is captured with all its .wrap siblings hidden, so the section sits
- * at the same integer y position (top of content column) that the built
- * /lab/<slug> pages render at. Without this, fractional document offsets from
- * thousands of pixels of preceding labs change subpixel text rendering and
- * clip-box rounding, producing phantom 1px diffs.
+ * Each lab is captured on its own page load with all other .wrap content
+ * (and the sticky .hdr) hidden BEFORE first render. This matches how the
+ * built /lab/<slug> pages render (one lab, top of the content column) in two
+ * ways that matter for pixel fidelity:
+ *  - integer y position (fractional document offsets thousands of pixels into
+ *    the full golden page change subpixel rasterization and clip rounding);
+ *  - font-fallback state (rendering the full document first warms Chromium's
+ *    fallback cache for symbol glyphs like ▸, which shifts line baselines by
+ *    1px vs a page that renders the lab alone).
+ * Runtime injection only — the golden files themselves are never touched.
  */
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
@@ -32,39 +34,41 @@ const browser = await chromium.launch();
 let total = 0;
 
 for (const file of GOLDEN_FILES) {
-  for (const [widthName, width] of Object.entries(WIDTHS)) {
-    const page = await browser.newPage({ viewport: { width, height: 900 } });
-    await page.goto(pathToFileURL(resolve("golden", file)).href);
-    await page.evaluate(() => (document as any).fonts.ready);
-    await page.addStyleTag({ content: ".hdr{display:none!important}" });
+  const url = pathToFileURL(resolve("golden", file)).href;
 
-    const labs = page.locator("section.lab");
-    const count = await labs.count();
-    for (let i = 0; i < count; i++) {
-      const lab = labs.nth(i);
-      const numText = await lab.locator(".lab-num").innerText();
-      const num = numText.replace(/\D/g, "").padStart(2, "0");
-      // isolate: hide every other direct child of .wrap so this lab sits at
-      // the top of the content column, like on its built /lab/<slug> page
-      await page.evaluate(`(() => {
-        const target = document.querySelectorAll("section.lab")[${i}];
-        for (const el of document.querySelectorAll(".wrap > *")) {
-          el.style.display = el === target ? "" : "none";
-        }
-        window.scrollTo(0, 0);
-      })()`);
+  // enumerate labs once per file
+  const probe = await browser.newPage();
+  await probe.goto(url);
+  const nums: string[] = await probe.$$eval("section.lab .lab-num", (els) =>
+    els.map((e) => (e.textContent || "").replace(/\D/g, "").padStart(2, "0")),
+  );
+  await probe.close();
+
+  for (const [widthName, width] of Object.entries(WIDTHS)) {
+    for (let i = 0; i < nums.length; i++) {
+      const page = await browser.newPage({ viewport: { width, height: 900 } });
+      await page.addInitScript(`
+        document.addEventListener("DOMContentLoaded", () => {
+          const st = document.createElement("style");
+          st.textContent = ".hdr{display:none!important}";
+          document.head.appendChild(st);
+          const target = document.querySelectorAll("section.lab")[${i}];
+          for (const el of document.querySelectorAll(".wrap > *")) {
+            if (el !== target) el.style.display = "none";
+          }
+        });
+      `);
+      await page.goto(url);
+      await page.evaluate(`document.fonts.ready`);
       await page.waitForTimeout(100);
-      await lab.screenshot({
-        path: `${OUT_DIR}/lab-${num}-${widthName}.png`,
+      await page.locator(`section.lab >> nth=${i}`).screenshot({
+        path: `${OUT_DIR}/lab-${nums[i]}-${widthName}.png`,
         animations: "disabled",
       });
-      await page.evaluate(`(() => {
-        for (const el of document.querySelectorAll(".wrap > *")) el.style.display = "";
-      })()`);
+      await page.close();
       total++;
-      console.log(`lab-${num}-${widthName}.png  (${file})`);
+      console.log(`lab-${nums[i]}-${widthName}.png  (${file})`);
     }
-    await page.close();
   }
 }
 
