@@ -43,3 +43,36 @@ test("deck reveal and grading counters move", async ({ page }) => {
   await expect(page.locator("#stGot")).toHaveText("1");
   await expect(page.locator("#stLeft")).toHaveText("19");
 });
+
+test("home and lab routes expose SEO and social metadata", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /Interactive simulators/);
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", "Firmware Labs");
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /\/og\.svg$/);
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/$/);
+
+  await page.goto("/lab/race-condition");
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /Step through a preemption interleaving/);
+  await expect(page.locator('meta[property="og:type"]')).toHaveAttribute("content", "article");
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /Lab 01 - Why counter\+\+ loses updates/);
+});
+
+for (const route of ["/", "/deck", "/track/wireless", "/lab/race-condition"]) {
+  test(`mobile layout has no horizontal overflow on ${route}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(route);
+    await page.evaluate(() => (document as any).fonts.ready);
+
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+  });
+}
+
+test("reduced motion disables CSS transitions", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/deck");
+
+  const transitionDuration = await page.locator("#prog").evaluate((el) => getComputedStyle(el).transitionDuration);
+  expect(transitionDuration).toBe("0s");
+});

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Firmware Labs</title>
+  <desc id="desc">Dark interface card for Firmware Labs with signal traces and firmware practice copy.</desc>
+  <defs>
+    <linearGradient id="trace" x1="140" x2="1040" y1="120" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00d4aa"/>
+      <stop offset=".55" stop-color="#0099cc"/>
+      <stop offset="1" stop-color="#ffb454"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#0a0c0f"/>
+  <path d="M0 110H1200M0 220H1200M0 330H1200M0 440H1200M0 550H1200M150 0V630M300 0V630M450 0V630M600 0V630M750 0V630M900 0V630M1050 0V630" stroke="#1e2530" stroke-width="1"/>
+  <rect x="96" y="86" width="1008" height="458" rx="18" fill="#111418" stroke="#2a3340" stroke-width="2"/>
+  <path d="M150 392H245L287 250L343 250L384 392H492L528 292H590L632 392H735L778 204H838L882 392H1048" fill="none" stroke="url(#trace)" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/>
+  <g fill="#c8d4e0">
+    <text x="150" y="182" font-family="IBM Plex Mono, Consolas, monospace" font-size="34" font-weight="600" letter-spacing="4">FIRMWARE LABS</text>
+    <text x="150" y="468" font-family="IBM Plex Sans, Arial, sans-serif" font-size="48" font-weight="600">Practice the failure modes</text>
+    <text x="150" y="516" font-family="IBM Plex Sans, Arial, sans-serif" font-size="30" fill="#5a6a7a">Interactive firmware simulators and drills</text>
+  </g>
+  <g font-family="IBM Plex Mono, Consolas, monospace" font-size="22" fill="#00d4aa">
+    <text x="830" y="154">RTOS</text>
+    <text x="908" y="154" fill="#ffb454">DMA</text>
+    <text x="976" y="154" fill="#0099cc">BLE</text>
+  </g>
+</svg>

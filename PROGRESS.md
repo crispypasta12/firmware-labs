@@ -22,7 +22,7 @@ smoke test pass) → `committed`.
   - [x] Batch E (23, 25, 26, 24, 19, 17, 13) — all committed, awaiting checkpoint approval
 - [x] **Phase 2 — Site shell** (tracks, home, prev/next, progress.ts, genericize copy, full suite re-run) — committed, awaiting checkpoint approval
 - [x] **Phase 3 — Drill engine** (DrillDeck.astro, generic deck, /deck page) — committed, awaiting checkpoint approval
-- [ ] **Phase 4 — Hardening** (Lighthouse, mobile QA, SEO/OG, reduced-motion audit)
+- [x] **Phase 4 — Hardening** (Lighthouse, mobile QA, SEO/OG, reduced-motion audit) — committed, awaiting checkpoint approval
 
 ## Labs
 
@@ -114,7 +114,18 @@ review draft flagged for review; the TI-specific deck was not imported or
 copied. `/deck` exposes the drill, with filter chips, weak-spots mode, shuffle,
 space-to-reveal, and 1/2/3 grading queue behavior preserved.
 
+**Resolved in Phase 4:** site and lab layouts now emit description, canonical,
+Open Graph, Twitter card, theme color, and shared OG image metadata. Site-shell
+secondary text contrast was raised without changing `tokens.css` or extracted
+lab internals. Playwright now covers metadata, representative mobile overflow
+checks (`/`, `/deck`, `/track/wireless`, `/lab/race-condition`), and
+prefers-reduced-motion transition disabling.
+
 **Testing:** `npm run shoot-golden` regenerates goldens. `npm test` = build +
 all Playwright tests; `npm run test:visual` = visual only. Labs register in
 `tests/labs.ts` (num, slug, interact) and are picked up by both specs. Latest
-Phase 3 verification: `npm.cmd test` passed, 96 tests.
+Phase 4 verification: `npm.cmd test` passed, 102 tests. Production preview
+Lighthouse on `/`: Performance 89, Accessibility 100, Best Practices 100, SEO
+100. Browser sweep at 390px verified `/`, `/deck`, `/track/wireless`, and
+`/lab/race-condition` render content with zero console errors and no horizontal
+overflow.

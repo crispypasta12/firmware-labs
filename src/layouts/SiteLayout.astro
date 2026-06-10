@@ -3,8 +3,16 @@ import "../styles/tokens.css";
 
 interface Props {
   title: string;
+  description?: string;
+  ogType?: string;
 }
-const { title } = Astro.props;
+const {
+  title,
+  description = "Interactive simulators and flashcards for practicing firmware debugging, architecture, timing, and wireless engineering judgment.",
+  ogType = "website",
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toString();
+const ogImage = new URL("/og.svg", Astro.site ?? Astro.url.origin).toString();
 ---
 
 <html lang="en">
@@ -12,6 +20,18 @@ const { title } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0a0c0f" />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
@@ -44,26 +64,26 @@ const { title } = Astro.props;
   }
   .site-brand{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--teal);text-decoration:none;letter-spacing:.06em;text-transform:uppercase}
   .site-nav{display:flex;gap:10px;align-items:center}
-  .site-nav a{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:5px 9px}
+  .site-nav a{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8b98a8;text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:5px 9px}
   .site-nav a:hover{color:var(--teal);border-color:var(--teal)}
   .site-wrap{max-width:1040px;margin:0 auto;padding:24px}
   .site-kicker{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
   .site-title{font-size:28px;line-height:1.15;margin:0 0 10px}
-  .site-copy{color:var(--dim);font-size:14px;max-width:760px}
+  .site-copy{color:#8b98a8;font-size:14px;max-width:760px}
   .site-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:22px}
   .site-card{border:1px solid var(--border);border-radius:8px;background:var(--bg2);padding:14px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:8px;min-height:140px}
   .site-card:hover{border-color:var(--teal)}
   .site-card h2,.site-card h3{font-size:15px;line-height:1.25;margin:0;color:var(--text)}
-  .site-card p{font-size:12px;color:var(--dim);line-height:1.6;margin:0}
-  .site-meta{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
+  .site-card p{font-size:12px;color:#8b98a8;line-height:1.6;margin:0}
+  .site-meta{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8b98a8;display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
   .site-section{margin-top:30px}
   .site-list{display:grid;gap:8px;margin-top:14px}
   .site-lab-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid var(--border);border-radius:8px;background:var(--bg2);padding:12px;text-decoration:none;color:inherit}
   .site-lab-row:hover{border-color:var(--teal)}
-  .site-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+  .site-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8b98a8}
   .site-lab-row h2{font-size:14px;margin:0 0 3px}
-  .site-lab-row p{font-size:12px;color:var(--dim);margin:0}
-  .site-check{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);border:1px solid var(--border2);border-radius:4px;padding:4px 7px}
+  .site-lab-row p{font-size:12px;color:#8b98a8;margin:0}
+  .site-check{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8b98a8;border:1px solid var(--border2);border-radius:4px;padding:4px 7px}
   .site-check[data-done="true"]{color:var(--green);border-color:rgba(80,200,120,.5)}
   @media(max-width:700px){
     .site-topbar{padding:12px 16px}
