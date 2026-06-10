@@ -37,4 +37,13 @@ export const LABS: LabEntry[] = [
       await expect(years).not.toHaveText(before ?? "");
     },
   },
+  {
+    num: "21",
+    slug: "rms-check",
+    interact: async (page) => {
+      await expect(page.locator("#rms-check-rmsOut")).toContainText("GUARANTEED");
+      await page.locator("#rms-check-rmsIn").fill("60, 50");
+      await expect(page.locator("#rms-check-rmsOut")).toContainText("NOT SCHEDULABLE");
+    },
+  },
 ];

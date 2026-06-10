@@ -1,0 +1,31 @@
+<!-- LAB 21 — extracted verbatim from golden/ti_concepts_lab_2b.html.
+     Only change: element ids prefixed with the lab slug (rms-check-). -->
+<div class="scope">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px">Task CPU utilizations (%): <input type="text" id="rms-check-rmsIn" value="20, 30, 15" style="width:220px"></div>
+  <div class="rms-out" id="rms-check-rmsOut"></div>
+</div>
+
+<style is:global>
+/* rms */
+.rms-out{font-family:'IBM Plex Mono',monospace;font-size:12px;margin-top:10px;line-height:1.9}
+.rms-out .v{color:var(--teal)}
+</style>
+
+<script is:inline>
+/* ===== 9. RMS ===== */
+(function(){
+  const inp=document.getElementById('rms-check-rmsIn'),out=document.getElementById('rms-check-rmsOut');
+  function calc(){
+    const us=inp.value.split(/[,\s]+/).map(Number).filter(x=>isFinite(x)&&x>0);
+    if(!us.length){out.textContent='Enter utilizations, e.g. 20, 30, 15';return}
+    const n=us.length,total=us.reduce((a,b)=>a+b,0);
+    const bound=n*(Math.pow(2,1/n)-1)*100;
+    let verdict,col;
+    if(total>100){verdict='NOT SCHEDULABLE — over 100% CPU';col='var(--red)'}
+    else if(total<=bound){verdict='GUARANTEED schedulable under RMS (≤ Liu & Layland bound)';col='var(--green)'}
+    else{verdict='MAYBE — above the bound but under 100%: needs response-time analysis';col='var(--amber)'}
+    out.innerHTML='n = <span class="v">'+n+'</span> tasks · total U = <span class="v">'+total.toFixed(1)+'%</span> · bound n(2<sup>1/n</sup>−1) = <span class="v">'+bound.toFixed(1)+'%</span><br><span style="color:'+col+'">▸ '+verdict+'</span>';
+  }
+  inp.addEventListener('input',calc);calc();
+})();
+</script>
