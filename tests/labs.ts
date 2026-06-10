@@ -69,4 +69,15 @@ export const LABS: LabEntry[] = [
       await expect(layer.locator(".det")).toBeVisible();
     },
   },
+  {
+    num: "30",
+    slug: "ble-versions",
+    interact: async (page) => {
+      const detail = page.locator("#ble-versions-vDetail");
+      await expect(detail).toBeHidden();
+      await page.locator("#ble-versions-vtl .vcard", { hasText: "4.2" }).click();
+      await expect(detail).toBeVisible();
+      await expect(detail).toContainText("Data Length Extension");
+    },
+  },
 ];

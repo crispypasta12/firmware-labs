@@ -1,0 +1,41 @@
+<!-- LAB 30 — extracted verbatim from golden/ti_ble_deep_dive.html.
+     Only change: element ids prefixed with the lab slug (ble-versions-). -->
+<div class="scope">
+  <div class="vtl" id="ble-versions-vtl"></div>
+  <div class="vdetail" id="ble-versions-vDetail"></div>
+</div>
+
+<style is:global>
+/* version timeline */
+.vtl{display:flex;gap:8px;flex-wrap:wrap}
+.vcard{flex:1;min-width:135px;border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:10px 12px;cursor:pointer;transition:.15s}
+.vcard:hover{border-color:var(--teal)}
+.vcard h4{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--teal)}
+.vcard .yr{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)}
+.vcard .hl1{font-size:11px;color:var(--dim);margin-top:4px}
+.vdetail{margin-top:12px;padding:10px 14px;border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);font-size:12px;color:var(--dim);line-height:1.8;display:none}
+.vdetail b{color:var(--text);font-weight:500}
+</style>
+
+<script is:inline>
+/* ===== B9 VERSIONS ===== */
+(function(){
+  const vs=[
+    {v:'4.0',y:'2010',h:'BLE is born',d:'<b>Bluetooth Low Energy introduced</b> alongside classic BR/EDR: 1M PHY, 40 channels, GATT/ATT, 27-byte LL payloads, legacy pairing. The architecture you still describe today.'},
+    {v:'4.1',y:'2013',h:'topology + LE dual roles',d:'Devices can be <b>central and peripheral simultaneously</b>; better coexistence with LTE; groundwork for IPv6 over BLE.'},
+    {v:'4.2',y:'2014',h:'DLE + LESC',d:'<b>Data Length Extension</b>: LL payload 27 → 251 B (~2.6× throughput). <b>LE Secure Connections</b>: ECDH P-256 pairing kills passive sniffing of legacy pairing. Enhanced privacy (RPA improvements).'},
+    {v:'5.0',y:'2016',h:'2M · Coded · ext adv',d:'<b>2M PHY</b> (2× throughput), <b>Coded PHY S=2/S=8</b> (~4× range), <b>extended advertising</b> on data channels (up to 255 B, advertising sets, periodic advertising), <b>CSA#2</b> channel selection, higher TX power class.'},
+    {v:'5.1',y:'2019',h:'direction finding',d:'<b>AoA/AoD</b> direction finding via antenna arrays + IQ sampling — indoor positioning. GATT caching to skip re-discovery on reconnect.'},
+    {v:'5.2',y:'2020',h:'LE Audio · ISO',d:'<b>Isochronous channels</b> → LE Audio + Auracast broadcast audio. <b>LE Power Control</b>: peers ask each other to adjust TX power (battery + coexistence). Enhanced ATT (EATT): parallel ATT transactions over L2CAP CoC.'},
+    {v:'5.3',y:'2021',h:'subrating — CC2340',d:'<b>Connection Subrating</b>: skip events by a factor, ramp to full rate instantly — low idle power with fast response (vs slave latency\'s slow exit). Channel classification by the peripheral. <b>This is the CC2340\'s spec level.</b>'},
+    {v:'5.4',y:'2023',h:'PAwR · encrypted adv',d:'<b>Periodic Advertising with Responses</b>: one broadcaster, thousands of synchronized end nodes (electronic shelf labels). <b>Encrypted advertising data</b> for broadcast confidentiality.'}
+  ];
+  const tl=document.getElementById('ble-versions-vtl'),det=document.getElementById('ble-versions-vDetail');
+  vs.forEach(x=>{
+    const d=document.createElement('div');d.className='vcard';
+    d.innerHTML='<h4>'+x.v+'</h4><div class="yr">'+x.y+'</div><div class="hl1">'+x.h+'</div>';
+    d.onclick=()=>{det.style.display='block';det.innerHTML='<b>BLE '+x.v+' ('+x.y+'):</b> '+x.d};
+    tl.appendChild(d);
+  });
+})();
+</script>
