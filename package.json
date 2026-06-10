@@ -1,0 +1,27 @@
+{
+  "name": "firmware-labs",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "test": "astro build && playwright test",
+    "test:visual": "astro build && playwright test tests/visual",
+    "shoot-golden": "tsx scripts/shoot-golden.ts"
+  },
+  "dependencies": {
+    "astro": "^6.4.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "pixelmatch": "^7.2.0",
+    "playwright": "^1.60.0",
+    "pngjs": "^7.0.0",
+    "tsx": "^4.22.4"
+  }
+}
