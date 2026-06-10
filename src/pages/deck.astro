@@ -1,0 +1,9 @@
+---
+import DrillDeck from "../components/DrillDeck.astro";
+import SiteLayout from "../layouts/SiteLayout.astro";
+import embeddedFundamentals from "../content/decks/embedded-fundamentals.json";
+---
+
+<SiteLayout title="Embedded Fundamentals Drill - Firmware Labs">
+  <DrillDeck deck={embeddedFundamentals} />
+</SiteLayout>

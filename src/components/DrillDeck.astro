@@ -1,0 +1,198 @@
+---
+interface DrillCard {
+  s: string;
+  w?: number;
+  q: string;
+  a: string;
+}
+
+interface DrillDeckData {
+  title: string;
+  subtitle: string;
+  review?: boolean;
+  reviewNote?: string;
+  sections: Record<string, string>;
+  cards: DrillCard[];
+}
+
+interface Props {
+  deck: DrillDeckData;
+}
+
+const { deck } = Astro.props;
+const deckJson = JSON.stringify(deck).replace(/</g, "\\u003c");
+---
+
+<section class="drill-deck" aria-label={deck.title}>
+  <script type="application/json" id="drill-data" set:html={deckJson}></script>
+
+  <header class="hdr">
+    <div>
+      <div class="hdr-title">{deck.title}</div>
+      <div class="hdr-sub">{deck.subtitle}</div>
+    </div>
+    <div class="stats">
+      <span>left <b id="stLeft">0</b></span>
+      <span class="g">got it <b id="stGot">0</b></span>
+      <span class="s">shaky <b id="stShaky">0</b></span>
+      <span class="a">again <b id="stAgain">0</b></span>
+    </div>
+  </header>
+
+  <div class="wrap">
+    {deck.review && deck.reviewNote && <p class="review-flag">{deck.reviewNote}</p>}
+
+    <div class="filters" id="filters"></div>
+    <div class="toolbar">
+      <button id="btnAll">Select all</button>
+      <button id="btnNone">Clear</button>
+      <button id="btnWeak">&#9888; Weak spots only</button>
+      <button id="btnShuffle">&#8644; Shuffle &amp; restart</button>
+      <span class="keys">tap card or <kbd>space</kbd> to reveal &middot; <kbd>1</kbd> again &middot; <kbd>2</kbd> shaky &middot; <kbd>3</kbd> got it &middot; progress resets on reload</span>
+    </div>
+
+    <div class="progressbar"><div id="prog"></div></div>
+
+    <div class="card" id="card">
+      <div class="card-top"><span class="sec-badge" id="cSec"></span><span id="cWeak"></span><span class="card-idx" id="cIdx"></span></div>
+      <div class="card-q" id="cQ"></div>
+      <div class="card-a" id="cA"></div>
+      <div class="card-hint">tap to reveal answer</div>
+    </div>
+    <div class="graderow">
+      <div class="grade">
+        <button class="gbtn again">1 &middot; Again (recycle soon)</button>
+        <button class="gbtn shaky">2 &middot; Shaky (end of deck)</button>
+        <button class="gbtn got">3 &middot; Got it</button>
+      </div>
+    </div>
+
+    <div class="done-msg" id="doneMsg">
+      <h2>// DECK CLEARED</h2>
+      <p id="doneStats"></p>
+      <p class="restart-note">Hit "Shuffle &amp; restart" to run it again, or filter to weak sections.</p>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+const DRILL_DATA=JSON.parse(document.getElementById('drill-data').textContent);
+const SECTIONS=DRILL_DATA.sections;
+const CARDS=DRILL_DATA.cards;
+
+let active=new Set(Object.keys(SECTIONS));
+let deck=[],pos=0,got=0,shaky=0,again=0,total=0;
+const $=id=>document.getElementById(id);
+
+function buildFilters(){
+  const f=$('filters');f.innerHTML='';
+  Object.entries(SECTIONS).forEach(([k,v])=>{
+    const n=CARDS.filter(c=>c.s===k).length;
+    const b=document.createElement('button');b.className='fchip'+(active.has(k)?' on':'');b.textContent=v+' ('+n+')';
+    b.onclick=()=>{active.has(k)?active.delete(k):active.add(k);buildFilters();restart()};
+    f.appendChild(b);
+  });
+}
+function restart(){
+  deck=CARDS.map((c,i)=>i).filter(i=>active.has(CARDS[i].s));
+  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}
+  total=deck.length;got=0;shaky=0;again=0;
+  show();
+}
+function stats(){
+  $('stLeft').textContent=deck.length;$('stGot').textContent=got;$('stShaky').textContent=shaky;$('stAgain').textContent=again;
+  $('prog').style.width=(total?((total-deck.length)/total*100):0)+'%';
+}
+function show(){
+  stats();
+  const card=$('card'),gr=document.querySelector('.graderow .grade');
+  if(!deck.length){
+    card.style.display='none';gr.style.display='none';
+    $('doneMsg').style.display='block';
+    $('doneStats').textContent='Session: '+got+' got it - '+shaky+' shaky - '+again+' sent back for another pass.';
+    return;
+  }
+  $('doneMsg').style.display='none';card.style.display='flex';
+  card.classList.remove('flip');gr.style.display='none';
+  const c=CARDS[deck[0]];
+  $('cSec').textContent=SECTIONS[c.s];
+  $('cWeak').innerHTML=c.w?'<span class="weak-badge">&#9888; handle carefully - review framing</span>':'';
+  $('cIdx').textContent=(total-deck.length+1)+' / '+total;
+  $('cQ').innerHTML=c.q;$('cA').innerHTML=c.a;
+}
+function reveal(){
+  if(!deck.length)return;
+  $('card').classList.add('flip');
+  document.querySelector('.graderow .grade').style.display='flex';
+}
+function grade(g){
+  if(!deck.length||!$('card').classList.contains('flip'))return;
+  const cur=deck.shift();
+  if(g===1){again++;deck.splice(Math.min(4,deck.length),0,cur)}
+  else if(g===2){shaky++;deck.push(cur)}
+  else got++;
+  show();
+}
+$('card').onclick=()=>{$('card').classList.contains('flip')?null:reveal()};
+document.querySelector('.gbtn.again').onclick=()=>grade(1);
+document.querySelector('.gbtn.shaky').onclick=()=>grade(2);
+document.querySelector('.gbtn.got').onclick=()=>grade(3);
+document.addEventListener('keydown',e=>{
+  if(e.key===' '){e.preventDefault();reveal()}
+  if(e.key==='1')grade(1); if(e.key==='2')grade(2); if(e.key==='3')grade(3);
+});
+$('btnAll').onclick=()=>{active=new Set(Object.keys(SECTIONS));buildFilters();restart()};
+$('btnNone').onclick=()=>{active=new Set();buildFilters();restart()};
+$('btnWeak').onclick=()=>{active=new Set(['weak']);buildFilters();restart()};
+$('btnShuffle').onclick=restart;
+buildFilters();restart();
+</script>
+
+<style is:global>
+  .drill-deck .hdr{border-bottom:1px solid var(--border);padding:1.1rem 1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:rgba(10,12,15,.95);backdrop-filter:blur(6px);z-index:50}
+  .drill-deck .hdr-title{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.08em;text-transform:uppercase}
+  .drill-deck .hdr-sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim)}
+  .drill-deck .stats{margin-left:auto;display:flex;gap:18px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim)}
+  .drill-deck .stats b{color:var(--text);font-weight:600}
+  .drill-deck .stats .g{color:var(--green)} .drill-deck .stats .s{color:var(--amber)} .drill-deck .stats .a{color:var(--red)}
+  .drill-deck .wrap{max-width:880px;margin:0 auto;padding:1.4rem 1.5rem 3rem}
+  .drill-deck .review-flag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);border:1px solid rgba(255,180,84,.35);border-radius:6px;background:rgba(255,180,84,.06);padding:8px 10px;margin:0 0 14px}
+  .drill-deck .filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .drill-deck .fchip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border:1px solid var(--border2);border-radius:20px;color:var(--dim);cursor:pointer;background:transparent;transition:.15s}
+  .drill-deck .fchip:hover{border-color:var(--teal)}
+  .drill-deck .fchip.on{border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.07)}
+  .drill-deck .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  .drill-deck button{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 14px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;transition:.15s}
+  .drill-deck button:hover{border-color:var(--teal);color:var(--teal)}
+  .drill-deck button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .drill-deck .keys{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+  .drill-deck .card{border:1px solid var(--border2);border-radius:10px;background:var(--bg2);min-height:320px;display:flex;flex-direction:column;overflow:hidden;cursor:pointer}
+  .drill-deck .card-top{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+  .drill-deck .sec-badge{padding:2px 8px;border-radius:3px;border:1px solid var(--border2);letter-spacing:.06em;text-transform:uppercase}
+  .drill-deck .weak-badge{color:var(--amber);border:1px solid rgba(255,180,84,.4);padding:2px 8px;border-radius:3px}
+  .drill-deck .card-idx{margin-left:auto}
+  .drill-deck .card-q{padding:26px 26px 10px;font-size:18px;font-weight:500;line-height:1.5}
+  .drill-deck .card-q code,.drill-deck .card-a code{font-family:'IBM Plex Mono',monospace;font-size:.85em;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;color:var(--teal)}
+  .drill-deck .card-hint{padding:0 26px 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:auto}
+  .drill-deck .card-a{display:none;padding:6px 26px 22px;font-size:13.5px;color:var(--dim);line-height:1.75;border-top:1px dashed var(--border2)}
+  .drill-deck .card-a b{color:var(--text);font-weight:500}
+  .drill-deck .card-a .say{display:block;margin-top:10px;border-left:3px solid var(--teal);background:rgba(0,212,170,.05);padding:6px 12px;border-radius:0 4px 4px 0;color:var(--dim)}
+  .drill-deck .card-a .say b{color:var(--teal)}
+  .drill-deck .card.flip .card-a{display:block}
+  .drill-deck .card.flip .card-hint{display:none}
+  .drill-deck .grade{display:none;gap:10px;margin-top:14px}
+  .drill-deck .card.flip ~ .graderow .grade{display:flex}
+  .drill-deck .graderow{margin-top:14px}
+  .drill-deck .gbtn{flex:1;padding:12px;font-size:12px;border-radius:6px}
+  .drill-deck .gbtn.again{border-color:rgba(224,80,80,.5);color:var(--red)} .drill-deck .gbtn.again:hover{background:rgba(224,80,80,.1)}
+  .drill-deck .gbtn.shaky{border-color:rgba(255,180,84,.5);color:var(--amber)} .drill-deck .gbtn.shaky:hover{background:rgba(255,180,84,.1)}
+  .drill-deck .gbtn.got{border-color:rgba(80,200,120,.5);color:var(--green)} .drill-deck .gbtn.got:hover{background:rgba(80,200,120,.1)}
+  .drill-deck .done-msg{text-align:center;padding:60px 20px;display:none}
+  .drill-deck .done-msg h2{font-family:'IBM Plex Mono',monospace;color:var(--teal);font-size:18px;margin-bottom:10px}
+  .drill-deck .done-msg p{color:var(--dim);font-size:13px}
+  .drill-deck .restart-note{margin-top:8px}
+  .drill-deck .progressbar{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:16px}
+  .drill-deck .progressbar div{height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));width:0;transition:width .3s}
+  .drill-deck kbd{font-family:'IBM Plex Mono',monospace;font-size:10px;border:1px solid var(--border2);border-bottom-width:2px;border-radius:3px;padding:1px 5px;color:var(--dim)}
+  @media(max-width:700px){.drill-deck .card-q{font-size:16px}.drill-deck .stats{margin-left:0}}
+</style>

@@ -1,0 +1,123 @@
+{
+  "title": "Embedded Fundamentals Drill",
+  "subtitle": "Generic firmware Q&A deck for self-graded review",
+  "review": true,
+  "reviewNote": "Review draft: this generic deck was derived from non-personal technical cards and should be reviewed for accuracy, coverage, and wording before publication.",
+  "sections": {
+    "c": "C",
+    "cpp": "C++",
+    "arm": "Cortex-M",
+    "rtos": "RTOS",
+    "drv": "Drivers",
+    "dbg": "Debug scenarios",
+    "zephyr": "Zephyr",
+    "build": "Build/Toolchain",
+    "tools": "Instruments",
+    "wireless": "Wireless/OTA",
+    "sec": "Security",
+    "weak": "Weak spots"
+  },
+  "cards": [
+    {
+      "s": "c",
+      "q": "What does <code>volatile</code> mean, and what does it not do?",
+      "a": "It tells the compiler a value can change outside normal program flow, so each access must perform the real read or write. Use it for memory-mapped registers, ISR-shared flags, and hardware status. <b>It does not make access atomic or prevent races</b>; shared read-modify-write still needs a critical section, atomic operation, or single-writer design."
+    },
+    {
+      "s": "c",
+      "q": "Is <code>volatile uint32_t counter; counter++;</code> safe?",
+      "a": "<b>No.</b> Volatile keeps the load and store visible, but <code>++</code> is still load, add, store. If an interrupt or task switch happens between those steps, one update can be lost. Fix with interrupt masking, an RTOS critical section, an atomic primitive, or ownership that avoids concurrent writers."
+    },
+    {
+      "s": "c",
+      "q": "What does <code>const volatile</code> mean together?",
+      "a": "<code>const</code> means software must not write through that identifier. <code>volatile</code> means the value can still change underneath the program and must be reread. Together they are common for read-only hardware status registers that hardware updates."
+    },
+    {
+      "s": "c",
+      "q": "What is structure padding and when does it matter?",
+      "a": "Compilers insert padding so members meet alignment requirements. That means a struct's in-memory size may be larger than the sum of its fields. It matters for register overlays, packet parsing, flash storage, DMA descriptors, and cross-device data exchange. Prefer explicit serialization when the byte layout is a protocol."
+    },
+    {
+      "s": "c",
+      "q": "Explain a ring buffer, including the full-vs-empty trap.",
+      "a": "A ring buffer uses fixed storage plus head and tail indexes that wrap at the end. <b>Empty</b> is usually head == tail. That same condition can also appear after filling unless the design leaves one slot unused or tracks a count. ISR/task designs often use single-writer ownership per index to avoid locks."
+    },
+    {
+      "s": "cpp",
+      "q": "Which C++ features are useful in firmware, and which need care?",
+      "a": "<b>Useful:</b> classes, RAII, <code>constexpr</code>, templates for zero-cost abstraction, references, <code>enum class</code>, and abstract interfaces for testable HALs. <b>Use care with:</b> heap allocation, exceptions, RTTI, static initialization order, and hidden costs in hot paths."
+    },
+    {
+      "s": "cpp",
+      "q": "What is RAII and how does it apply to firmware?",
+      "a": "Resource Acquisition Is Initialization: acquire a resource in a constructor and release it in a destructor so cleanup happens on every exit path. Firmware uses include scoped mutex locks, temporary interrupt masks, SPI chip-select guards, and critical-section wrappers."
+    },
+    {
+      "s": "arm",
+      "q": "What happens when a Cortex-M resets?",
+      "a": "The core reads the vector table at address 0: word 0 becomes the initial MSP and word 1 becomes the reset handler address. Startup code then copies initialized data to RAM, zeros <code>.bss</code>, runs system and runtime initialization, and eventually calls <code>main()</code>."
+    },
+    {
+      "s": "arm",
+      "q": "What is the vector table, and why can relocation matter?",
+      "a": "The vector table is an array of exception and interrupt entry addresses. Bootloaders or applications may relocate it with VTOR so interrupts dispatch into the active image. If relocation is wrong, an application interrupt can jump into a bootloader handler or invalid address."
+    },
+    {
+      "s": "rtos",
+      "q": "Mutex vs semaphore vs queue: what is each for?",
+      "a": "<b>Mutex:</b> protects a shared resource and may support priority inheritance. <b>Semaphore:</b> signals events or counts available resources. <b>Queue:</b> transfers data and ownership between tasks. Picking the wrong primitive often creates priority, lifetime, or lost-event bugs."
+    },
+    {
+      "s": "rtos",
+      "q": "What is priority inversion?",
+      "a": "A high-priority task blocks on a resource held by a low-priority task, while medium-priority work prevents the low-priority owner from running and releasing it. Priority inheritance helps by temporarily boosting the owner so it can finish the critical section."
+    },
+    {
+      "s": "drv",
+      "q": "Design a portable UART driver. What are the pieces?",
+      "a": "Define a stable public API, a configuration structure, an MCU-specific backend, interrupt and DMA paths, error reporting, callbacks or queues for RX, and optional RTOS synchronization. Keep board-specific pins, clocks, and DMA channels out of application code."
+    },
+    {
+      "s": "drv",
+      "q": "Polling vs interrupt vs DMA: when does each win?",
+      "a": "<b>Polling</b> is simple and predictable for low-rate or init-time waits. <b>Interrupts</b> handle asynchronous moderate-rate events without busy waiting. <b>DMA</b> wins for continuous or high-throughput transfers where the CPU should not touch every byte."
+    },
+    {
+      "s": "dbg",
+      "q": "UART randomly drops bytes. How do you debug it?",
+      "a": "Check the physical signal with a logic analyzer, then verify baud, framing, FIFO, flow control, error flags, ISR latency, DMA wrap handling, buffer ownership, queue overflow, and consumer task priority. Add counters for received bytes, overruns, wraps, drops, and parser errors."
+    },
+    {
+      "s": "dbg",
+      "q": "An interrupt causes a HardFault immediately after it is enabled. What do you check?",
+      "a": "Check that the ISR symbol matches the vector table, the peripheral is initialized before enabling the interrupt, stale pending flags are cleared, the handler clears the correct flag, driver context is valid, RTOS ISR APIs are legal at that priority, and stack space is sufficient."
+    },
+    {
+      "s": "zephyr",
+      "q": "Devicetree vs Kconfig: what is the distinction?",
+      "a": "<b>Devicetree describes hardware</b>: peripherals, addresses, interrupts, pins, clocks, memory, aliases, and chosen nodes. <b>Kconfig selects software</b>: drivers, subsystems, options, and features compiled into the image."
+    },
+    {
+      "s": "build",
+      "q": "Walk through the firmware build process.",
+      "a": "Preprocess sources, compile to object files, assemble any assembly, link objects and libraries according to the linker script, produce an ELF, then post-process into map, hex, bin, signed, or packaged artifacts as needed."
+    },
+    {
+      "s": "tools",
+      "q": "Oscilloscope vs logic analyzer: when do you use each?",
+      "a": "Use a logic analyzer for digital timing and protocol decoding. Use an oscilloscope for analog behavior: voltage levels, rise and fall time, ringing, noise, clock integrity, reset behavior, and power rail stability. Many bring-up bugs need both views."
+    },
+    {
+      "s": "wireless",
+      "q": "Design an OTA update flow end to end.",
+      "a": "Check version and compatibility, transfer chunks with offsets and CRCs, store to a secondary slot, verify the complete image hash and signature, mark it pending, boot into a test state, confirm after self-test, and roll back automatically if confirmation never happens."
+    },
+    {
+      "s": "weak",
+      "w": 1,
+      "q": "Weak spot: a firmware feature works in debug but fails at full speed. What is the disciplined answer?",
+      "a": "Assume the debugger changed timing. Check init delays, clock readiness, races, missing <code>volatile</code>, uninitialized data, optimization-sensitive undefined behavior, watchdog timing, stack usage, and logging side effects. Use GPIO timestamps and a logic analyzer to compare real timing."
+    }
+  ]
+}

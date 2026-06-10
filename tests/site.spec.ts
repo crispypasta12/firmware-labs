@@ -18,3 +18,28 @@ test("site shell exposes tracks and lab progress", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("1/4")).toBeVisible();
 });
+
+test("deck reveal and grading counters move", async ({ page }) => {
+  await page.goto("/deck");
+
+  await expect(page.locator("#stLeft")).toHaveText("20");
+  await expect(page.locator("#stGot")).toHaveText("0");
+  await expect(page.locator("#stShaky")).toHaveText("0");
+  await expect(page.locator("#stAgain")).toHaveText("0");
+
+  await page.locator("#card").click();
+  await expect(page.locator("#cA")).toBeVisible();
+  await page.getByRole("button", { name: /Again/ }).click();
+  await expect(page.locator("#stAgain")).toHaveText("1");
+  await expect(page.locator("#stLeft")).toHaveText("20");
+
+  await page.keyboard.press("Space");
+  await page.getByRole("button", { name: /Shaky/ }).click();
+  await expect(page.locator("#stShaky")).toHaveText("1");
+  await expect(page.locator("#stLeft")).toHaveText("20");
+
+  await page.keyboard.press("Space");
+  await page.getByRole("button", { name: /Got it/ }).click();
+  await expect(page.locator("#stGot")).toHaveText("1");
+  await expect(page.locator("#stLeft")).toHaveText("19");
+});

@@ -21,7 +21,7 @@ smoke test pass) → `committed`.
   - [x] Batch D (02, 04, 11, 29, 31, 14) — all committed, awaiting checkpoint approval
   - [x] Batch E (23, 25, 26, 24, 19, 17, 13) — all committed, awaiting checkpoint approval
 - [x] **Phase 2 — Site shell** (tracks, home, prev/next, progress.ts, genericize copy, full suite re-run) — committed, awaiting checkpoint approval
-- [ ] **Phase 3 — Drill engine** (DrillDeck.astro, generic deck, /deck page)
+- [x] **Phase 3 — Drill engine** (DrillDeck.astro, generic deck, /deck page) — committed, awaiting checkpoint approval
 - [ ] **Phase 4 — Hardening** (Lighthouse, mobile QA, SEO/OG, reduced-motion audit)
 
 ## Labs
@@ -107,6 +107,14 @@ goldens and visual comparisons hide `.lab-head`, `.lab-why`, and `.takeaway`
 before first paint. The visual suite continues to compare the extracted lab
 body, controls, and interactive visuals against `golden/`.
 
+**Resolved in Phase 3:** `golden/ti_drill_mode.html` was used only as the
+source for the drill engine behavior. The shipped deck is
+`src/content/decks/embedded-fundamentals.json`, a 20-card generic technical
+review draft flagged for review; the TI-specific deck was not imported or
+copied. `/deck` exposes the drill, with filter chips, weak-spots mode, shuffle,
+space-to-reveal, and 1/2/3 grading queue behavior preserved.
+
 **Testing:** `npm run shoot-golden` regenerates goldens. `npm test` = build +
 all Playwright tests; `npm run test:visual` = visual only. Labs register in
-`tests/labs.ts` (num, slug, interact) and are picked up by both specs.
+`tests/labs.ts` (num, slug, interact) and are picked up by both specs. Latest
+Phase 3 verification: `npm.cmd test` passed, 96 tests.
