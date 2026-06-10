@@ -1,0 +1,17 @@
+---
+import LabLayout from "../../layouts/LabLayout.astro";
+import LabShell from "../../components/LabShell.astro";
+import SpiModes from "../../components/labs/SpiModes.astro";
+---
+
+<LabLayout title="Lab 09 · SPI modes — CPOL / CPHA explorer — Firmware Labs">
+  <LabShell
+    num="LAB 09"
+    title="SPI modes — CPOL / CPHA explorer"
+    tag="PDF Q42 · Q48"
+    why='<b>Interview angle:</b> "SPI returns garbage — first thing you check?" → mode mismatch. Click through all four modes and note which edge samples the data.'
+    takeaway="<b>Memory hook:</b> CPOL = where the clock <i>rests</i> (0 = low). CPHA = which edge <i>samples</i> (0 = first edge, 1 = second). Mode 0 and Mode 3 cover most devices — always confirm against the slave's datasheet timing diagram."
+  >
+    <SpiModes />
+  </LabShell>
+</LabLayout>

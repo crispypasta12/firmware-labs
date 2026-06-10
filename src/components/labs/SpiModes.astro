@@ -1,0 +1,54 @@
+<!-- LAB 09 - extracted verbatim from golden/ti_concepts_lab.html.
+     Only change: element ids prefixed with the lab slug (spi-modes-). -->
+<div class="scope">
+  <div class="spi-controls" id="spi-modes-spiBtns"></div>
+  <svg id="spi-modes-spiSvg" width="100%" height="170" viewBox="0 0 640 170" preserveAspectRatio="xMidYMid meet"></svg>
+  <div class="narr" id="spi-modes-spiNarr"></div>
+</div>
+
+<style is:global>
+.spi-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.spi-controls button.sel{border-color:var(--amber);color:var(--amber)}
+</style>
+
+<script is:inline>
+/* ===== 9. SPI ===== */
+(function(){
+  const modes=[{cpol:0,cpha:0},{cpol:0,cpha:1},{cpol:1,cpha:0},{cpol:1,cpha:1}];
+  const btnwrap=document.getElementById('spi-modes-spiBtns');let cur=0;
+  modes.forEach((m,i)=>{const b=document.createElement('button');b.textContent='Mode '+i+' (CPOL='+m.cpol+', CPHA='+m.cpha+')';b.onclick=()=>{cur=i;draw()};btnwrap.appendChild(b)});
+  function draw(){
+    [...btnwrap.children].forEach((b,i)=>b.classList.toggle('sel',i===cur));
+    const {cpol,cpha}=modes[cur];
+    const svg=document.getElementById('spi-modes-spiSvg');
+    const x0=60,per=64,n=8,hiY=40,loY=80,mosiHi=120,mosiLo=150;
+    const idleY=cpol?hiY:loY, actY=cpol?loY:hiY;
+    let p='M 10 '+idleY+' L '+x0+' '+idleY;
+    let edges=[];
+    for(let k=0;k<n;k++){
+      const xa=x0+k*per, xb=xa+per/2, xc=xa+per;
+      p+=' L '+xa+' '+idleY+' L '+xa+' '+actY+' L '+xb+' '+actY+' L '+xb+' '+idleY+' L '+xc+' '+idleY;
+      edges.push({x:xa,first:true},{x:xb,first:false});
+    }
+    p+=' L '+(x0+n*per+20)+' '+idleY;
+    const samples=edges.filter(e=>cpha===0?e.first:!e.first);
+    // sampling edge direction
+    const rising=(cpol===0&&cpha===0)||(cpol===1&&cpha===1);
+    let dots=samples.map(e=>'<circle cx="'+e.x+'" cy="60" r="5" fill="none" stroke="#ffb454" stroke-width="2"/>').join('');
+    // MOSI bit cells aligned so transitions happen on the non-sample edge
+    const shift=cpha===0?-per/2:0;
+    let mosi='';
+    for(let k=0;k<n;k++){
+      const xs=Math.max(x0+shift+k*per,10), xe=x0+shift+(k+1)*per;
+      mosi+='<rect x="'+xs+'" y="'+mosiHi+'" width="'+(xe-xs)+'" height="'+(mosiLo-mosiHi)+'" fill="rgba(0,153,204,.12)" stroke="#2a3340"/>'
+          +'<text x="'+((xs+xe)/2)+'" y="'+(mosiHi+20)+'" fill="#5a6a7a" font-size="10" text-anchor="middle" font-family="IBM Plex Mono">b'+(7-k)+'</text>';
+    }
+    svg.innerHTML=
+      '<text x="10" y="30" fill="#5a6a7a" font-size="10" font-family="IBM Plex Mono">SCK  (idle '+(cpol?'HIGH':'LOW')+')</text>'
+      +'<path d="'+p+'" fill="none" stroke="#00d4aa" stroke-width="2"/>'+dots
+      +'<text x="10" y="115" fill="#5a6a7a" font-size="10" font-family="IBM Plex Mono">DATA (valid window per bit)</text>'+mosi;
+    document.getElementById('spi-modes-spiNarr').textContent='Mode '+cur+': clock idles '+(cpol?'HIGH':'LOW')+', data is sampled on the '+(cpha?'SECOND':'FIRST')+' edge of each pulse — that is the '+(rising?'RISING':'FALLING')+' edge (amber circles). Mismatch with the slave = shifted/garbage data.';
+  }
+  draw();
+})();
+</script>

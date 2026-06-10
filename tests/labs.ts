@@ -161,4 +161,12 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#ring-buffer-rbTail")).toHaveText("1");
     },
   },
+  {
+    num: "09",
+    slug: "spi-modes",
+    interact: async (page) => {
+      await page.locator("#spi-modes-spiBtns button", { hasText: "Mode 2" }).click();
+      await expect(page.locator("#spi-modes-spiNarr")).toContainText("Mode 2");
+    },
+  },
 ];
