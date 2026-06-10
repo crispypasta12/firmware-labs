@@ -1,0 +1,5 @@
+# golden/ is immutable — never normalize or rewrite line endings
+golden/** -text
+
+# screenshots are binary
+*.png binary
