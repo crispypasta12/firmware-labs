@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TI Prep · Concepts Lab — Interactive Visualizers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --bg2:#111418; --bg3:#181d23; --border:#1e2530; --border2:#2a3340;
+  --text:#c8d4e0; --dim:#5a6a7a; --muted:#3a4a5a;
+  --teal:#00d4aa; --blue:#0099cc; --amber:#ffb454; --red:#e05050; --purple:#a080e0; --green:#50c878;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+.hdr{position:sticky;top:0;z-index:90;background:rgba(10,12,15,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);padding:1.1rem 1.5rem}
+.hdr-title{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.08em;text-transform:uppercase}
+.hdr-sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 9px;border:1px solid var(--border2);border-radius:20px;color:var(--dim);text-decoration:none;transition:.15s}
+.chip:hover{color:var(--teal);border-color:var(--teal)}
+.wrap{max-width:980px;margin:0 auto;padding:1.5rem}
+.lab{margin:0 0 2.5rem;scroll-margin-top:130px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);overflow:hidden}
+.lab-head{display:flex;align-items:baseline;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.lab-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+.lab-title{font-size:15px;font-weight:600}
+.lab-tag{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:.06em;text-transform:uppercase}
+.lab-body{padding:16px 18px}
+.lab-why{font-size:12px;color:var(--dim);margin-bottom:14px;border-left:3px solid var(--teal);padding:6px 12px;background:rgba(0,212,170,.04);border-radius:0 4px 4px 0}
+.lab-why b{color:var(--teal);font-weight:500}
+.scope{background:#0c1014;border:1px solid var(--border2);border-radius:6px;padding:14px;
+  background-image:linear-gradient(rgba(42,51,64,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(42,51,64,.25) 1px,transparent 1px);
+  background-size:24px 24px;position:relative}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+button{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 14px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;transition:.15s}
+button:hover{border-color:var(--teal);color:var(--teal)}
+button.primary{border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.08)}
+button.danger:hover{border-color:var(--red);color:var(--red)}
+button:disabled{opacity:.35;cursor:default}
+button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.narr{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--amber);min-height:38px;margin-top:12px;line-height:1.6}
+.takeaway{margin-top:14px;font-size:12px;color:var(--dim);border-left:3px solid var(--amber);background:rgba(255,180,84,.05);padding:8px 12px;border-radius:0 4px 4px 0}
+.takeaway b{color:var(--amber);font-weight:500}
+code{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;color:var(--teal)}
+select,input[type=number],input[type=text]{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:6px 8px}
+label.sw{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);cursor:pointer}
+/* race stepper */
+.race-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.race-task{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.85);padding:10px 12px}
+.race-task h4{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;margin-bottom:8px}
+.race-line{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--dim);padding:3px 8px;border-radius:3px;border-left:2px solid transparent}
+.race-line.active{color:var(--text);background:rgba(0,212,170,.1);border-left-color:var(--teal)}
+.race-line.done{color:var(--muted)}
+.race-state{display:flex;gap:18px;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:12px;flex-wrap:wrap}
+.race-state .v{color:var(--amber);font-weight:600}
+.race-state .lostflag{color:var(--red);font-weight:600}
+/* gantt */
+.gantt{margin-top:4px}
+.grow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.glabel{width:120px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);text-align:right;flex-shrink:0}
+.gtrack{position:relative;flex:1;height:26px;background:rgba(17,20,24,.8);border:1px solid var(--border2);border-radius:3px;overflow:hidden}
+.gseg{position:absolute;top:0;bottom:0;border-radius:2px}
+.gseg.run{background:rgba(80,200,120,.55)}
+.gseg.mutex{background:rgba(255,180,84,.65)}
+.gseg.blocked{background:repeating-linear-gradient(45deg,rgba(224,80,80,.5),rgba(224,80,80,.5) 4px,rgba(224,80,80,.2) 4px,rgba(224,80,80,.2) 8px)}
+.gseg.inherit{background:rgba(160,128,224,.65)}
+.playhead{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--teal);box-shadow:0 0 8px var(--teal);z-index:5}
+.gwrap{position:relative;padding:6px 0}
+.glegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+.glegend span{display:inline-flex;align-items:center;gap:5px}
+.sw-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+/* ring buffer */
+.ring{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.cell{width:52px;height:52px;border:1px solid var(--border2);border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);background:rgba(17,20,24,.85);position:relative;transition:.2s}
+.cell .idx{font-size:9px;color:var(--muted)}
+.cell.filled{border-color:var(--amber);color:var(--amber)}
+.cell .ptr{position:absolute;top:-18px;font-size:9px;letter-spacing:.04em}
+.cell .ptr.tailp{top:auto;bottom:-18px}
+.cell.headcell{box-shadow:0 0 0 1px var(--teal) inset}
+.statline{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--dim);margin-top:26px;display:flex;gap:18px;flex-wrap:wrap}
+.statline .v{color:var(--text)}
+.statline .bad{color:var(--red)}
+/* dma */
+.dmabuf{display:grid;grid-template-columns:repeat(16,1fr);gap:4px}
+.dcell{height:34px;border:1px solid var(--border2);border-radius:3px;background:rgba(17,20,24,.85);transition:.15s;position:relative}
+.dcell.filled{background:rgba(255,180,84,.55);border-color:var(--amber)}
+.dcell.consumed{background:rgba(0,212,170,.25);border-color:rgba(0,212,170,.5)}
+.dcell.overrun{background:rgba(224,80,80,.7);border-color:var(--red)}
+.dma-half-label{display:flex;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-top:5px}
+.dma-half-label div{flex:1;text-align:center}
+/* boot */
+.bootgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.memcol{border:1px solid var(--border2);border-radius:6px;overflow:hidden;background:rgba(17,20,24,.85)}
+.memcol h4{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--border)}
+.memblk{padding:8px 10px;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);transition:.25s}
+.memblk small{display:block;font-size:9px;color:var(--muted)}
+.memblk.hl{background:rgba(0,212,170,.12);color:var(--teal)}
+.bootsteps{margin-top:12px}
+.bootstep-desc{font-size:12.5px;color:var(--text);min-height:44px;margin-top:10px}
+.stepdots{display:flex;gap:6px;margin-top:6px}
+.sdot{width:26px;height:4px;border-radius:2px;background:var(--border2)}
+.sdot.on{background:var(--teal)}
+/* hardfault */
+.clue{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:10px 14px;margin-bottom:8px;display:none}
+.clue.show{display:block;animation:fadein .3s}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+.clue .reg{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber)}
+.clue .meaning{font-size:12px;color:var(--dim);margin-top:3px}
+.clue .meaning b{color:var(--text);font-weight:500}
+/* struct */
+.members{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.member{display:flex;align-items:center;gap:8px;border:1px solid var(--border2);border-radius:4px;padding:6px 10px;background:rgba(17,20,24,.85);font-family:'IBM Plex Mono',monospace;font-size:12px}
+.member .mv{margin-left:auto;display:flex;gap:4px}
+.member button{padding:2px 8px;font-size:11px}
+.bytegrid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-width:480px}
+.byte{height:34px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;border:1px solid var(--border2);color:#0a0c0f;font-weight:600}
+.byte.pad{background:repeating-linear-gradient(45deg,#2a3340,#2a3340 4px,#181d23 4px,#181d23 8px);color:var(--dim);font-weight:400}
+/* endian */
+.endrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.endrow .lab{width:130px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+.ecell{width:64px;border:1px solid var(--border2);border-radius:4px;background:rgba(17,20,24,.85);text-align:center;padding:5px 0;font-family:'IBM Plex Mono',monospace}
+.ecell .b{font-size:13px;color:var(--amber)}
+.ecell .a{font-size:9px;color:var(--muted)}
+/* layers */
+.stack{display:flex;flex-direction:column;gap:6px}
+.layer{border:1px solid var(--border2);border-radius:6px;padding:10px 14px;background:rgba(17,20,24,.85);cursor:pointer;transition:.15s}
+.layer:hover{border-color:var(--teal)}
+.layer h4{font-family:'IBM Plex Mono',monospace;font-size:12px;display:flex;align-items:center;gap:8px}
+.layer .det{display:none;font-size:12px;color:var(--dim);margin-top:6px;line-height:1.7}
+.layer.open .det{display:block}
+.layer .det b{color:var(--text);font-weight:500}
+/* ota */
+.ota-states{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.onode{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 12px;border:1px solid var(--border2);border-radius:5px;color:var(--dim);background:rgba(17,20,24,.85);transition:.2s}
+.onode.active{border-color:var(--teal);color:var(--teal);box-shadow:0 0 10px rgba(0,212,170,.25)}
+.onode.bad{border-color:var(--red);color:var(--red)}
+.ota-log{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);background:rgba(10,12,15,.8);border:1px solid var(--border2);border-radius:5px;padding:10px 12px;height:130px;overflow-y:auto;margin-top:10px;line-height:1.7}
+.ota-log .ok{color:var(--green)} .ota-log .warn{color:var(--amber)} .ota-log .err{color:var(--red)}
+.progressbar{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:8px;border:1px solid var(--border2)}
+.progressbar div{height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .2s}
+/* battery */
+.calcgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.cfield label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:4px}
+.cfield input{width:100%}
+.calc-out{margin-top:14px;display:flex;gap:24px;flex-wrap:wrap}
+.calc-out .big{font-family:'IBM Plex Mono',monospace;font-size:22px;color:var(--teal)}
+.calc-out .lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+.spi-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.spi-controls button.sel{border-color:var(--amber);color:var(--amber)}
+@media(max-width:700px){.race-grid,.bootgrid{grid-template-columns:1fr}.glabel{width:74px;font-size:9px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-title">TI Norway · Concepts Lab</div>
+  <div class="hdr-sub">Volume 2 — interactive visualizers for the prep document · pair with the Q&A study hub & Drill Mode</div>
+  <nav class="chips">
+    <a class="chip" href="#race">Race condition</a>
+    <a class="chip" href="#pinv">Priority inversion</a>
+    <a class="chip" href="#ring">Ring buffer</a>
+    <a class="chip" href="#dma">DMA circular RX</a>
+    <a class="chip" href="#boot">Cortex-M boot</a>
+    <a class="chip" href="#hf">HardFault detective</a>
+    <a class="chip" href="#pad">Struct padding</a>
+    <a class="chip" href="#endian">Endianness</a>
+    <a class="chip" href="#spi">SPI modes</a>
+    <a class="chip" href="#layers">BSP/HAL/Driver</a>
+    <a class="chip" href="#ota">OTA state machine</a>
+    <a class="chip" href="#batt">Battery calc</a>
+  </nav>
+</header>
+
+<div class="wrap">
+
+<!-- ============ 1. RACE CONDITION ============ -->
+<section class="lab" id="race">
+  <div class="lab-head"><span class="lab-num">LAB 01</span><span class="lab-title">Why <code>counter++</code> loses updates</span><span class="lab-tag">PDF Q13 · Q40</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> they show you <code>volatile uint32_t counter; counter++;</code> and ask "is this safe?" Step through the exact interleaving below until you can narrate it from memory.</div>
+    <div class="scope">
+      <div class="race-grid">
+        <div class="race-task"><h4 style="color:var(--teal)">TASK A</h4><div id="taskA"></div></div>
+        <div class="race-task"><h4 style="color:var(--purple)">TASK B (preempts A)</h4><div id="taskB"></div></div>
+      </div>
+      <div class="race-state">
+        <span>counter (memory): <span class="v" id="rcMem">5</span></span>
+        <span>A's register: <span class="v" id="rcRA">—</span></span>
+        <span>B's register: <span class="v" id="rcRB">—</span></span>
+        <span id="rcLost"></span>
+      </div>
+      <div class="narr" id="rcNarr">Two tasks each call counter++ once. Expected result: 7. Press Step.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="rcStep">Step ▸</button>
+      <button id="rcReset">Reset</button>
+    </div>
+    <div class="takeaway"><b>Say this in the interview:</b> "<code>volatile</code> forces the read and write to happen, but <code>++</code> is still LOAD → ADD → STORE. A preemption between LOAD and STORE loses an update. Fix: critical section (<code>taskENTER_CRITICAL</code>), interrupt masking, an atomic (LDREX/STREX), or a single-writer design."</div>
+  </div>
+</section>
+
+<!-- ============ 2. PRIORITY INVERSION ============ -->
+<section class="lab" id="pinv">
+  <div class="lab-head"><span class="lab-num">LAB 02</span><span class="lab-title">Priority inversion & priority inheritance</span><span class="lab-tag">PDF Q36–Q37</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> the classic follow-up to "mutex vs semaphore." Watch how the medium task hijacks the CPU, then flip inheritance on and watch the block shrink. Mention Mars Pathfinder (1997) as the famous case.</div>
+    <div class="scope">
+      <div class="gwrap" id="gwrap">
+        <div class="gantt">
+          <div class="grow"><div class="glabel" style="color:var(--red)">H (high)</div><div class="gtrack" data-row="0"></div></div>
+          <div class="grow"><div class="glabel" style="color:var(--amber)">M (medium)</div><div class="gtrack" data-row="1"></div></div>
+          <div class="grow"><div class="glabel" style="color:var(--green)">L (low)</div><div class="gtrack" data-row="2"></div></div>
+        </div>
+        <div class="glegend">
+          <span><i class="sw-dot" style="background:rgba(80,200,120,.55)"></i>running</span>
+          <span><i class="sw-dot" style="background:rgba(255,180,84,.65)"></i>holding mutex</span>
+          <span><i class="sw-dot" style="background:repeating-linear-gradient(45deg,rgba(224,80,80,.5),rgba(224,80,80,.5) 4px,rgba(224,80,80,.2) 4px,rgba(224,80,80,.2) 8px)"></i>blocked</span>
+          <span><i class="sw-dot" style="background:rgba(160,128,224,.65)"></i>inherited priority</span>
+        </div>
+      </div>
+      <div class="narr" id="piNarr">Press Play. Inheritance is OFF — this is the failure case.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="piPlay">▶ Play</button>
+      <button id="piReset">Reset</button>
+      <label class="sw"><input type="checkbox" id="piInherit"> priority inheritance (mutex, not binary semaphore)</label>
+    </div>
+    <div class="takeaway"><b>Key sentence:</b> "Only FreeRTOS <i>mutexes</i> do priority inheritance — binary semaphores don't, because they have no ownership concept. That's the real difference between them, beyond signaling vs mutual exclusion."</div>
+  </div>
+</section>
+
+<!-- ============ 3. RING BUFFER ============ -->
+<section class="lab" id="ring">
+  <div class="lab-head"><span class="lab-num">LAB 03</span><span class="lab-title">Ring buffer — head, tail, full vs empty</span><span class="lab-tag">PDF Q20 · Q47</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "design a UART RX path" almost always lands here. The trap question: how do you tell <i>full</i> from <i>empty</i> when head == tail? (Answer: leave one slot unused, or keep a count.)</div>
+    <div class="scope">
+      <div class="ring" id="ringCells"></div>
+      <div class="statline">
+        <span>head (write): <span class="v" id="rbHead">0</span></span>
+        <span>tail (read): <span class="v" id="rbTail">0</span></span>
+        <span>count: <span class="v" id="rbCount">0</span></span>
+        <span>state: <span class="v" id="rbState">EMPTY</span></span>
+        <span>overruns dropped: <span class="bad" id="rbOver">0</span></span>
+      </div>
+      <div class="narr" id="rbNarr">ISR/DMA writes at head. Task reads at tail. One slot is kept unused so full ≠ empty.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="rbWrite">ISR: write byte</button>
+      <button class="primary" id="rbRead">Task: read byte</button>
+      <button id="rbBurst">Burst write ×5</button>
+      <button id="rbReset2">Reset</button>
+    </div>
+    <div class="takeaway"><b>Conditions to recite:</b> empty when <code>head == tail</code>; full when <code>(head+1) % N == tail</code>. Indexes shared between ISR and task must be <code>volatile</code> and updated single-writer (ISR owns head, task owns tail) — that's what makes the lock-free version safe.</div>
+  </div>
+</section>
+
+<!-- ============ 4. DMA ============ -->
+<section class="lab" id="dma">
+  <div class="lab-head"><span class="lab-num">LAB 04</span><span class="lab-title">Circular DMA + half/full interrupts (ping-pong)</span><span class="lab-tag">PDF Q8–Q9 · Q45</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> your CV claims circular DMA on UART/ADC — expect "walk me through it" and "what goes wrong?" Toggle the slow CPU and watch the overrun happen: that's the failure mode to name unprompted.</div>
+    <div class="scope">
+      <div class="dmabuf" id="dmaBuf"></div>
+      <div class="dma-half-label"><div>← first half · HT interrupt fires when full</div><div>second half · TC interrupt fires, DMA wraps to 0 →</div></div>
+      <div class="statline">
+        <span>HT events: <span class="v" id="dmaHT">0</span></span>
+        <span>TC events: <span class="v" id="dmaTC">0</span></span>
+        <span>overruns: <span class="bad" id="dmaOver">0</span></span>
+      </div>
+      <div class="narr" id="dmaNarr">DMA fills cells (amber). On HT/TC interrupt, the CPU consumes that half (teal). Press Play.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="dmaPlay">▶ Play</button>
+      <button id="dmaReset">Reset</button>
+      <label class="sw"><input type="checkbox" id="dmaSlow"> CPU too slow (processing &gt; fill time)</label>
+    </div>
+    <div class="takeaway"><b>The rule:</b> ping-pong only works if processing time per half &lt; fill time per half. Bugs to list: wrong address/length/width, missed flag clear, ISR/task index races, wraparound math, and cache coherency on MCUs with D-cache.</div>
+  </div>
+</section>
+
+<!-- ============ 5. BOOT ============ -->
+<section class="lab" id="boot">
+  <div class="lab-head"><span class="lab-num">LAB 05</span><span class="lab-title">Cortex-M reset → main()</span><span class="lab-tag">PDF Q26–Q27</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "what happens when the MCU resets?" is a favorite fundamentals probe. Step through and watch which memory region is touched at each stage.</div>
+    <div class="scope">
+      <div class="bootgrid">
+        <div class="memcol"><h4>FLASH</h4>
+          <div class="memblk" id="mb-vt">0x0000_0000 · Vector table<small>[0] initial MSP · [1] Reset_Handler · faults · IRQs</small></div>
+          <div class="memblk" id="mb-text">.text<small>code</small></div>
+          <div class="memblk" id="mb-rodata">.rodata<small>constants</small></div>
+          <div class="memblk" id="mb-datainit">.data load image<small>initial values stored in flash</small></div>
+        </div>
+        <div class="memcol"><h4>RAM</h4>
+          <div class="memblk" id="mb-data">.data<small>initialized globals — copied from flash</small></div>
+          <div class="memblk" id="mb-bss">.bss<small>zero-initialized globals</small></div>
+          <div class="memblk" id="mb-heap">heap<small>(if used)</small></div>
+          <div class="memblk" id="mb-stack">stack<small>MSP starts at top of RAM</small></div>
+        </div>
+      </div>
+      <div class="bootsteps">
+        <div class="stepdots" id="bootDots"></div>
+        <div class="bootstep-desc" id="bootDesc"></div>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button id="bootPrev">◂ Back</button>
+      <button class="primary" id="bootNext">Step ▸</button>
+    </div>
+    <div class="takeaway"><b>Bootloader bonus:</b> a custom bootloader jumping to an app must also disable interrupts/DMA, set <code>SCB-&gt;VTOR</code> to the app's vector table, load the app's SP, then jump to its reset handler — forget VTOR and every interrupt vectors back into the bootloader.</div>
+  </div>
+</section>
+
+<!-- ============ 6. HARDFAULT ============ -->
+<section class="lab" id="hf">
+  <div class="lab-head"><span class="lab-num">LAB 06</span><span class="lab-title">HardFault detective — a worked investigation</span><span class="lab-tag">PDF Q29 · Q49</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "how do you debug a HardFault?" separates juniors from seniors. The senior answer names the registers. Walk this real-style case until the register names are automatic.</div>
+    <div class="scope">
+      <div id="hfClues">
+        <div class="clue"><div class="reg">▸ Symptom</div><div class="meaning">Device resets randomly under load. You attach the debugger and halt — PC is inside <b>HardFault_Handler</b>. Don't guess. Read the fault registers.</div></div>
+        <div class="clue"><div class="reg">▸ HFSR @ 0xE000ED2C = 0x4000_0000</div><div class="meaning">Bit 30 <b>FORCED = 1</b> → a configurable fault (bus/usage/mem) escalated to HardFault because its handler wasn't enabled. So the real story is in <b>CFSR</b>.</div></div>
+        <div class="clue"><div class="reg">▸ CFSR @ 0xE000ED28 = 0x0000_8200</div><div class="meaning">Bus fault byte: <b>PRECISERR = 1</b> (precise data bus error — the stacked PC points at the exact faulting instruction) and <b>BFARVALID = 1</b> → the faulting <i>address</i> is captured in <b>BFAR</b>.</div></div>
+        <div class="clue"><div class="reg">▸ BFAR @ 0xE000ED38 = 0x0000_0004</div><div class="meaning">Faulting address is near zero → a <b>NULL pointer dereference</b> (reading a struct field at offset 4 through a NULL pointer).</div></div>
+        <div class="clue"><div class="reg">▸ Stacked PC (from exception stack frame) = 0x0000_A4C2</div><div class="meaning">The CPU auto-pushed R0–R3, R12, LR, PC, xPSR on fault entry. Look up 0xA4C2 in the <b>.map file</b> / disassembly → it lands inside <b>uart_send()</b>, at a load through the driver handle.</div></div>
+        <div class="clue"><div class="reg">▸ Root cause</div><div class="meaning">A task called <code>uart_send()</code> before <code>uart_init()</code> ran — the handle pointer was still NULL. Fix: assert non-NULL handle at entry, fix init ordering, add an init-state flag. <b>Process change:</b> add an assertion-on-entry convention for all driver handles.</div></div>
+      </div>
+      <div class="narr" id="hfNarr">Press "Next clue" to start the investigation.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="hfNext">Next clue ▸</button>
+      <button id="hfReset">Restart</button>
+    </div>
+    <div class="takeaway"><b>Register cheat line:</b> CFSR 0xE000ED28 (which sub-fault) → HFSR 0xE000ED2C (escalated?) → MMFAR/BFAR 0xE000ED34/38 (faulting address) → stacked PC (faulting instruction) → map file (which function). Causes to list: NULL pointer, stack overflow, bad function pointer, invalid ISR priority calling RTOS APIs, DMA writing out of bounds.</div>
+  </div>
+</section>
+
+<!-- ============ 7. STRUCT PADDING ============ -->
+<section class="lab" id="pad">
+  <div class="lab-head"><span class="lab-num">LAB 07</span><span class="lab-title">Struct padding playground</span><span class="lab-tag">PDF Q18</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> reorder the members and watch the size change — a great thing to demonstrate aloud. Largest-first ordering minimizes padding.</div>
+    <div class="scope">
+      <div class="members" id="padMembers"></div>
+      <label class="sw" style="margin-bottom:10px"><input type="checkbox" id="padPacked"> <code>__attribute__((packed))</code></label>
+      <div class="bytegrid" id="padGrid"></div>
+      <div class="statline"><span>sizeof(struct): <span class="v" id="padSize">—</span> bytes</span><span>padding: <span class="v" id="padWaste">—</span> bytes</span></div>
+      <div class="narr" id="padNarr"></div>
+    </div>
+    <div class="takeaway"><b>Why it matters:</b> mapping structs onto registers/packets/flash needs exact layout — but packed structs can cause <b>unaligned accesses</b> that are slow on M3/M4 and fault on M0. Prefer explicit serialization or careful member ordering over packing.</div>
+  </div>
+</section>
+
+<!-- ============ 8. ENDIANNESS ============ -->
+<section class="lab" id="endian">
+  <div class="lab-head"><span class="lab-num">LAB 08</span><span class="lab-title">Endianness visualizer</span><span class="lab-tag">PDF Q17</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> ARM Cortex-M is little-endian; network/BLE multi-byte fields are often the opposite of what you expect. Type any value and read the bytes off.</div>
+    <div class="scope">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px">uint32_t x = 0x<input type="text" id="endIn" value="12345678" maxlength="8" style="width:110px">;</div>
+      <div class="endrow"><div class="lab">little-endian (ARM)</div><div id="endLE" style="display:flex;gap:6px"></div></div>
+      <div class="endrow"><div class="lab">big-endian (network)</div><div id="endBE" style="display:flex;gap:6px"></div></div>
+      <div class="narr">LSB at the lowest address = little-endian. Bugs show up when casting byte arrays to ints or parsing protocol packets.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 9. SPI MODES ============ -->
+<section class="lab" id="spi">
+  <div class="lab-head"><span class="lab-num">LAB 09</span><span class="lab-title">SPI modes — CPOL / CPHA explorer</span><span class="lab-tag">PDF Q42 · Q48</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "SPI returns garbage — first thing you check?" → mode mismatch. Click through all four modes and note which edge samples the data.</div>
+    <div class="scope">
+      <div class="spi-controls" id="spiBtns"></div>
+      <svg id="spiSvg" width="100%" height="170" viewBox="0 0 640 170" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="narr" id="spiNarr"></div>
+    </div>
+    <div class="takeaway"><b>Memory hook:</b> CPOL = where the clock <i>rests</i> (0 = low). CPHA = which edge <i>samples</i> (0 = first edge, 1 = second). Mode 0 and Mode 3 cover most devices — always confirm against the slave's datasheet timing diagram.</div>
+  </div>
+</section>
+
+<!-- ============ 10. LAYERS ============ -->
+<section class="lab" id="layers">
+  <div class="lab-head"><span class="lab-num">LAB 10</span><span class="lab-title">App / HAL / Driver / BSP — who owns what</span><span class="lab-tag">PDF Q6</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> this question maps directly onto your Milwaukee Tool BSP work — answer it with the layer names <i>and</i> a concrete example from your platform. Click each layer.</div>
+    <div class="scope">
+      <div class="stack">
+        <div class="layer" onclick="this.classList.toggle('open')"><h4 style="color:var(--purple)">APPLICATION ▾</h4><div class="det"><b>Owns:</b> product behavior, business logic, state machines. <b>Must not know:</b> register addresses, clock trees, DMA channel numbers. <b>Example:</b> "send telemetry every 10 s" — calls <code>uart_write()</code>, never <code>USART1-&gt;TDR</code>.</div></div>
+        <div class="layer" onclick="this.classList.toggle('open')"><h4 style="color:var(--blue)">HAL ▾</h4><div class="det"><b>Owns:</b> a common interface over hardware-specific implementations. <b>Example:</b> the same <code>uart_write()</code> works whether the MCU underneath is STM32 or Silicon Labs — exactly how your multi-platform firmware stayed portable.</div></div>
+        <div class="layer" onclick="this.classList.toggle('open')"><h4 style="color:var(--teal)">DRIVER ▾</h4><div class="det"><b>Owns:</b> one peripheral or device — config, TX/RX, interrupts, DMA, error flags, callbacks. <b>Example:</b> UART driver handling baud, ORE/FE/PE flags, ring buffer; a sensor driver doing I2C register reads.</div></div>
+        <div class="layer" onclick="this.classList.toggle('open')"><h4 style="color:var(--amber)">BSP ▾</h4><div class="det"><b>Owns:</b> everything board-specific — pin muxing, clock setup, power sequencing, memory layout, interrupt mapping, board init. <b>Example:</b> bringing up a new board revision = BSP changes only; drivers and app untouched.</div></div>
+        <div class="layer" onclick="this.classList.toggle('open')"><h4 style="color:var(--dim)">HARDWARE ▾</h4><div class="det">Registers, silicon, errata. Zephyr's equivalent split: <b>Devicetree</b> describes this layer, <b>Kconfig</b> selects what software above it gets compiled in, the <b>driver model</b> binds them.</div></div>
+      </div>
+    </div>
+    <div class="takeaway"><b>The senior framing:</b> "The goal wasn't making one board work — it was separating board-specific config from generic driver logic so multiple platform variants shared the same firmware components."</div>
+  </div>
+</section>
+
+<!-- ============ 11. OTA ============ -->
+<section class="lab" id="ota">
+  <div class="lab-head"><span class="lab-num">LAB 11</span><span class="lab-title">OTA dual-bank update — run the state machine</span><span class="lab-tag">PDF Q65–Q66</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> drive the update yourself — including the failure paths. Being fluent in the rollback path is what makes the answer senior. Try: start → a CRC failure → finish → crash on test boot.</div>
+    <div class="scope">
+      <div class="ota-states" id="otaStates"></div>
+      <div class="progressbar"><div id="otaProg"></div></div>
+      <div class="btnrow" id="otaBtns"></div>
+      <div class="ota-log" id="otaLog"></div>
+    </div>
+    <div class="takeaway"><b>Checklist to recite:</b> chunked transfer with resume (offsets, not restart-from-zero) → per-chunk CRC → full-image SHA-256 + ECDSA signature → mark pending → test boot with confirm-or-rollback (watchdog-guarded) → anti-rollback version counter in OTP/CCFG. In Zephyr this is <b>MCUboot</b> — know its swap modes.</div>
+  </div>
+</section>
+
+<!-- ============ 12. BATTERY ============ -->
+<section class="lab" id="batt">
+  <div class="lab-head"><span class="lab-num">LAB 12</span><span class="lab-title">Coin-cell budget calculator</span><span class="lab-tag">System design</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "design a 5-year battery sensor" is a classic TI system-design question. Be able to do this arithmetic on a whiteboard: average current = sleep + active × duty cycle.</div>
+    <div class="scope">
+      <div class="calcgrid">
+        <div class="cfield"><label>Sleep current (µA)</label><input type="number" id="bSleep" value="0.85" step="0.05"></div>
+        <div class="cfield"><label>Active current (mA)</label><input type="number" id="bAct" value="5" step="0.5"></div>
+        <div class="cfield"><label>Active time per wake (ms)</label><input type="number" id="bMs" value="2" step="0.5"></div>
+        <div class="cfield"><label>Wake period (s)</label><input type="number" id="bPer" value="10" step="1"></div>
+        <div class="cfield"><label>Battery capacity (mAh)</label><input type="number" id="bCap" value="225" step="5"></div>
+      </div>
+      <div class="calc-out">
+        <div><div class="big" id="bAvg">—</div><div class="lbl">average current</div></div>
+        <div><div class="big" id="bYears">—</div><div class="lbl">battery life (ideal)</div></div>
+        <div><div class="big" id="bDerate">—</div><div class="lbl">with 30% derating margin</div></div>
+      </div>
+    </div>
+    <div class="takeaway"><b>Mention the margin:</b> real designs derate for self-discharge, cold-temperature capacity loss, and TX current spikes on a high-ESR coin cell (decoupling caps!). Verify with a power profiler (TI EnergyTrace) before tapeout.</div>
+  </div>
+</section>
+
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:1rem 0 2rem">Concepts Lab · companion to the TI study hub & Drill Mode · session state is in-memory only</div>
+</div>
+
+<script>
+/* ===== 1. RACE ===== */
+(function(){
+  const linesA=['LOAD  r1, [counter]   ; r1 = 5','ADD   r1, r1, #1       ; r1 = 6','STORE [counter], r1    ; mem = 6'];
+  const linesB=['LOAD  r2, [counter]   ; r2 = 5','ADD   r2, r2, #1       ; r2 = 6','STORE [counter], r2    ; mem = 6'];
+  const A=document.getElementById('taskA'),B=document.getElementById('taskB');
+  linesA.forEach(t=>{const d=document.createElement('div');d.className='race-line';d.textContent=t;A.appendChild(d)});
+  linesB.forEach(t=>{const d=document.createElement('div');d.className='race-line';d.textContent=t;B.appendChild(d)});
+  const la=[...A.children], lb=[...B.children];
+  // schedule: A0, (preempt) B0,B1,B2, (resume) A1, A2
+  const steps=[
+    {l:la[0],mem:5,ra:'5',rb:'—',n:'Task A loads counter (5) into its register… and is preempted right here.'},
+    {l:lb[0],mem:5,ra:'5',rb:'5',n:'Task B runs. It loads counter — still 5. A\'s increment hasn\'t been stored yet.'},
+    {l:lb[1],mem:5,ra:'5',rb:'6',n:'B increments its private copy to 6.'},
+    {l:lb[2],mem:6,ra:'5',rb:'6',n:'B stores 6 to memory. B\'s increment is complete.'},
+    {l:la[1],mem:6,ra:'6',rb:'6',n:'A resumes — but it still holds the STALE value 5, and increments it to 6.'},
+    {l:la[2],mem:6,ra:'6',rb:'6',n:'A stores 6 — overwriting B\'s work. Two increments, counter went 5 → 6. ONE UPDATE LOST.',lost:true}
+  ];
+  let i=0;
+  const mem=document.getElementById('rcMem'),ra=document.getElementById('rcRA'),rb=document.getElementById('rcRB'),narr=document.getElementById('rcNarr'),lost=document.getElementById('rcLost');
+  document.getElementById('rcStep').onclick=()=>{
+    if(i>=steps.length)return;
+    [...la,...lb].forEach(x=>x.classList.remove('active'));
+    if(i>0)steps[i-1].l.classList.add('done');
+    const s=steps[i]; s.l.classList.add('active');
+    mem.textContent=s.mem; ra.textContent=s.ra; rb.textContent=s.rb; narr.textContent=s.n;
+    if(s.lost)lost.innerHTML='<span class="lostflag">⚠ LOST UPDATE — expected 7</span>';
+    i++;
+  };
+  document.getElementById('rcReset').onclick=()=>{
+    i=0;[...la,...lb].forEach(x=>x.classList.remove('active','done'));
+    mem.textContent='5';ra.textContent='—';rb.textContent='—';lost.textContent='';
+    narr.textContent='Two tasks each call counter++ once. Expected result: 7. Press Step.';
+  };
+})();
+
+/* ===== 2. PRIORITY INVERSION ===== */
+(function(){
+  const DUR=9;
+  const scen={
+    off:{segs:[{r:2,s:0,e:1,c:'run'},{r:2,s:1,e:2,c:'mutex'},{r:0,s:2,e:3,c:'run'},{r:0,s:3,e:7,c:'blocked'},{r:1,s:3,e:6,c:'run'},{r:2,s:6,e:7,c:'mutex'},{r:0,s:7,e:9,c:'run'}],
+      notes:[[0,'L (low) starts running.'],[1,'L takes the mutex (amber).'],[2,'H (high) becomes ready and preempts L.'],[3,'H needs the mutex → BLOCKS. M (medium) becomes ready and runs — it outranks L, so L can\'t release.'],[6,'M finally finishes. L runs and releases the mutex.'],[7,'H gets the mutex — stalled 4 ticks by a task that never touched it. That is priority inversion.'],[8.9,'Done. H effectively ran at M\'s priority.']]},
+    on:{segs:[{r:2,s:0,e:1,c:'run'},{r:2,s:1,e:2,c:'mutex'},{r:0,s:2,e:3,c:'run'},{r:0,s:3,e:4,c:'blocked'},{r:2,s:3,e:4,c:'inherit'},{r:0,s:4,e:6,c:'run'},{r:1,s:6,e:9,c:'run'}],
+      notes:[[0,'L starts running.'],[1,'L takes the mutex.'],[2,'H preempts L.'],[3,'H blocks → L INHERITS H\'s priority (purple) and outranks M.'],[4,'L releases, drops back to low priority. H runs immediately.'],[6,'H done — blocked only 1 tick. Now M finally runs.'],[8.9,'Inheritance bounded the inversion to the critical section length.']]}
+  };
+  const tracks=[...document.querySelectorAll('#pinv .gtrack')];
+  const narr=document.getElementById('piNarr');
+  const wrap=document.getElementById('gwrap');
+  const head=document.createElement('div');head.className='playhead';head.style.left='0%';head.style.display='none';
+  tracks[0].appendChild(head);
+  let timer=null,t=0;
+  function key(){return document.getElementById('piInherit').checked?'on':'off'}
+  function render(){
+    const sc=scen[key()];
+    tracks.forEach((tr,row)=>{
+      tr.querySelectorAll('.gseg').forEach(x=>x.remove());
+      sc.segs.filter(s=>s.r===row&&t>s.s).forEach(s=>{
+        const d=document.createElement('div');d.className='gseg '+s.c;
+        d.style.left=(s.s/DUR*100)+'%';d.style.width=((Math.min(s.e,t)-s.s)/DUR*100)+'%';
+        tr.appendChild(d);
+      });
+    });
+    tracks[0].appendChild(head);
+    head.style.left=(Math.min(t,DUR)/DUR*100)+'%';
+    const n=sc.notes.filter(x=>x[0]<=t).pop();
+    if(n)narr.textContent=n[1];
+  }
+  function play(){
+    if(timer)return;
+    head.style.display='block';
+    timer=setInterval(()=>{t+=0.08;if(t>=DUR){t=DUR;clearInterval(timer);timer=null}render()},55);
+  }
+  function reset(){if(timer){clearInterval(timer);timer=null}t=0;head.style.display='none';
+    tracks.forEach(tr=>tr.querySelectorAll('.gseg').forEach(x=>x.remove()));
+    narr.textContent=document.getElementById('piInherit').checked?'Inheritance is ON — watch how short H\'s block becomes.':'Inheritance is OFF — this is the failure case. Press Play.'}
+  document.getElementById('piPlay').onclick=play;
+  document.getElementById('piReset').onclick=reset;
+  document.getElementById('piInherit').onchange=reset;
+})();
+
+/* ===== 3. RING BUFFER ===== */
+(function(){
+  const N=8;let head=0,tail=0,over=0;const buf=new Array(N).fill(null);
+  const wrap=document.getElementById('ringCells');
+  for(let i=0;i<N;i++){const c=document.createElement('div');c.className='cell';c.innerHTML='<span class="ptr"></span><span class="val">·</span><span class="idx">['+i+']</span><span class="ptr tailp"></span>';wrap.appendChild(c)}
+  const cells=[...wrap.children];
+  const narr=document.getElementById('rbNarr');
+  function full(){return (head+1)%N===tail} function empty(){return head===tail}
+  function count(){return (head-tail+N)%N}
+  function draw(){
+    cells.forEach((c,i)=>{
+      c.classList.toggle('filled',buf[i]!==null);
+      c.classList.toggle('headcell',i===head);
+      c.querySelector('.val').textContent=buf[i]===null?'·':buf[i];
+      c.querySelector('.ptr').textContent=i===head?'HEAD ▼':'';
+      c.querySelector('.ptr').style.color='var(--teal)';
+      const tp=c.querySelector('.tailp');tp.textContent=i===tail?'▲ TAIL':'';tp.style.color='var(--purple)';
+    });
+    document.getElementById('rbHead').textContent=head;
+    document.getElementById('rbTail').textContent=tail;
+    document.getElementById('rbCount').textContent=count();
+    document.getElementById('rbState').textContent=empty()?'EMPTY':(full()?'FULL':'OK');
+    document.getElementById('rbOver').textContent=over;
+  }
+  function wr(silent){
+    if(full()){over++;if(!silent)narr.textContent='Buffer FULL — (head+1)%N == tail. Byte dropped: overrun. In a real UART this sets the ORE flag.';draw();return}
+    buf[head]='0x'+Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase();
+    head=(head+1)%N;
+    if(!silent)narr.textContent='ISR wrote at head, then advanced it. Only the ISR ever writes head — single-writer keeps it lock-free.';
+    draw();
+  }
+  function rd(){
+    if(empty()){narr.textContent='Buffer EMPTY — head == tail. Task blocks (semaphore / task notification) instead of busy-polling.';return}
+    buf[tail]=null;tail=(tail+1)%N;
+    narr.textContent='Task consumed at tail, then advanced it. Only the task ever writes tail.';
+    draw();
+  }
+  document.getElementById('rbWrite').onclick=()=>wr(false);
+  document.getElementById('rbRead').onclick=rd;
+  document.getElementById('rbBurst').onclick=()=>{for(let i=0;i<5;i++)wr(true);narr.textContent='Burst of 5 writes — if the task is slow, the buffer fills and further bytes drop. Size buffers for worst-case burst.';};
+  document.getElementById('rbReset2').onclick=()=>{head=0;tail=0;over=0;buf.fill(null);narr.textContent='ISR/DMA writes at head. Task reads at tail. One slot is kept unused so full ≠ empty.';draw()};
+  draw();
+})();
+
+/* ===== 4. DMA ===== */
+(function(){
+  const N=16;const wrap=document.getElementById('dmaBuf');
+  for(let i=0;i<N;i++){const d=document.createElement('div');d.className='dcell';wrap.appendChild(d)}
+  const cells=[...wrap.children];
+  let idx=0,ht=0,tc=0,over=0,queue=[],credit=0,timer=null;
+  const filled=new Array(N).fill(false),consumed=new Array(N).fill(true);
+  const narr=document.getElementById('dmaNarr');
+  function draw(){cells.forEach((c,i)=>{c.className='dcell'+(filled[i]?(consumed[i]?' consumed':' filled'):'')});
+    document.getElementById('dmaHT').textContent=ht;document.getElementById('dmaTC').textContent=tc;document.getElementById('dmaOver').textContent=over}
+  function tick(){
+    // DMA writes one cell
+    if(filled[idx]&&!consumed[idx]){over++;cells[idx].classList.add('overrun');narr.textContent='⚠ OVERRUN — DMA wrapped into data the CPU hasn\'t consumed yet. Processing per half must be faster than fill per half.';setTimeout(()=>cells[idx]&&cells[idx].classList.remove('overrun'),300)}
+    filled[idx]=true;consumed[idx]=false;idx=(idx+1)%N;
+    if(idx===N/2){ht++;queue.push(...Array.from({length:N/2},(_,k)=>k));narr.textContent='Half-transfer (HT) interrupt → CPU starts consuming the FIRST half while DMA fills the second.'}
+    if(idx===0){tc++;queue.push(...Array.from({length:N/2},(_,k)=>k+N/2));narr.textContent='Transfer-complete (TC) interrupt → CPU consumes the SECOND half; DMA wraps to 0. Circular mode never stops.'}
+    // CPU consumes
+    credit+=document.getElementById('dmaSlow').checked?0.35:2;
+    while(credit>=1&&queue.length){const i=queue.shift();consumed[i]=true;credit--}
+    draw();
+  }
+  document.getElementById('dmaPlay').onclick=function(){
+    if(timer){clearInterval(timer);timer=null;this.textContent='▶ Play';return}
+    this.textContent='❚❚ Pause';timer=setInterval(tick,300);
+  };
+  document.getElementById('dmaReset').onclick=()=>{if(timer){clearInterval(timer);timer=null;document.getElementById('dmaPlay').textContent='▶ Play'}
+    idx=0;ht=0;tc=0;over=0;queue=[];credit=0;filled.fill(false);consumed.fill(true);
+    narr.textContent='DMA fills cells (amber). On HT/TC interrupt, the CPU consumes that half (teal). Press Play.';draw()};
+  draw();
+})();
+
+/* ===== 5. BOOT ===== */
+(function(){
+  const steps=[
+    {d:'POWER-ON RESET. The CPU fetches word [0] of the vector table at 0x0000_0000 → this is the INITIAL STACK POINTER. MSP is loaded before any code runs.',hl:['mb-vt','mb-stack']},
+    {d:'The CPU fetches word [1] → the RESET HANDLER address, and jumps there. Startup code (assembly/C) begins.',hl:['mb-vt','mb-text']},
+    {d:'Startup code copies the .data LOAD IMAGE from flash into the .data section in RAM — initialized globals get their values.',hl:['mb-datainit','mb-data']},
+    {d:'Startup code ZEROS the .bss section — uninitialized globals become 0, as C requires.',hl:['mb-bss']},
+    {d:'System clock init (wait for PLLRDY before switching!) and, in C++, static constructors run.',hl:['mb-text']},
+    {d:'main() is called → board/BSP init, peripheral init, create RTOS tasks, start the scheduler. From here the RTOS owns the CPU.',hl:['mb-text','mb-stack']}
+  ];
+  let i=-1;
+  const dots=document.getElementById('bootDots');
+  steps.forEach(()=>{const d=document.createElement('div');d.className='sdot';dots.appendChild(d)});
+  function draw(){
+    document.querySelectorAll('#boot .memblk').forEach(b=>b.classList.remove('hl'));
+    [...dots.children].forEach((d,k)=>d.classList.toggle('on',k<=i));
+    if(i<0){document.getElementById('bootDesc').textContent='Press Step to begin at power-on reset.';return}
+    steps[i].hl.forEach(id=>document.getElementById(id).classList.add('hl'));
+    document.getElementById('bootDesc').textContent=(i+1)+'/6 — '+steps[i].d;
+  }
+  document.getElementById('bootNext').onclick=()=>{if(i<steps.length-1){i++;draw()}};
+  document.getElementById('bootPrev').onclick=()=>{if(i>-1){i--;draw()}};
+  draw();
+})();
+
+/* ===== 6. HARDFAULT ===== */
+(function(){
+  const clues=[...document.querySelectorAll('#hfClues .clue')];let i=0;
+  const msgs=['Symptom revealed. What do you read first?','HFSR says: escalated fault. Where\'s the detail?','CFSR decoded: precise bus fault + valid fault address. Go get the address.','The address is ~0. What kind of bug lives at address zero?','Stacked PC → map file → the guilty function.','Case closed. Note the structure: registers → address → instruction → function → root cause → process fix.'];
+  document.getElementById('hfNext').onclick=()=>{
+    if(i<clues.length){clues[i].classList.add('show');document.getElementById('hfNarr').textContent=msgs[i];i++;}
+    if(i>=clues.length)document.getElementById('hfNext').disabled=true;
+  };
+  document.getElementById('hfReset').onclick=()=>{i=0;clues.forEach(c=>c.classList.remove('show'));document.getElementById('hfNext').disabled=false;document.getElementById('hfNarr').textContent='Press "Next clue" to start the investigation.'};
+})();
+
+/* ===== 7. STRUCT PADDING ===== */
+(function(){
+  let members=[{n:'flags',t:'uint8_t',sz:1,col:'#ffb454'},{n:'timestamp',t:'uint32_t',sz:4,col:'#00d4aa'},{n:'length',t:'uint16_t',sz:2,col:'#a080e0'},{n:'type',t:'uint8_t',sz:1,col:'#0099cc'}];
+  const list=document.getElementById('padMembers'),grid=document.getElementById('padGrid');
+  function layout(){
+    const packed=document.getElementById('padPacked').checked;
+    let off=0,bytes=[],maxA=1;
+    members.forEach(m=>{
+      const a=packed?1:m.sz;maxA=Math.max(maxA,a);
+      while(off%a!==0){bytes.push({pad:true});off++}
+      for(let k=0;k<m.sz;k++){bytes.push({m});off++}
+    });
+    if(!packed){while(off%maxA!==0){bytes.push({pad:true});off++}}
+    return {bytes,size:off};
+  }
+  function draw(){
+    list.innerHTML='';
+    members.forEach((m,i)=>{
+      const d=document.createElement('div');d.className='member';
+      d.innerHTML='<span style="width:12px;height:12px;border-radius:2px;background:'+m.col+'"></span><span>'+m.t+' '+m.n+';</span><span style="color:var(--muted)">'+m.sz+'B</span><span class="mv"></span>';
+      const mv=d.querySelector('.mv');
+      const up=document.createElement('button');up.textContent='▲';up.disabled=i===0;up.onclick=()=>{[members[i-1],members[i]]=[members[i],members[i-1]];draw()};
+      const dn=document.createElement('button');dn.textContent='▼';dn.disabled=i===members.length-1;dn.onclick=()=>{[members[i+1],members[i]]=[members[i],members[i+1]];draw()};
+      mv.append(up,dn);list.appendChild(d);
+    });
+    const {bytes,size}=layout();
+    grid.innerHTML='';
+    bytes.forEach((b,i)=>{
+      const d=document.createElement('div');d.className='byte'+(b.pad?' pad':'');
+      d.style.background=b.pad?'':b.m.col;
+      d.textContent=b.pad?'pad':b.m.n[0].toUpperCase();
+      d.title=b.pad?'padding byte (offset '+i+')':b.m.t+' '+b.m.n+' (offset '+i+')';
+      grid.appendChild(d);
+    });
+    const waste=bytes.filter(b=>b.pad).length;
+    document.getElementById('padSize').textContent=size;
+    document.getElementById('padWaste').textContent=waste;
+    document.getElementById('padNarr').textContent=document.getElementById('padPacked').checked
+      ?'Packed: no padding, exact wire layout — but uint32_t may land on an odd offset → unaligned access (slow on M3/M4, HardFault on M0).'
+      :(waste===0?'Zero padding — this ordering is optimal (largest members first).':'The compiler inserted '+waste+' padding byte(s) to satisfy alignment. Try reordering: largest first.');
+  }
+  document.getElementById('padPacked').onchange=draw;
+  draw();
+})();
+
+/* ===== 8. ENDIANNESS ===== */
+(function(){
+  const inp=document.getElementById('endIn');
+  function draw(){
+    let v=inp.value.replace(/[^0-9a-fA-F]/g,'').padStart(8,'0').slice(-8).toUpperCase();
+    const b=[v.slice(0,2),v.slice(2,4),v.slice(4,6),v.slice(6,8)]; // MSB..LSB
+    const mk=(arr)=>arr.map((x,i)=>'<div class="ecell"><div class="b">0x'+x+'</div><div class="a">addr+'+i+'</div></div>').join('');
+    document.getElementById('endLE').innerHTML=mk([...b].reverse());
+    document.getElementById('endBE').innerHTML=mk(b);
+  }
+  inp.addEventListener('input',draw);draw();
+})();
+
+/* ===== 9. SPI ===== */
+(function(){
+  const modes=[{cpol:0,cpha:0},{cpol:0,cpha:1},{cpol:1,cpha:0},{cpol:1,cpha:1}];
+  const btnwrap=document.getElementById('spiBtns');let cur=0;
+  modes.forEach((m,i)=>{const b=document.createElement('button');b.textContent='Mode '+i+' (CPOL='+m.cpol+', CPHA='+m.cpha+')';b.onclick=()=>{cur=i;draw()};btnwrap.appendChild(b)});
+  function draw(){
+    [...btnwrap.children].forEach((b,i)=>b.classList.toggle('sel',i===cur));
+    const {cpol,cpha}=modes[cur];
+    const svg=document.getElementById('spiSvg');
+    const x0=60,per=64,n=8,hiY=40,loY=80,mosiHi=120,mosiLo=150;
+    const idleY=cpol?hiY:loY, actY=cpol?loY:hiY;
+    let p='M 10 '+idleY+' L '+x0+' '+idleY;
+    let edges=[];
+    for(let k=0;k<n;k++){
+      const xa=x0+k*per, xb=xa+per/2, xc=xa+per;
+      p+=' L '+xa+' '+idleY+' L '+xa+' '+actY+' L '+xb+' '+actY+' L '+xb+' '+idleY+' L '+xc+' '+idleY;
+      edges.push({x:xa,first:true},{x:xb,first:false});
+    }
+    p+=' L '+(x0+n*per+20)+' '+idleY;
+    const samples=edges.filter(e=>cpha===0?e.first:!e.first);
+    // sampling edge direction
+    const rising=(cpol===0&&cpha===0)||(cpol===1&&cpha===1);
+    let dots=samples.map(e=>'<circle cx="'+e.x+'" cy="60" r="5" fill="none" stroke="#ffb454" stroke-width="2"/>').join('');
+    // MOSI bit cells aligned so transitions happen on the non-sample edge
+    const shift=cpha===0?-per/2:0;
+    let mosi='';
+    for(let k=0;k<n;k++){
+      const xs=Math.max(x0+shift+k*per,10), xe=x0+shift+(k+1)*per;
+      mosi+='<rect x="'+xs+'" y="'+mosiHi+'" width="'+(xe-xs)+'" height="'+(mosiLo-mosiHi)+'" fill="rgba(0,153,204,.12)" stroke="#2a3340"/>'
+          +'<text x="'+((xs+xe)/2)+'" y="'+(mosiHi+20)+'" fill="#5a6a7a" font-size="10" text-anchor="middle" font-family="IBM Plex Mono">b'+(7-k)+'</text>';
+    }
+    svg.innerHTML=
+      '<text x="10" y="30" fill="#5a6a7a" font-size="10" font-family="IBM Plex Mono">SCK  (idle '+(cpol?'HIGH':'LOW')+')</text>'
+      +'<path d="'+p+'" fill="none" stroke="#00d4aa" stroke-width="2"/>'+dots
+      +'<text x="10" y="115" fill="#5a6a7a" font-size="10" font-family="IBM Plex Mono">DATA (valid window per bit)</text>'+mosi;
+    document.getElementById('spiNarr').textContent='Mode '+cur+': clock idles '+(cpol?'HIGH':'LOW')+', data is sampled on the '+(cpha?'SECOND':'FIRST')+' edge of each pulse — that is the '+(rising?'RISING':'FALLING')+' edge (amber circles). Mismatch with the slave = shifted/garbage data.';
+  }
+  draw();
+})();
+
+/* ===== 11. OTA ===== */
+(function(){
+  const stateNames=['SLOT A ACTIVE','DOWNLOADING → SLOT B','VALIDATING','PENDING + REBOOT','TEST BOOT (SLOT B)','CONFIRMED · SLOT B ACTIVE','ROLLED BACK → SLOT A'];
+  const sWrap=document.getElementById('otaStates');
+  stateNames.forEach(n=>{const d=document.createElement('div');d.className='onode';d.textContent=n;sWrap.appendChild(d)});
+  const nodes=[...sWrap.children];
+  const log=document.getElementById('otaLog'),btns=document.getElementById('otaBtns'),prog=document.getElementById('otaProg');
+  let state=0,chunks=0;const TOTAL=8;
+  function addLog(t,cls){const d=document.createElement('div');if(cls)d.className=cls;d.textContent='> '+t;log.appendChild(d);log.scrollTop=log.scrollHeight}
+  function setState(s,bad){state=s;nodes.forEach((n,i)=>{n.classList.toggle('active',i===s);n.classList.toggle('bad',bad&&i===s)});drawBtns()}
+  function btn(label,fn,primary){const b=document.createElement('button');if(primary)b.className='primary';b.textContent=label;b.onclick=fn;btns.appendChild(b)}
+  function drawBtns(){
+    btns.innerHTML='';
+    if(state===0){btn('Start OTA download',()=>{chunks=0;prog.style.width='0%';addLog('Version check: device v1.2 < server v1.3 — update available','ok');addLog('Begin chunked transfer to slot B (external/secondary flash)');setState(1)},true)}
+    else if(state===1){
+      btn('Chunk received OK',()=>{chunks++;prog.style.width=(chunks/TOTAL*100)+'%';addLog('Chunk '+chunks+'/'+TOTAL+' — CRC OK, written at offset '+((chunks-1)*4096).toString(16).padStart(5,'0'),'ok');
+        if(chunks>=TOTAL){addLog('Transfer complete — running full-image validation');setState(2)}},true);
+      btn('Chunk CRC fails',()=>{addLog('Chunk '+(chunks+1)+' CRC mismatch — request retransmit of THIS chunk only','warn')});
+      btn('Connection lost',()=>{addLog('Link dropped. Progress ('+chunks+'/'+TOTAL+' chunks) persisted — on reconnect, RESUME from offset, never restart from zero','warn')});
+    }
+    else if(state===2){
+      btn('SHA-256 + ECDSA signature valid',()=>{addLog('Hash matches header. Signature verifies against trusted public key','ok');addLog('Anti-rollback: image version 1.3 > counter 1.2 — accepted','ok');addLog('Mark slot B PENDING, reboot into bootloader');prog.style.width='100%';setState(3);setTimeout(()=>{addLog('Bootloader: pending image found → booting slot B (trial)');setState(4)},700)},true);
+      btn('Signature invalid',()=>{addLog('SIGNATURE FAIL — image rejected, slot B erased. Never boot unverified code.','err');setState(0)});
+      btn('Older version (downgrade attack)',()=>{addLog('Image version 1.1 < anti-rollback counter 1.2 — REJECTED. Counter lives in OTP/CCFG.','err');setState(0)});
+    }
+    else if(state===4){
+      btn('App self-test passes → confirm',()=>{addLog('App called confirm-OK API within timeout — slot B marked permanent','ok');setState(5)},true);
+      btn('App crashes / watchdog reset',()=>{addLog('No confirmation before watchdog/boot-count limit — bootloader REVERTS to slot A','err');setState(6,true);setTimeout(()=>{addLog('Device healthy on slot A v1.2. Failure reported via telemetry.','warn');setState(0)},1200)});
+    }
+    else if(state===5){btn('Run another update cycle',()=>{addLog('— new cycle —');prog.style.width='0%';setState(0)})}
+  }
+  addLog('Dual-bank OTA simulator. Slot A runs v1.2. Drive the update — try the failure paths too.');
+  setState(0);
+})();
+
+/* ===== 12. BATTERY ===== */
+(function(){
+  const ids=['bSleep','bAct','bMs','bPer','bCap'];
+  function calc(){
+    const sl=+document.getElementById('bSleep').value||0;
+    const act=+document.getElementById('bAct').value||0;
+    const ms=+document.getElementById('bMs').value||0;
+    const per=+document.getElementById('bPer').value||1;
+    const cap=+document.getElementById('bCap').value||0;
+    const duty=(ms/1000)/per;
+    const avg=sl+act*1000*duty; // µA
+    const years=cap*1000/avg/8760;
+    document.getElementById('bAvg').textContent=avg.toFixed(2)+' µA';
+    document.getElementById('bYears').textContent=isFinite(years)?years.toFixed(1)+' yr':'—';
+    document.getElementById('bDerate').textContent=isFinite(years)?(years*0.7).toFixed(1)+' yr':'—';
+  }
+  ids.forEach(id=>document.getElementById(id).addEventListener('input',calc));
+  calc();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TI Prep · Drill Mode — Flashcard Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c0f;--bg2:#111418;--bg3:#181d23;--border:#1e2530;--border2:#2a3340;--text:#c8d4e0;--dim:#5a6a7a;--muted:#3a4a5a;--teal:#00d4aa;--blue:#0099cc;--amber:#ffb454;--red:#e05050;--purple:#a080e0;--green:#50c878}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+.hdr{border-bottom:1px solid var(--border);padding:1.1rem 1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;background:rgba(10,12,15,.95);backdrop-filter:blur(6px);z-index:50}
+.hdr-title{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.08em;text-transform:uppercase}
+.hdr-sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim)}
+.stats{margin-left:auto;display:flex;gap:18px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim)}
+.stats b{color:var(--text);font-weight:600}
+.stats .g{color:var(--green)} .stats .s{color:var(--amber)} .stats .a{color:var(--red)}
+.wrap{max-width:880px;margin:0 auto;padding:1.4rem 1.5rem 3rem}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.fchip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border:1px solid var(--border2);border-radius:20px;color:var(--dim);cursor:pointer;background:transparent;transition:.15s}
+.fchip:hover{border-color:var(--teal)}
+.fchip.on{border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.07)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+button{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 14px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;transition:.15s}
+button:hover{border-color:var(--teal);color:var(--teal)}
+button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.card{border:1px solid var(--border2);border-radius:10px;background:var(--bg2);min-height:320px;display:flex;flex-direction:column;overflow:hidden;cursor:pointer}
+.card-top{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+.sec-badge{padding:2px 8px;border-radius:3px;border:1px solid var(--border2);letter-spacing:.06em;text-transform:uppercase}
+.weak-badge{color:var(--amber);border:1px solid rgba(255,180,84,.4);padding:2px 8px;border-radius:3px}
+.card-q{padding:26px 26px 10px;font-size:18px;font-weight:500;line-height:1.5}
+.card-q code,.card-a code{font-family:'IBM Plex Mono',monospace;font-size:.85em;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;color:var(--teal)}
+.card-hint{padding:0 26px 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:auto}
+.card-a{display:none;padding:6px 26px 22px;font-size:13.5px;color:var(--dim);line-height:1.75;border-top:1px dashed var(--border2)}
+.card-a b{color:var(--text);font-weight:500}
+.card-a .say{display:block;margin-top:10px;border-left:3px solid var(--teal);background:rgba(0,212,170,.05);padding:6px 12px;border-radius:0 4px 4px 0;color:var(--dim)}
+.card-a .say b{color:var(--teal)}
+.card.flip .card-a{display:block}
+.card.flip .card-hint{display:none}
+.grade{display:none;gap:10px;margin-top:14px}
+.card.flip ~ .graderow .grade{display:flex}
+.graderow{margin-top:14px}
+.gbtn{flex:1;padding:12px;font-size:12px;border-radius:6px}
+.gbtn.again{border-color:rgba(224,80,80,.5);color:var(--red)} .gbtn.again:hover{background:rgba(224,80,80,.1)}
+.gbtn.shaky{border-color:rgba(255,180,84,.5);color:var(--amber)} .gbtn.shaky:hover{background:rgba(255,180,84,.1)}
+.gbtn.got{border-color:rgba(80,200,120,.5);color:var(--green)} .gbtn.got:hover{background:rgba(80,200,120,.1)}
+.done-msg{text-align:center;padding:60px 20px;display:none}
+.done-msg h2{font-family:'IBM Plex Mono',monospace;color:var(--teal);font-size:18px;margin-bottom:10px}
+.done-msg p{color:var(--dim);font-size:13px}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:30px}
+.panel{border:1px solid var(--border);border-radius:8px;background:var(--bg2);padding:16px 18px}
+.panel h3{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-bottom:10px}
+.panel p,.panel li{font-size:12.5px;color:var(--dim);line-height:1.7}
+.panel ul{padding-left:1.1rem}
+.panel li{margin-bottom:6px}
+.panel b{color:var(--text);font-weight:500}
+.progressbar{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:16px}
+.progressbar div{height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));width:0;transition:width .3s}
+kbd{font-family:'IBM Plex Mono',monospace;font-size:10px;border:1px solid var(--border2);border-bottom-width:2px;border-radius:3px;padding:1px 5px;color:var(--dim)}
+@media(max-width:700px){.panels{grid-template-columns:1fr}.card-q{font-size:16px}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div>
+    <div class="hdr-title">TI Norway · Drill Mode</div>
+    <div class="hdr-sub">Volume 3 — every Q&A from your prep document as a self-graded deck</div>
+  </div>
+  <div class="stats">
+    <span>left <b id="stLeft">0</b></span>
+    <span class="g">got it <b id="stGot">0</b></span>
+    <span class="s">shaky <b id="stShaky">0</b></span>
+    <span class="a">again <b id="stAgain">0</b></span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filters" id="filters"></div>
+  <div class="toolbar">
+    <button id="btnAll">Select all</button>
+    <button id="btnNone">Clear</button>
+    <button id="btnWeak">⚠ Weak spots only</button>
+    <button id="btnShuffle">⇄ Shuffle & restart</button>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)">tap card or <kbd>space</kbd> to reveal · <kbd>1</kbd> again · <kbd>2</kbd> shaky · <kbd>3</kbd> got it · progress resets on reload</span>
+  </div>
+
+  <div class="progressbar"><div id="prog"></div></div>
+
+  <div class="card" id="card">
+    <div class="card-top"><span class="sec-badge" id="cSec"></span><span id="cWeak"></span><span style="margin-left:auto" id="cIdx"></span></div>
+    <div class="card-q" id="cQ"></div>
+    <div class="card-a" id="cA"></div>
+    <div class="card-hint">tap to reveal answer</div>
+  </div>
+  <div class="graderow">
+    <div class="grade">
+      <button class="gbtn again">1 · Again (recycle soon)</button>
+      <button class="gbtn shaky">2 · Shaky (end of deck)</button>
+      <button class="gbtn got">3 · Got it</button>
+    </div>
+  </div>
+
+  <div class="done-msg" id="doneMsg">
+    <h2>// DECK CLEARED</h2>
+    <p id="doneStats"></p>
+    <p style="margin-top:8px">Hit "Shuffle & restart" to run it again, or filter to your weak sections.</p>
+  </div>
+
+  <div class="panels">
+    <div class="panel">
+      <h3>One-minute closing pitch (memorize the beats)</h3>
+      <p><b>1.</b> Combination of low-level development <i>and</i> validation: ARM Cortex-M, BSPs, drivers, FreeRTOS, DMA, bring-up, JTAG/SWD + logic analyzer debugging.<br>
+      <b>2.</b> Built Python/PyTest/Jenkins automated hardware validation — quality at scale.<br>
+      <b>3.</b> Honest gap framing: deepest RTOS experience is FreeRTOS, actively ramping Zephyr — the hardware-level knowledge transfers.<br>
+      <b>4.</b> Close with fit: "wireless MCU software, drivers, RTOS support, debugging, customer-impacting platform software is exactly where I want to keep growing."</p>
+    </div>
+    <div class="panel">
+      <h3>Top questions to ask them</h3>
+      <ul>
+        <li>How much current development is <b>Zephyr vs TI's own SDK</b> — and are you contributing upstream or maintaining a fork?</li>
+        <li>Which <b>wireless MCU families</b> does the Oslo team primarily support (CC23xx / CC26xx / CC13xx)?</li>
+        <li>What <b>low-level driver work</b> would I own in the first 6 months, and what does success look like at 6 months?</li>
+        <li>Is the role primarily <b>customer-facing SDK drivers</b>, internal platform software, or both?</li>
+        <li>What's the <b>biggest technical challenge</b> the connectivity team is working on right now?</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+const SECTIONS={intro:'Intro',cv:'CV projects',c:'C',cpp:'C++',arm:'Cortex-M',rtos:'RTOS',drv:'Drivers',dbg:'Debug scenarios',zephyr:'Zephyr',build:'Build/Toolchain',tools:'Instruments',ble:'Wireless/OTA',sec:'Security',behav:'Behavioral',weak:'Weak spots'};
+
+const CARDS=[
+/* INTRO */
+{s:'intro',q:'Tell me about yourself.',a:'<b>Beats, in order:</b> ~4 yrs embedded SW on ARM Cortex-M connected platforms → close to hardware: BSP, peripheral drivers, RTOS firmware, board bring-up, automated validation → Milwaukee Tool: STM32 WBA55 + Silicon Labs; drivers for UART/SPI/I2C/CAN/ADC/GPIO/DMA, BLE, cellular, GNSS → FreeRTOS: tasks, semaphores, mutexes, queues, ISR-to-task sync → Python/PyTest/Jenkins HIL validation frameworks → security research background (firmware malware detection).<span class="say"><b>Close with:</b> "This TI role is close to the work I enjoy most: wireless MCU software, low-level drivers, RTOS support, and software other engineers build on."</span>'},
+{s:'intro',q:'Why Texas Instruments?',a:'TI sits at the <b>intersection of silicon, embedded software, and customer-facing development</b>. The parts of embedded work I enjoy most — configuring peripherals, debugging timing, writing drivers, validating on real boards, building abstractions other engineers use — are exactly what this role is. Because TI software ships to many customers, <b>SDK/driver quality has broad impact</b> — that\'s the work I want to grow into.'},
+{s:'intro',q:'Why this role in Oslo?',a:'The role focuses on <b>embedded connectivity and wireless MCU software</b> — directly aligned with my BLE, Cortex-M, RTOS, and BSP/driver experience. It\'s a natural next step: contributing to wireless MCU platform software while going deeper on <b>Zephyr, driver models, and SDK-level quality</b>. (Be ready for relocation/work-authorization follow-ups — answer them plainly and positively.)'},
+{s:'intro',q:'Which parts of your experience are most relevant?',a:'<b>Four pillars:</b> 1) BSP + driver development on Cortex-M (STM32, Silicon Labs; UART/SPI/I2C/CAN/ADC/GPIO/DMA, BLE, cellular, GNSS). 2) FreeRTOS — scheduling, sync primitives, ISR-to-task patterns. 3) Debugging — JTAG/SWD, GDB, J-Link, logic analyzer, oscilloscope, UART tracing; DMA/timing/exception root-causing. 4) Automation — PyTest + Jenkins hardware regression. <b>Maps 1:1 to the JD\'s list:</b> embedded SW, RTOS, Cortex-M, instrumentation, debugging, scripting, CI, build systems.'},
+/* CV */
+{s:'cv',q:'Tell me about your BSP and driver development experience.',a:'STM32 WBA55 + Silicon Labs platforms at Milwaukee Tool. BSP scope: <b>pin config, clock config, peripheral init, interrupt setup, DMA config, power sequencing, hardware abstraction</b>. External subsystems: BLE radios, cellular modems (AT over UART), GNSS.<span class="say"><b>Senior framing:</b> "The goal wasn\'t one working board — it was reusable firmware components across platform variants: board-specific config separated from generic driver logic, clean interfaces between app / HAL / drivers / board layer."</span>'},
+{s:'cv',q:'BSP vs HAL vs driver vs application — define each.',a:'<b>BSP:</b> board-specific — pin mux, clocks, power sequencing, memory layout, interrupt mapping, board init. <b>Driver:</b> controls one peripheral/device — config, TX/RX, interrupts, DMA, errors, callbacks. <b>HAL:</b> common interface over hardware-specific implementations — app calls <code>uart_write()</code> regardless of MCU. <b>Application:</b> product behavior only; never register addresses or DMA channel numbers. Clean separation = portable app, reusable drivers, board changes isolated in BSP.'},
+{s:'cv',q:'Tell me about your DMA experience.',a:'Mem-to-periph and periph-to-mem across UART, SPI, I2C, ADC — single-shot and <b>circular</b> modes with interrupt-based completion. UART RX pattern: circular DMA into a ring buffer; firmware tracks last-read position vs current DMA write position; <b>idle-line / half / complete events</b> trigger the parser. Hard parts: wraparound, overrun, ISR↔task sync, alignment, transfer size, and <b>cache coherency</b> on D-cache parts. Debug method: DMA + peripheral registers + interrupt flags + buffer contents, correlated with a logic analyzer.'},
+{s:'cv',q:'Tell me about your Python/PyTest/Jenkins framework.',a:'<b>Problem:</b> manual regression was slow and unrepeatable. <b>Built:</b> PyTest framework driving hardware via serial/FTDI/debug probes; validated BLE comms, cellular connectivity, DMA behavior, power transitions. PyTest = orchestration, fixtures, parameterized tests, reports; Jenkins = triggers, build integration, logs, dashboards. <b>Senior detail:</b> handling flaky hardware — timeouts, careful retries, and separating <i>infrastructure</i> failures from <i>firmware</i> failures.'},
+/* C */
+{s:'c',q:'What does <code>volatile</code> mean — and what does it NOT do?',a:'Tells the compiler the value can change outside normal program flow → <b>never cache it; always perform the real read/write</b>. Use for: memory-mapped registers, ISR-shared variables, hardware status flags. <b>Does NOT:</b> make access atomic or prevent race conditions — you still need critical sections / atomics / masking for shared read-modify-write.'},
+{s:'c',q:'Is <code>volatile uint32_t counter; counter++;</code> safe?',a:'<b>No.</b> volatile guarantees the read and write happen, but <code>++</code> is LOAD → ADD → STORE. Preemption between steps loses an update (5 → 6 after two increments instead of 7). Fixes: <code>taskENTER_CRITICAL()</code>, interrupt disable around the update, RTOS mutex, atomic op (LDREX/STREX), or single-writer design.'},
+{s:'c',q:'What does <code>const volatile</code> mean together?',a:'<code>const</code>: the program must not write through this identifier. <code>volatile</code>: the value may still change underneath you, so always actually read it. Combined = <b>read-only hardware status register</b>: software can\'t write it, hardware updates it. <code>const volatile uint32_t *status_reg;</code>'},
+{s:'c',q:'What\'s wrong with <code>#define SET_BIT(REG,BIT) REG |= 1 &lt;&lt; BIT</code>?',a:'<b>1)</b> No parentheses around args/body. <b>2)</b> <code>1</code> should be unsigned (<code>1UL</code>) — signed shift into bit 31 is UB. <b>3)</b> UB if BIT ≥ width. <b>4)</b> Unsafe if REG has side effects. <b>5)</b> Still not atomic. Better: <code>((REG) |= (1UL &lt;&lt; (BIT)))</code> — and prefer hardware dedicated set/clear registers when they exist.'},
+{s:'c',q:'What is endianness and where does it bite you?',a:'Byte order of multi-byte values. <b>Little-endian (ARM Cortex-M): LSB at lowest address</b> — 0x12345678 stored as 78 56 34 12. Bites you when: parsing protocol packets, casting byte arrays to ints, reading binary files, talking to big-endian/network-order peers.'},
+{s:'c',q:'What is structure padding and when does it matter?',a:'Compiler inserts pad bytes so members meet alignment (e.g. uint32_t on 4-byte boundary) — <code>{uint8_t; uint32_t;}</code> is 8 bytes, not 5. Matters for: register overlays, packet parsing, flash storage, cross-device data. <b>Packed structs</b> give exact layout but cause unaligned access — slow on M3/M4, faults on M0. Mitigate by ordering members largest-first or explicit serialization.'},
+{s:'c',q:'Where do you use function pointers in embedded?',a:'Interrupt/driver <b>callbacks</b>, state machines, HAL backends, command dispatch tables, protocol parsers, test mocks. Example: UART driver lets the app register an RX-data callback. (Bonus: a corrupted function pointer is a classic HardFault cause.)'},
+{s:'c',q:'Explain a ring buffer — including the full-vs-empty trap.',a:'Fixed-size circular buffer with write index (head) and read index (tail); indexes wrap at the end. <b>Empty:</b> head == tail. <b>Full:</b> ambiguous unless you leave one slot unused (<code>(head+1)%N == tail</code>) or keep a count. ISR/task sharing: indexes <code>volatile</code>, <b>single-writer per index</b> (ISR owns head, task owns tail) makes it lock-free. Used for UART RX, logging, producer-consumer.'},
+/* CPP */
+{s:'cpp',q:'Which C++ features are useful in firmware — and which do you avoid?',a:'<b>Use:</b> classes for encapsulation, RAII, <code>constexpr</code>, templates (zero-cost abstraction), references, <code>enum class</code>, abstract interfaces for HAL, deleted copy constructors for hardware singletons. <b>Avoid/care:</b> dynamic allocation, exceptions, RTTI, excessive virtuals, hidden heap usage, static init order issues. <b>Principle:</b> predictable, explicit, inspectable at the generated-code level.'},
+{s:'cpp',q:'What is RAII and how do you use it in firmware?',a:'<b>Resource Acquisition Is Initialization</b> — acquire in the constructor, release in the destructor; cleanup is automatic on every exit path. Firmware uses: mutex lock/unlock, critical-section enter/exit, SPI chip-select assert/deassert, temporary interrupt masking. Example: a <code>CriticalSection</code> class wrapping <code>taskENTER/EXIT_CRITICAL()</code>.'},
+{s:'cpp',q:'Are virtual functions OK in embedded? What is a vtable?',a:'A <b>vtable</b> is a compiler-generated table of function pointers; each polymorphic object carries a hidden vtable pointer; virtual calls are an indirect lookup. Costs: RAM/flash overhead, indirect call, harder call tracing. <b>Judgment:</b> fine for higher-level HAL interfaces (clean abstraction, easy test mocking); for hot low-level paths prefer templates/static polymorphism or C-style function tables. Use intentionally, knowing the cost.'},
+{s:'cpp',q:'Why are exceptions usually disabled in embedded C++?',a:'Code-size growth, complex hidden control flow, runtime support requirements, and <b>hard-to-bound worst-case execution</b>. Instead: status enums / return codes, error callbacks, assertions in dev builds, fault handlers for unrecoverable states — error paths stay visible and predictable.'},
+/* ARM */
+{s:'arm',q:'What happens when a Cortex-M resets?',a:'CPU reads the vector table at address 0: <b>word[0] → initial MSP, word[1] → Reset_Handler</b>; loads SP, jumps. Startup code then: copy <b>.data</b> init values flash→RAM, zero <b>.bss</b>, clock setup, C++ static constructors, call <code>main()</code> → board init, create tasks, start scheduler.'},
+{s:'arm',q:'What is the vector table? Can it move?',a:'Array of addresses: initial SP, reset handler, NMI, HardFault, other faults, then peripheral ISRs — the <b>NVIC dispatches through it</b>. Normally at flash start; can be relocated (e.g. to RAM, or to an application image by a bootloader) via the <b>VTOR register</b>. A bootloader that forgets VTOR sends every app interrupt into bootloader handlers.'},
+{s:'arm',q:'What is the NVIC and why do priorities matter with an RTOS?',a:'<b>Nested Vectored Interrupt Controller</b>: enable/disable, priority config, pending state, nesting/preemption, vector dispatch. RTOS gotcha: only interrupts at or below a configured priority threshold (<code>configMAX_SYSCALL_INTERRUPT_PRIORITY</code>) may call FromISR APIs — a too-high-priority ISR calling RTOS APIs corrupts the kernel → faults.'},
+{s:'arm',q:'How do you debug a HardFault? (the senior answer)',a:'<b>1)</b> Halt — confirm you\'re in HardFault_Handler. <b>2)</b> Read <b>CFSR</b> (0xE000ED28) for the sub-fault; <b>HFSR</b> (0xE000ED2C) FORCED bit = escalated fault. <b>3)</b> <b>BFAR/MMFAR</b> hold the faulting address. <b>4)</b> Read the <b>stacked PC</b> from the auto-pushed exception frame → look it up in the .map/disassembly. <b>5)</b> Typical causes: NULL pointer, stack overflow, unaligned access (M0), bad function pointer, invalid ISR priority + RTOS call, DMA writing out of bounds. <b>6)</b> Reproduce with watchpoints/asserts.<span class="say"><b>Never</b> just say "I check the debugger" — name the registers.</span>'},
+{s:'arm',q:'Breakpoint vs watchpoint?',a:'<b>Breakpoint:</b> halt at an instruction address — "stop in <code>uart_rx_callback</code>." <b>Watchpoint:</b> halt on read/write of a memory address — "who is corrupting <code>rx_buffer[10]</code>?" Watchpoints are the tool for memory corruption and mystery variable writes.'},
+{s:'arm',q:'MSP vs PSP?',a:'Two stack pointers. <b>MSP</b> (Main): used at reset and by exception/interrupt handlers. <b>PSP</b> (Process): used by RTOS tasks — each task has its own stack and the scheduler switches PSP on context switch. Separation isolates task stacks from interrupt handling and lets the kernel bound interrupt stack usage.'},
+{s:'arm',q:'What is SysTick used for?',a:'Built-in core timer, typically the <b>RTOS tick source</b>: time slicing, delays, timeouts, software timers. <b>Low-power nuance:</b> tickless idle suppresses periodic ticks during sleep so the MCU isn\'t woken 1000×/s for nothing — key for battery devices.'},
+/* RTOS */
+{s:'rtos',q:'What is a FreeRTOS task and how do you partition them?',a:'Independently scheduled thread with its own <b>stack, priority, state, entry point, TCB</b>. States: running / ready / blocked / suspended. Partition by responsibility: BLE task, sensor task, comms task, logging task, app state machine — and set priorities by real-time need, not importance.'},
+{s:'rtos',q:'What is a context switch and what triggers one?',a:'Kernel saves the current task\'s CPU state (registers + stack pointer) and restores the next task\'s. Triggers: higher-priority task becomes ready, current task blocks, delay expires, an ISR wakes a task (with portYIELD_FROM_ISR), or time-slicing between equal priorities. Switches cost cycles — avoid designs with needless wakeups.'},
+{s:'rtos',q:'Binary semaphore vs mutex — the real difference?',a:'<b>Semaphore = signaling</b> (ISR → task "data ready"); no ownership. <b>Mutex = mutual exclusion</b>; has an owner who must release it, and FreeRTOS mutexes implement <b>priority inheritance</b> — semaphores don\'t. That inheritance difference is the senior-level point.'},
+{s:'rtos',q:'Explain priority inversion and the fix.',a:'L (low) holds a mutex → H (high) blocks on it → M (medium) preempts L, so L can never release → H is effectively held hostage by M. Famous case: <b>Mars Pathfinder 1997</b>. Fix: <b>priority inheritance</b> — L temporarily runs at H\'s priority until it releases. Only mutexes do this in FreeRTOS.'},
+{s:'rtos',q:'How should an ISR communicate with a task?',a:'ISR does minimal work: capture event → clear flag → store minimal data → notify via <b>FromISR APIs</b> (<code>xSemaphoreGiveFromISR</code>, <code>xQueueSendFromISR</code>, <code>vTaskNotifyGiveFromISR</code>) → request context switch if a higher-priority task woke. Heavy work (parsing, state machines, retries, logging) belongs in the task.'},
+{s:'rtos',q:'Queue vs semaphore vs mutex vs event group — one-liner each + example.',a:'<b>Queue:</b> moves data (UART packets → parser task). <b>Semaphore:</b> signals/counts events (ADC conversion done). <b>Mutex:</b> protects a shared resource with ownership (shared I2C bus). <b>Event group:</b> wait on multiple flag bits (Wi-Fi connected AND IP acquired AND time synced).'},
+{s:'rtos',q:'How do you avoid race conditions in RTOS firmware?',a:'Minimize shared state; prefer <b>queues over shared globals</b>; protect what remains with mutexes/critical sections; keep ISRs short; only FromISR APIs in ISRs; define clear <b>buffer ownership</b>; never block while holding a lock; review priorities; assertions + static analysis; reproduce timing bugs with traces. volatile alone is never the answer.'},
+{s:'rtos',q:'How do you debug a stack overflow in FreeRTOS?',a:'Enable <code>configCHECK_FOR_STACK_OVERFLOW</code>; check <code>uxTaskGetStackHighWaterMark()</code>; temporarily enlarge the suspect stack; inspect the fill-pattern watermark; hunt large locals, recursion, and printf stack usage; check interrupt stack (MSP) separately; MPU guard page = instant MemFault on overflow. Symptoms: random crashes, corrupted variables, bad return addresses, HardFaults.'},
+/* DRIVERS */
+{s:'drv',q:'Design a portable UART driver — what are the pieces?',a:'<b>Public API:</b> init/deinit, read/write, enable_rx, register_callback, set_baudrate, get_status. <b>Config struct:</b> baud, parity, stop bits, flow control, pins, DMA enable, buffer sizes. <b>Backend:</b> register access, interrupts, DMA channels, clock enable, error flags — MCU-specific, swappable. <b>RTOS layer:</b> TX mutex, RX queue/stream buffer, completion notification. <b>Errors:</b> framing/parity/overrun/timeout/DMA. <b>Test hooks:</b> loopback, simulated RX, drop counters. <b>Key decision:</b> stable upper API, isolated lower layer.'},
+{s:'drv',q:'Design a SPI driver — key concerns?',a:'Config: <b>mode 0–3 (CPOL/CPHA)</b>, frequency, bit order, word size, CS behavior, DMA. Transfer modes: blocking / interrupt / DMA. <b>CS timing</b> (setup/hold around transfers). Thread safety: bus mutex when shared. Errors: timeout, over/underrun, DMA failure. <b>Multi-device pattern:</b> one shared bus driver, per-device CS + config. Test: loopback, logic analyzer, known device register reads.'},
+{s:'drv',q:'Design an I2C driver — what must it handle that SPI doesn\'t?',a:'Address handling + ACK/NACK, <b>repeated start</b> (write-read combined), <b>clock stretching</b>, arbitration loss (multi-master), and <b>bus recovery</b> — a stuck slave can hold SDA low, so you manually toggle SCL ~9 times and reinit. API: write / read / write_read. Debug with logic analyzer: start, address+ACK, register, repeated start, data, stop.'},
+{s:'drv',q:'Design a CAN driver — what is specific to CAN?',a:'<b>Bit timing</b> (bitrate + sample point), acceptance filters, TX mailboxes, RX FIFOs, standard vs extended IDs, error states and <b>bus-off recovery</b>. Common field bugs: bitrate mismatch, sample point config, missing 120Ω termination, ACK errors (alone on the bus), filter misconfig. Validate with a CAN analyzer, not just status registers.'},
+{s:'drv',q:'Polling vs interrupt vs DMA — when does each win?',a:'<b>Polling:</b> simple, deterministic latency; fine for init-time/low-rate or sub-interrupt-overhead waits; burns CPU, blocks sleep. <b>Interrupt:</b> asynchronous, moderate-rate events (button, byte received, completion). <b>DMA:</b> high-throughput / continuous streams (UART streaming, ADC sampling, displays) — CPU freed entirely. <b>Best designs combine:</b> DMA moves data, interrupt signals completion/idle, task processes.'},
+{s:'drv',q:'How do you test a driver?',a:'<b>Unit:</b> param validation, state machine, mocked register access. <b>Hardware:</b> loopback, known device reads, boundary lengths. <b>Stress:</b> max frequency, long duration, repeated init/deinit, power cycling. <b>Error injection:</b> timeouts, disconnects, invalid responses. <b>Instrumentation:</b> logic analyzer, scope, counters. <b>CI/HIL:</b> automated PyTest under Jenkins — your signature move; volunteer it.'},
+/* DEBUG */
+{s:'dbg',q:'UART randomly drops bytes — debug it.',a:'<b>1)</b> Logic analyzer on the wire: baud/framing/levels. <b>2)</b> Config: baud, oversampling, FIFO, flow control. <b>3)</b> Error flags: <b>overrun</b>, framing, parity, noise. <b>4)</b> ISR/DMA: ISR too slow? flags cleared? circular wrap correct? data overwritten before consumed? <b>5)</b> RTOS: consumer task priority, blocking, queue overflow. <b>6)</b> Add counters (rx, parsed, overruns, queue-full, wraps). <b>7)</b> Reproduce under stress. Fixes: circular DMA, bigger buffers, flow control, faster wakeup.'},
+{s:'dbg',q:'SPI returns wrong data — debug it.',a:'In order of likelihood: <b>CPOL/CPHA mode mismatch</b> → clock too fast for the device → <b>CS setup/hold timing</b> → bit order / word size → wiring (MISO/MOSI swapped, ground) → logic analyzer decode vs datasheet → driver issues (DMA length, dummy bytes for reads, full-duplex handling) → device protocol (command byte, address, dummy cycles before data).'},
+{s:'dbg',q:'Device HardFaults right after enabling an interrupt — checklist?',a:'ISR name matches the vector table symbol? Interrupt enabled before peripheral init? <b>Flag already pending</b> when enabled? ISR clears the <i>correct</i> flag? NULL/uninitialized driver context inside the ISR? <b>Non-ISR-safe RTOS API</b> or invalid priority for FromISR calls? Stack size? Then: stacked PC + CFSR/HFSR/BFAR/MMFAR.'},
+{s:'dbg',q:'Works in debug, fails at full speed — why?',a:'Debug stepping slows everything → hides <b>timing bugs</b>. Suspects: missing delay after peripheral enable, race conditions, uninitialized variable, clock not stable before use, watchdog timing, optimization exposing UB, <b>missing volatile</b> on ISR-shared data, stack overflow, hardware startup time, logging altering timing. Method: diff debug/release flags, GPIO-toggle + logic analyzer timestamps, audit init order.'},
+{s:'dbg',q:'Low-power wakeup doesn\'t work — debug it.',a:'Which mode (sleep/stop/standby)? Which wakeup source (GPIO/RTC/UART/radio) — and is it <b>enabled before entering</b> low power? Interrupt priorities OK? <b>Clocks restored</b> after wake? Peripherals reinitialized? GPIO states preserved? Is the <b>debugger itself</b> changing low-power behavior? Maybe it wakes but crashes after — confirm with current measurement + GPIO toggles marking state transitions.'},
+/* ZEPHYR */
+{s:'zephyr',q:'What is Devicetree and why does Zephyr use it?',a:'Structured <b>hardware description</b>: peripherals, base addresses, interrupts, pins, clocks, memory, aliases, chosen nodes. Drivers read config from DT instead of hardcoding board details → <b>same driver works on any board that describes the hardware correctly</b>. Pieces: .dts (board), .dtsi (SoC include), .overlay (per-app modifications).'},
+{s:'zephyr',q:'Kconfig vs Devicetree — the one-line distinction?',a:'<b>Devicetree describes what hardware exists; Kconfig selects what software is compiled in</b> (drivers, subsystems, logging, BT…). App config lives in <code>prj.conf</code>. They work together: DT says "there is a UART here," Kconfig says "build the UART driver and the shell on it."'},
+{s:'zephyr',q:'What is West?',a:'Zephyr\'s meta-tool: multi-repo workspace management plus build/flash/debug. Know the verbs: <code>west init</code>, <code>west update</code>, <code>west build -b &lt;board&gt;</code>, <code>west flash</code>, <code>west debug</code>. It manages Zephyr itself, modules, board defs, and build output.'},
+{s:'zephyr',q:'How would you add a new board to Zephyr?',a:'Create the board directory + metadata → write the board <b>.dts</b> (memory, flash, SRAM, clocks, peripherals) → <b>pinctrl</b> config → board Kconfig + defconfig → enable drivers in prj.conf → <b>bring up minimal first</b> (blinky / UART echo) → validate with debugger + logic analyzer → add peripherals one at a time. The incremental bring-up discipline is the senior signal.'},
+{s:'zephyr',q:'Zephyr driver model vs bare-metal driver?',a:'Bare metal: app directly calls init with hardcoded addresses/config. Zephyr: devices declared in <b>Devicetree</b>, enabled via <b>Kconfig</b>, instantiated with <code>DEVICE_DT_DEFINE</code>, initialized at defined boot levels, accessed through standard API structs, bound by <b>compatible strings</b>. More structure and portability, in exchange for following the framework\'s conventions.'},
+/* BUILD */
+{s:'build',q:'Walk through the firmware build process.',a:'<b>Preprocess</b> (macros, includes) → <b>compile</b> (C/C++ → objects) → <b>assemble</b> → <b>link</b> (combine objects + libs, place per linker script, resolve symbols → ELF) → <b>post-process</b> (.hex/.bin, map file, size analysis, signing/packaging) → <b>flash</b>.'},
+{s:'build',q:'What is a linker script?',a:'Tells the linker <b>where everything lives</b>: flash/RAM regions, vector table location, .text/.rodata/.data/.bss, stack, heap, custom sections. Key concept: .data has a <b>load address in flash and an execution address in RAM</b> — startup code does the copy. Must match the real MCU memory map.'},
+{s:'build',q:'What is a map file good for?',a:'Linker-generated layout of every symbol/section. Uses: firmware size budgeting, finding large functions/objects, locating symbols, verifying memory layout, spotting dead code — and the killer one: <b>mapping a HardFault\'s stacked PC back to a function</b>.'},
+{s:'build',q:'How do you reduce firmware size?',a:'Optimization flags (-Os), <b>LTO</b>, remove unused modules, <code>-ffunction-sections -fdata-sections</code> + <code>--gc-sections</code>, hunt large symbols in the <b>map file</b>, shrink log strings, avoid float printf, trim heavy libc usage, watch C++ template bloat, gate optional features behind compile flags.'},
+/* TOOLS */
+{s:'tools',q:'How have you used a logic analyzer?',a:'Correlate firmware behavior with what\'s <b>actually on the wire</b>: UART baud/framing, SPI mode + CS timing, I2C ACK/NACK + repeated start, GPIO timing, interrupt latency, DMA transfer timing. Use it when logs aren\'t enough — logs say what the firmware <i>thinks</i> happened; the analyzer shows what happened.'},
+{s:'tools',q:'Oscilloscope vs logic analyzer — when each?',a:'<b>Logic analyzer:</b> digital protocol decoding and timing. <b>Oscilloscope:</b> analog signal quality — voltage levels, rise/fall, ringing, noise, power rail stability, reset behavior, clock integrity. Example: analyzer shows bad SPI data; scope reveals slow edges from a wrong pull-up. Production bring-up needs both.'},
+/* BLE */
+{s:'ble',q:'Tell me about your BLE experience (honest framing).',a:'BLE firmware on connected platforms: advertisements, device comm flows, <b>OTA over BLE</b>, Silicon Labs BLE SoC integration, plus <b>automated BLE validation</b>. Systems where BLE coexisted with cellular + GNSS. Framing for TI: "I know wireless MCU development from both the firmware side and the validation/debugging side."'},
+{s:'ble',q:'Design an OTA update flow end to end.',a:'<b>Version check → chunked transfer</b> (resume via offsets, never restart) → per-chunk CRC → store to secondary slot → <b>full-image validation</b> (size, hash, ECDSA signature, metadata) → mark pending → bootloader boots new image → <b>self-test + confirm API</b> → no confirm = <b>rollback</b> to previous slot. Security: signing, <b>anti-rollback counter</b>, secure key storage. Zephyr answer: MCUboot.'},
+{s:'ble',q:'How do you handle unreliable wireless links?',a:'Design assuming failure: timeouts, bounded retries, sequence numbers, ACKs, CRC, duplicate detection, state-machine recovery, <b>persistent progress tracking</b>, clean connection-loss handling, explicit error codes, logging/metrics. OTA specifically: chunk offsets so transfers resume, not restart.'},
+/* SEC */
+{s:'sec',q:'Encryption vs hashing vs signing?',a:'<b>Encryption</b> = confidentiality (AES). <b>Hashing</b> = one-way integrity digest (SHA-256). <b>Signing</b> = authenticity + integrity: private key signs, public key verifies (ECDSA). Firmware updates: hash catches corruption, <b>signature proves origin</b>, encryption optional for confidentiality.'},
+{s:'sec',q:'Secure coding practices in embedded C?',a:'Validate all input lengths; no unsafe string functions; check pointers and return values; fixed-width types; avoid integer overflow; minimize dynamic memory; protect secrets in RAM; no debug backdoors; warnings + static analysis in CI; stack protection; <b>secure boot + signed firmware</b>. Protocol handling: validate length, command, checksum, auth state, and <b>allowed state transitions</b> before acting.'},
+{s:'sec',q:'What is your embedded security experience? (honest framing)',a:'Strongest in <b>cyber-physical threat modeling, firmware malware detection (CNN/transfer learning, IEEE publications), anomaly detection, HIL security validation</b>; industry exposure to TLS/MQTT/HTTPS/AWS IoT. <b>Honest line:</b> "I haven\'t shipped low-level AES/SHA/ECC accelerator drivers in production, but I understand the concepts and my driver background makes that a comfortable ramp."'},
+/* BEHAV */
+{s:'behav',q:'Tell me about a difficult bug you solved. (STAR)',a:'<b>S:</b> intermittent UART data corruption/drops under burst traffic. <b>T:</b> isolate firmware vs DMA config vs interrupts vs hardware timing. <b>A:</b> logic analyzer capture vs firmware logs; inspected UART/DMA registers + flags; added counters for overrun and wraparound; reviewed circular buffer handling; verified consumer task priority and flag clearing. <b>R:</b> root cause isolated; buffering/interrupt path fixed; reliable under burst. <b>Lesson:</b> correlate software state with the physical signal — don\'t trust logs alone.'},
+{s:'behav',q:'Tell me about working with hardware engineers.',a:'Board bring-up + HW/SW integration at Milwaukee Tool, across sites. Failures weren\'t always software: pin muxing, schematic diffs, power sequencing, clocks, signal integrity. My role: validate the firmware side <b>and</b> help isolate hardware — SWD/JTAG, UART logs, logic analyzer + scope vs expected behavior, schematic review, confirming pinouts and rails with HW engineers. <b>Point:</b> debugging together beats debugging in isolation.'},
+{s:'behav',q:'Tell me about learning something quickly.',a:'<b>S:</b> cellular modem subsystem (AT commands) I hadn\'t used. <b>T:</b> bring up comms, validate connectivity, integrate into firmware + tests. <b>A:</b> docs → small test scripts → basic AT first → network registration → MQTT/HTTPS/GNSS → automated tests. <b>R:</b> working integration + validation flow. <b>Method to state:</b> break unknown systems into layers — electrical, basic comms, protocol, errors, automation, docs.'},
+{s:'behav',q:'Tell me about improving a process.',a:'<b>S:</b> manual firmware regression — slow, inconsistent. <b>T:</b> repeatability, less manual effort. <b>A:</b> built PyTest framework + Jenkins integration: hardware control, log collection, comm-flow validation, reporting. <b>R:</b> continuous regression, earlier failure detection, visibility, less engineer-dependent testing. <b>One-liner:</b> "manual, hero-dependent testing → repeatable, automated hardware validation."'},
+/* WEAK */
+{s:'weak',w:1,q:'⚠ "You have more FreeRTOS than Zephyr. Is that a problem?"',a:'<b>Own it, then bridge:</b> "My production RTOS depth is FreeRTOS — but the underlying concepts transfer: scheduling, synchronization, ISR-to-task, driver integration, timing, resource constraints. On Zephyr specifically I know the architecture: <b>Kconfig for features, Devicetree for hardware, West for build/workspace, the device driver model</b>. The ramp is TI\'s specific Zephyr conventions, and my Cortex-M + driver background makes that a fast ramp." Never bluff depth you don\'t have — they WILL follow up.'},
+{s:'weak',w:1,q:'⚠ "Do you have advanced assembly experience?"',a:'<b>Accurate framing:</b> "Practical debugging-level assembly rather than authoring large assembly modules: reading disassembly, debugging faults at instruction level, startup code, faulting-instruction analysis, single-instruction stepping on Thumb." Comfortable ramping if the role needs more. <b>Do not overclaim</b> — one follow-up exposes it.'},
+{s:'weak',w:1,q:'⚠ "Have you developed cryptography drivers?"',a:'<b>Honest:</b> "Not production AES/SHA/ECC accelerator drivers. My security depth is research-side: firmware malware detection, anomaly detection, threat modeling, plus TLS/MQTT concepts. I understand accelerators, key handling, signing, secure boot — and given my driver background, crypto peripheral drivers are a comfortable ramp, and an area I\'d be excited to own." Turns the gap into appetite.'},
+{s:'weak',w:1,q:'⚠ Anything else you want us to know? (the closing pitch)',a:'<b>Beat 1:</b> low-level development + validation combo: Cortex-M, BSPs, drivers, FreeRTOS, DMA, bring-up, JTAG/SWD + logic analyzer. <b>Beat 2:</b> built Python/PyTest/Jenkins automated hardware validation — reliability at scale. <b>Beat 3:</b> FreeRTOS deepest, actively ramping Zephyr, hardware knowledge transfers. <b>Beat 4:</b> "This is exactly the embedded work I want to keep growing in: wireless MCU software, drivers, RTOS support, debugging, customer-impacting platform software."'},
+];
+
+let active=new Set(Object.keys(SECTIONS));
+let deck=[],pos=0,got=0,shaky=0,again=0,total=0;
+const $=id=>document.getElementById(id);
+
+function buildFilters(){
+  const f=$('filters');f.innerHTML='';
+  Object.entries(SECTIONS).forEach(([k,v])=>{
+    const n=CARDS.filter(c=>c.s===k).length;
+    const b=document.createElement('button');b.className='fchip'+(active.has(k)?' on':'');b.textContent=v+' ('+n+')';
+    b.onclick=()=>{active.has(k)?active.delete(k):active.add(k);buildFilters();restart()};
+    f.appendChild(b);
+  });
+}
+function restart(){
+  deck=CARDS.map((c,i)=>i).filter(i=>active.has(CARDS[i].s));
+  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}
+  total=deck.length;got=0;shaky=0;again=0;
+  show();
+}
+function stats(){
+  $('stLeft').textContent=deck.length;$('stGot').textContent=got;$('stShaky').textContent=shaky;$('stAgain').textContent=again;
+  $('prog').style.width=(total?((total-deck.length)/total*100):0)+'%';
+}
+function show(){
+  stats();
+  const card=$('card'),gr=document.querySelector('.graderow .grade');
+  if(!deck.length){
+    card.style.display='none';gr.style.display='none';
+    $('doneMsg').style.display='block';
+    $('doneStats').textContent='Session: '+got+' got it · '+shaky+' shaky · '+again+' sent back for another pass.';
+    return;
+  }
+  $('doneMsg').style.display='none';card.style.display='flex';
+  card.classList.remove('flip');gr.style.display='none';
+  const c=CARDS[deck[0]];
+  $('cSec').textContent=SECTIONS[c.s];
+  $('cWeak').innerHTML=c.w?'<span class="weak-badge">⚠ handle carefully — honesty framing</span>':'';
+  $('cIdx').textContent=(total-deck.length+1)+' / '+total;
+  $('cQ').innerHTML=c.q;$('cA').innerHTML=c.a;
+}
+function reveal(){
+  if(!deck.length)return;
+  $('card').classList.add('flip');
+  document.querySelector('.graderow .grade').style.display='flex';
+}
+function grade(g){
+  if(!deck.length||!$('card').classList.contains('flip'))return;
+  const cur=deck.shift();
+  if(g===1){again++;deck.splice(Math.min(4,deck.length),0,cur)}
+  else if(g===2){shaky++;deck.push(cur)}
+  else got++;
+  show();
+}
+$('card').onclick=()=>{$('card').classList.contains('flip')?null:reveal()};
+document.querySelector('.gbtn.again').onclick=()=>grade(1);
+document.querySelector('.gbtn.shaky').onclick=()=>grade(2);
+document.querySelector('.gbtn.got').onclick=()=>grade(3);
+document.addEventListener('keydown',e=>{
+  if(e.key===' '){e.preventDefault();reveal()}
+  if(e.key==='1')grade(1); if(e.key==='2')grade(2); if(e.key==='3')grade(3);
+});
+$('btnAll').onclick=()=>{active=new Set(Object.keys(SECTIONS));buildFilters();restart()};
+$('btnNone').onclick=()=>{active=new Set();buildFilters();restart()};
+$('btnWeak').onclick=()=>{active=new Set(['weak']);buildFilters();restart()};
+$('btnShuffle').onclick=restart;
+buildFilters();restart();
+</script>
+</body>
+</html>

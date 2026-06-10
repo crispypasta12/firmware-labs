@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TI Prep · Concepts Lab 2b — Connectivity & Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --bg2:#111418; --bg3:#181d23; --border:#1e2530; --border2:#2a3340;
+  --text:#c8d4e0; --dim:#5a6a7a; --muted:#3a4a5a;
+  --teal:#00d4aa; --blue:#0099cc; --amber:#ffb454; --red:#e05050; --purple:#a080e0; --green:#50c878;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+.hdr{position:sticky;top:0;z-index:90;background:rgba(10,12,15,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);padding:1.1rem 1.5rem}
+.hdr-title{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.08em;text-transform:uppercase}
+.hdr-sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 9px;border:1px solid var(--border2);border-radius:20px;color:var(--dim);text-decoration:none;transition:.15s}
+.chip:hover{color:var(--teal);border-color:var(--teal)}
+.wrap{max-width:980px;margin:0 auto;padding:1.5rem}
+.lab{margin:0 0 2.5rem;scroll-margin-top:140px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);overflow:hidden}
+.lab-head{display:flex;align-items:baseline;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.lab-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+.lab-title{font-size:15px;font-weight:600}
+.lab-tag{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:.06em;text-transform:uppercase}
+.lab-body{padding:16px 18px}
+.lab-why{font-size:12px;color:var(--dim);margin-bottom:14px;border-left:3px solid var(--teal);padding:6px 12px;background:rgba(0,212,170,.04);border-radius:0 4px 4px 0}
+.lab-why b{color:var(--teal);font-weight:500}
+.scope{background:#0c1014;border:1px solid var(--border2);border-radius:6px;padding:14px;
+  background-image:linear-gradient(rgba(42,51,64,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(42,51,64,.25) 1px,transparent 1px);
+  background-size:24px 24px;position:relative}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+button{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 14px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;transition:.15s}
+button:hover{border-color:var(--teal);color:var(--teal)}
+button.primary{border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.08)}
+button:disabled{opacity:.35;cursor:default}
+button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.narr{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--amber);min-height:38px;margin-top:12px;line-height:1.6}
+.takeaway{margin-top:14px;font-size:12px;color:var(--dim);border-left:3px solid var(--amber);background:rgba(255,180,84,.05);padding:8px 12px;border-radius:0 4px 4px 0}
+.takeaway b{color:var(--amber);font-weight:500}
+code{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;color:var(--teal)}
+select,input[type=number],input[type=text],input[type=range]{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:6px 8px}
+label.sw{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);cursor:pointer}
+.statline{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--dim);margin-top:12px;display:flex;gap:18px;flex-wrap:wrap}
+.statline .v{color:var(--text)} .statline .good{color:var(--green)} .statline .bad{color:var(--red)}
+/* BLE timeline */
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+.sl label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:4px}
+.sl input{width:100%}
+.sl .val{color:var(--teal)}
+.formula{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 12px;border-radius:4px;border:1px solid var(--border2);background:rgba(17,20,24,.85);margin-bottom:12px}
+.formula.ok{border-color:rgba(80,200,120,.5)} .formula.ok .verdict{color:var(--green)}
+.formula.fail{border-color:rgba(224,80,80,.5)} .formula.fail .verdict{color:var(--red)}
+.blerow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.blelabel{width:110px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);text-align:right;flex-shrink:0}
+.bletrack{position:relative;flex:1;height:34px;background:rgba(17,20,24,.8);border:1px solid var(--border2);border-radius:3px;overflow:hidden}
+.evt{position:absolute;top:4px;bottom:4px;width:6px;border-radius:2px}
+.evt.anchor{background:var(--blue)}
+.evt.wake{background:var(--teal);box-shadow:0 0 6px var(--teal)}
+.evt.sleepmark{background:#22303c}
+.evt.miss{background:var(--red)}
+.suprow{display:flex;align-items:center;gap:10px;margin-top:6px}
+.supbar{flex:1;height:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;overflow:hidden}
+.supbar div{height:100%;width:0;background:linear-gradient(90deg,var(--amber),var(--red));transition:width .2s}
+/* GATT */
+.gatt-tree{font-family:'IBM Plex Mono',monospace;font-size:12px}
+.gnode{border:1px solid var(--border2);border-radius:5px;background:rgba(17,20,24,.9);margin-bottom:6px;overflow:hidden}
+.gnode-head{padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.gnode-head:hover{background:rgba(0,212,170,.05)}
+.gnode-head .arrow{color:var(--muted);font-size:10px;transition:transform .2s}
+.gnode.open > .gnode-head .arrow{transform:rotate(90deg)}
+.gnode-body{display:none;padding:4px 10px 10px 26px}
+.gnode.open > .gnode-body{display:block}
+.gdesc{font-family:'IBM Plex Sans',sans-serif;font-size:11.5px;color:var(--dim);padding:0 12px 8px 30px;display:none}
+.gnode.open > .gdesc{display:block}
+.gtype{font-size:9px;padding:1px 6px;border-radius:3px;border:1px solid var(--border2);color:var(--dim);letter-spacing:.05em}
+.lane-wrap{margin-top:16px}
+.lane{position:relative;height:36px;border:1px solid var(--border2);border-radius:4px;background:rgba(17,20,24,.8);margin-bottom:8px}
+.lane .who{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);z-index:2}
+.pkt{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);transition:left .55s linear;z-index:3}
+.pkt.n{background:var(--teal);box-shadow:0 0 8px var(--teal)}
+.pkt.ind{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.pkt.ack{background:var(--purple);width:10px;height:10px;box-shadow:0 0 6px var(--purple)}
+/* RF core + zephyr + ctx steppers */
+.flow{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.fbox{flex:1;min-width:150px;border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:10px 12px;transition:.25s}
+.fbox h4{font-family:'IBM Plex Mono',monospace;font-size:11px;margin-bottom:4px}
+.fbox p{font-size:11px;color:var(--dim);line-height:1.55}
+.fbox.hl{border-color:var(--teal);box-shadow:0 0 12px rgba(0,212,170,.2)}
+.fbox.hl h4{color:var(--teal)}
+.farrow{display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:14px}
+.farrow.hl{color:var(--teal);text-shadow:0 0 8px var(--teal)}
+.stepdots{display:flex;gap:6px;margin-top:14px}
+.sdot{width:26px;height:4px;border-radius:2px;background:var(--border2)}
+.sdot.on{background:var(--teal)}
+/* clock tree */
+.ctree{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.cnode{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:10px;min-width:120px;flex:1}
+.cnode h5{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+.cnode .freq{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--teal)}
+.cnode select{width:100%;margin-top:4px}
+.cnode.warn .freq{color:var(--red)}
+.alert{margin-top:12px;padding:8px 12px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;display:none}
+.alert.bad{display:block;border:1px solid rgba(224,80,80,.5);background:rgba(224,80,80,.08);color:var(--red)}
+.alert.good{display:block;border:1px solid rgba(80,200,120,.5);background:rgba(80,200,120,.08);color:var(--green)}
+/* i2c */
+.i2c-desc{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);min-height:34px;margin-top:8px}
+.i2c-legend{display:flex;gap:12px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin-top:6px}
+.i2c-legend span{display:inline-flex;align-items:center;gap:5px}
+.lg-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+/* thread mesh */
+.meshsvg text{font-family:'IBM Plex Mono',monospace}
+/* ctx switch */
+.ctxgrid{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:12px}
+.stackcol{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);overflow:hidden}
+.stackcol h4{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--border);text-transform:uppercase}
+.stackitems{display:flex;flex-direction:column-reverse;padding:8px;gap:4px;min-height:170px;justify-content:flex-start}
+.sframe{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 8px;border-radius:3px;border:1px solid var(--border2);color:var(--dim);text-align:center}
+.sframe.hw{border-color:rgba(0,153,204,.5);color:var(--blue)}
+.sframe.sw{border-color:rgba(160,128,224,.5);color:var(--purple)}
+.sframe.new{animation:pop .3s}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.cpubox{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim)}
+.cpubox b{color:var(--text);font-weight:500}
+.cpubox .mode{color:var(--amber)}
+.cpubox .psp{color:var(--teal)}
+/* rms */
+.rms-out{font-family:'IBM Plex Mono',monospace;font-size:12px;margin-top:10px;line-height:1.9}
+.rms-out .v{color:var(--teal)}
+@media(max-width:700px){.ctxgrid{grid-template-columns:1fr}.flow{flex-direction:column}.farrow{transform:rotate(90deg);justify-content:center}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-title">TI Norway · Concepts Lab 2b</div>
+  <div class="hdr-sub">Connectivity & Platform — the gaps Volume 2 didn't cover · BLE timing is the heart of this role</div>
+  <nav class="chips">
+    <a class="chip" href="#bletime">BLE connection timing</a>
+    <a class="chip" href="#gatt">GATT explorer</a>
+    <a class="chip" href="#rfcore">CC26xx RF core</a>
+    <a class="chip" href="#clocks">Clock tree → baud</a>
+    <a class="chip" href="#i2c">I2C anatomy</a>
+    <a class="chip" href="#zbuild">Zephyr build flow</a>
+    <a class="chip" href="#mesh">Thread mesh</a>
+    <a class="chip" href="#ctx">Context switch</a>
+    <a class="chip" href="#rms">RMS check</a>
+  </nav>
+</header>
+
+<div class="wrap">
+
+<!-- ============ 1. BLE CONNECTION TIMING ============ -->
+<section class="lab" id="bletime">
+  <div class="lab-head"><span class="lab-num">LAB 13</span><span class="lab-title">BLE connection events — interval, slave latency, supervision timeout</span><span class="lab-tag">Core of the role</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "Embedded Connectivity" is in the hiring manager's title — and "device disconnects every 5 seconds" debugging starts here. Move the sliders until you can predict the timeline before it draws. Then flip on interference and watch the supervision timer kill the link.</div>
+    <div class="scope">
+      <div class="sliders">
+        <div class="sl"><label>Connection interval: <span class="val" id="bIntV">100</span> ms</label><input type="range" id="bInt" min="30" max="400" step="10" value="100"></div>
+        <div class="sl"><label>Slave latency: <span class="val" id="bLatV">4</span> skipped events</label><input type="range" id="bLat" min="0" max="9" step="1" value="4"></div>
+        <div class="sl"><label>Supervision timeout: <span class="val" id="bSupV">2000</span> ms</label><input type="range" id="bSup" min="300" max="6000" step="100" value="2000"></div>
+      </div>
+      <div class="formula" id="bForm"></div>
+      <div class="blerow"><div class="blelabel">CENTRAL<br>(anchors)</div><div class="bletrack" id="bCent"></div></div>
+      <div class="blerow"><div class="blelabel">PERIPHERAL<br>(radio)</div><div class="bletrack" id="bPeri"></div></div>
+      <div class="suprow"><div class="blelabel">supervision<br>timer</div><div class="supbar"><div id="bSupBar"></div></div></div>
+      <div class="statline">
+        <span>peripheral wakes every: <span class="v" id="bSync">—</span></span>
+        <span>radio wakes/min: <span class="v" id="bWakes">—</span></span>
+        <span>est. avg current: <span class="v" id="bCur">—</span></span>
+        <span>link: <span class="v" id="bLink">—</span></span>
+      </div>
+      <div class="narr" id="bNarr">The central transmits an anchor every interval. With slave latency, the peripheral may sleep through events and stay connected. Press Play.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="bPlay">▶ Play</button>
+      <button id="bReset">Reset</button>
+      <label class="sw"><input type="checkbox" id="bRF"> 2.4 GHz interference (all packets lost)</label>
+    </div>
+    <div class="takeaway"><b>The rule to recite:</b> <code>(1 + slave_latency) × conn_interval &lt; supervision_timeout / 2</code> — the ÷2 gives margin for a couple of lost packets. "Disconnects every ~5 s" almost always means a supervision timeout (5–6 s is a common default): check the parameter math first, then sniffer, then RSSI, then 2.4 GHz interference (Wi-Fi ch. 6 overlaps BLE 37/38/39).</div>
+  </div>
+</section>
+
+<!-- ============ 2. GATT ============ -->
+<section class="lab" id="gatt">
+  <div class="lab-head"><span class="lab-num">LAB 14</span><span class="lab-title">GATT hierarchy explorer + notify vs indicate race</span><span class="lab-tag">Hub S8</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "How is data organized in BLE?" Click through a real Heart Rate Service, then run the notify-vs-indicate race to see why OTA uses indications and sensor streams use notifications.</div>
+    <div class="scope">
+      <div class="gatt-tree" id="gattTree"></div>
+      <div class="lane-wrap">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:6px">GATT SERVER (peripheral) → GATT CLIENT (central) · purple = ATT confirmation</div>
+        <div class="lane" id="laneN"><span class="who">NOTIFY</span></div>
+        <div class="lane" id="laneI"><span class="who">INDICATE</span></div>
+        <div class="statline"><span>notify ×3: <span class="v" id="tN">—</span></span><span>indicate ×3: <span class="v" id="tI">—</span></span></div>
+      </div>
+      <div class="narr" id="gNarr">Click tree nodes to expand. Then race the two delivery modes.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="gRace">▶ Race: send 3 packets each way</button>
+    </div>
+    <div class="takeaway"><b>One-liner:</b> Profile → Service → Characteristic → Descriptor. <b>Notify</b> = fire-and-forget, fast, no guarantee — sensor streams. <b>Indicate</b> = wait for ATT confirmation per packet, guaranteed but one round-trip each — OTA chunks, config changes. The client opts in by writing 0x0001 (notify) or 0x0002 (indicate) to the <b>CCCD</b>.</div>
+  </div>
+</section>
+
+<!-- ============ 3. RF CORE ============ -->
+<section class="lab" id="rfcore">
+  <div class="lab-head"><span class="lab-num">LAB 15</span><span class="lab-title">CC26xx RF core — dual-CPU architecture</span><span class="lab-tag">Highest-ROI differentiator</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> most candidates won't know this. Knowing why TI put a <i>second CPU</i> inside the chip — and what it implies for your application code — signals you studied their silicon specifically. Step through one radio command.</div>
+    <div class="scope">
+      <div class="flow">
+        <div class="fbox" id="rf-m4"><h4>CORTEX-M4F · APP</h4><p>Your application + BLE host stack + TI Drivers. Calls <code>RF_runCmd()</code> / <code>RF_scheduleCmd()</code>.</p></div>
+        <div class="farrow" id="rf-a1">⇄</div>
+        <div class="fbox" id="rf-mb"><h4>MAILBOX + DOORBELL</h4><p>Shared memory for radio operation command structs; doorbell registers signal both ways.</p></div>
+        <div class="farrow" id="rf-a2">⇄</div>
+        <div class="fbox" id="rf-m0"><h4>CORTEX-M0 · RF CORE (CPE)</h4><p>TI's proprietary RF firmware — the Command & Packet Engine. Owns all radio timing.</p></div>
+        <div class="farrow" id="rf-a3">→</div>
+        <div class="fbox" id="rf-phy"><h4>RADIO / PHY</h4><p>2.4 GHz transceiver. Modem, frequency synth, packet engine.</p></div>
+      </div>
+      <div class="stepdots" id="rfDots"></div>
+      <div class="narr" id="rfNarr">Press Step to post a BLE connection-event command.</div>
+    </div>
+    <div class="btnrow">
+      <button id="rfPrev">◂ Back</button>
+      <button class="primary" id="rfNext">Step ▸</button>
+    </div>
+    <div class="takeaway"><b>Why it matters (say all four):</b> ① RF timing is deterministic — your app bugs can't break a connection event. ② RF certification is handled at TI level — you never touch RF firmware. ③ The M4 can <b>sleep through connection events</b> — huge for power. ④ Rule: never call RF APIs from arbitrary ISRs — use RF driver callbacks. On <b>CC23xx</b> the same philosophy continues on a Cortex-M33 + TrustZone (BLE stack secure, app non-secure).</div>
+  </div>
+</section>
+
+<!-- ============ 4. CLOCK TREE ============ -->
+<section class="lab" id="clocks">
+  <div class="lab-head"><span class="lab-num">LAB 16</span><span class="lab-title">Clock tree → baud rate (break it, then fix it)</span><span class="lab-tag">Hub S1 reinforcement</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> you already studied clocks — this makes it muscle memory. Configure the tree, then press "change clocks, forget BRR" and watch the UART silently break. That exact bug is a favorite interview scenario.</div>
+    <div class="scope">
+      <div class="ctree">
+        <div class="cnode"><h5>Source</h5><div class="freq" id="cSrcF">8 MHz</div><select id="cSrc"><option value="8">HSE crystal 8 MHz</option><option value="16">HSI RC 16 MHz</option></select></div>
+        <div class="farrow">→</div>
+        <div class="cnode"><h5>PLL ×N (wait PLLRDY!)</h5><div class="freq" id="cPllF">—</div><select id="cPll"><option>2</option><option>4</option><option selected>6</option><option>8</option><option>12</option><option>16</option></select></div>
+        <div class="farrow">→</div>
+        <div class="cnode" id="cSysNode"><h5>SYSCLK (max 80 MHz)</h5><div class="freq" id="cSysF">—</div></div>
+        <div class="farrow">→</div>
+        <div class="cnode"><h5>APB divider</h5><div class="freq" id="cApbF">—</div><select id="cApb"><option>1</option><option>2</option><option>4</option></select></div>
+        <div class="farrow">→</div>
+        <div class="cnode"><h5>UART @ 115200</h5><div class="freq" id="cBrr">—</div><p style="font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace" id="cErr"></p></div>
+      </div>
+      <div class="alert" id="cAlert"></div>
+      <div class="narr" id="cNarr">BRR = f_periph / baud. Recomputed live as you change the tree — that's the correct behavior.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="cBreak">⚡ Change clocks but FORGET to update BRR</button>
+      <button id="cFix">Fix: recompute BRR</button>
+    </div>
+    <div class="takeaway"><b>The answer pattern:</b> "Baud is derived from the peripheral clock through BRR. Changing SYSCLK or a bus divider changes f_periph but BRR keeps its old value → actual baud diverges → framing errors / garbage. Fix: recalculate BRR after <i>any</i> clock change, and check which APB bus the UART hangs off in the clock tree." UART tolerates roughly ±2% baud error.</div>
+  </div>
+</section>
+
+<!-- ============ 5. I2C ANATOMY ============ -->
+<section class="lab" id="i2c">
+  <div class="lab-head"><span class="lab-num">LAB 17</span><span class="lab-title">I2C write-read transaction — decoded waveform</span><span class="lab-tag">PDF Q43 · Hub S1</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "debug an I2C failure with a logic analyzer" — this is what you'd see on screen. Hover/tap any region for what it means. Reading a register at slave 0x48 (a TMP117-style temp sensor): write the register address, repeated start, read the data.</div>
+    <div class="scope">
+      <svg id="i2cSvg" width="100%" height="190" viewBox="0 0 980 190" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="i2c-legend">
+        <span><i class="lg-dot" style="background:rgba(255,180,84,.5)"></i>address + R/W</span>
+        <span><i class="lg-dot" style="background:rgba(0,153,204,.5)"></i>register</span>
+        <span><i class="lg-dot" style="background:rgba(80,200,120,.4)"></i>data (slave drives)</span>
+        <span><i class="lg-dot" style="background:rgba(160,128,224,.5)"></i>start / rep-start / stop</span>
+        <span><i class="lg-dot" style="background:rgba(224,80,80,.5)"></i>NACK</span>
+      </div>
+      <div class="i2c-desc" id="i2cDesc">Hover or tap a region of the waveform.</div>
+    </div>
+    <div class="btnrow">
+      <label class="sw"><input type="checkbox" id="i2cStretch"> show clock stretching (slave holds SCL low after ACK)</label>
+    </div>
+    <div class="takeaway"><b>Logic-analyzer checklist:</b> no ACK on address → wrong address / dead / unpowered slave. Slow rising edges → wrong pull-ups (setup violation). SCL held low forever → stretch-timeout or stuck slave → <b>bus recovery</b>: toggle SCL ~9×, send STOP, reinit. Master must change SDA only while SCL is low — except START (fall) and STOP (rise) which happen while SCL is high; that's exactly what makes them unique.</div>
+  </div>
+</section>
+
+<!-- ============ 6. ZEPHYR BUILD FLOW ============ -->
+<section class="lab" id="zbuild">
+  <div class="lab-head"><span class="lab-num">LAB 18</span><span class="lab-title">Zephyr build flow — how DTS + Kconfig + West become a binary</span><span class="lab-tag">JD gap closer</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> Zephyr is your flagged gap. Being able to narrate this pipeline turns "I know the concepts" into "I know how the pieces actually combine." Step through what <code>west build -b lp_em_cc2340r5</code> does.</div>
+    <div class="scope">
+      <div class="flow" style="flex-wrap:wrap">
+        <div class="fbox" id="z-in"><h4>INPUTS</h4><p>app sources · <code>prj.conf</code> (Kconfig) · board <code>.dts</code> + <code>.dtsi</code> · app <code>.overlay</code></p></div>
+        <div class="farrow" id="z-a1">→</div>
+        <div class="fbox" id="z-west"><h4>WEST → CMAKE</h4><p>workspace meta-tool invokes CMake with the board's toolchain + config</p></div>
+        <div class="farrow" id="z-a2">→</div>
+        <div class="fbox" id="z-gen"><h4>GENERATED CONFIG</h4><p><code>autoconf.h</code> (from Kconfig merge) · <code>devicetree_generated.h</code> (from DTS + bindings)</p></div>
+        <div class="farrow" id="z-a3">→</div>
+        <div class="fbox" id="z-cc"><h4>COMPILE + LINK</h4><p>drivers selected by Kconfig compiled; DT macros resolve addresses/IRQs; linker script places it</p></div>
+        <div class="farrow" id="z-a4">→</div>
+        <div class="fbox" id="z-out"><h4>OUTPUT</h4><p><code>zephyr.elf / .bin / .hex</code> + map file → <code>west flash</code> / <code>west debug</code></p></div>
+      </div>
+      <div class="stepdots" id="zDots"></div>
+      <div class="narr" id="zNarr">Press Step. We'll trace one concrete thing through the pipeline: enabling the UART console.</div>
+    </div>
+    <div class="btnrow">
+      <button id="zPrev">◂ Back</button>
+      <button class="primary" id="zNext">Step ▸</button>
+    </div>
+    <div class="takeaway"><b>The sentence that lands:</b> "Devicetree describes what hardware exists, Kconfig selects what software gets built, West orchestrates it — at build time they meet as generated headers, so drivers are configured at compile time with zero runtime discovery cost." Tests run under <b>Twister</b> on native_posix/QEMU in CI, hardware reserved for RF/timing tests.</div>
+  </div>
+</section>
+
+<!-- ============ 7. THREAD MESH ============ -->
+<section class="lab" id="mesh">
+  <div class="lab-head"><span class="lab-num">LAB 19</span><span class="lab-title">Thread mesh — sleepy end devices & self-healing routes</span><span class="lab-tag">Hub S8 · Matter context</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> TI's CC13xx/CC26xx push Thread + Matter hard. Deliver a message to a sleeping sensor, then kill a router and watch the mesh route around it — the two behaviors that define Thread.</div>
+    <div class="scope">
+      <svg id="meshSvg" class="meshsvg" width="100%" height="240" viewBox="0 0 760 240" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="narr" id="mNarr">BR = border router (bridges to IP/Wi-Fi). R1/R2 = always-on routers. R3 = the SED's parent. SED = sleepy end device — radio OFF between polls.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="mSend">▶ Deliver message to the sleepy sensor</button>
+      <label class="sw"><input type="checkbox" id="mKill"> router R1 fails</label>
+    </div>
+    <div class="takeaway"><b>SED in one breath:</b> "It doesn't route and isn't always-on — it polls its parent every few seconds; the parent buffers downstream messages; the mesh routes around it. That's how a CC2652 sensor runs for years on a battery. Contrast: MTD polls faster, FTD is always-on and routes." Matter then runs <i>over</i> Thread (or Wi-Fi/Ethernet) as the application layer, with the border router bridging to IP.</div>
+  </div>
+</section>
+
+<!-- ============ 8. CONTEXT SWITCH ============ -->
+<section class="lab" id="ctx">
+  <div class="lab-head"><span class="lab-num">LAB 20</span><span class="lab-title">FreeRTOS context switch — MSP, PSP & the two stack frames</span><span class="lab-tag">PDF Q32 · Q35</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "what is a context switch?" answered at register level is a senior flex. Watch which frame the <i>hardware</i> pushes vs which the <i>kernel</i> pushes, and where MSP vs PSP is in use.</div>
+    <div class="scope">
+      <div class="ctxgrid">
+        <div class="stackcol"><h4>Task A stack (PSP_A)</h4><div class="stackitems" id="stA"></div></div>
+        <div class="cpubox" id="cpuBox"></div>
+        <div class="stackcol"><h4>Task B stack (PSP_B)</h4><div class="stackitems" id="stB"></div></div>
+      </div>
+      <div class="stepdots" id="xDots"></div>
+      <div class="narr" id="xNarr">Task A is running. Press Step — SysTick is about to fire.</div>
+    </div>
+    <div class="btnrow">
+      <button id="xPrev">◂ Back</button>
+      <button class="primary" id="xNext">Step ▸</button>
+    </div>
+    <div class="takeaway"><b>Three facts to drop:</b> ① hardware auto-pushes xPSR·PC·LR·R12·R3–R0 on exception entry; the kernel (PendSV) saves only R4–R11 + PSP. ② Handlers run on <b>MSP</b>; tasks run on <b>PSP</b> — that's why each task needs its own stack sized for its worst case. ③ The switch happens in <b>PendSV at the lowest priority</b>, so a context switch can never preempt another ISR mid-flight.</div>
+  </div>
+</section>
+
+<!-- ============ 9. RMS ============ -->
+<section class="lab" id="rms">
+  <div class="lab-head"><span class="lab-num">LAB 21</span><span class="lab-title">RMS schedulability quick-check</span><span class="lab-tag">Hub S4</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> if scheduling theory comes up, doing the Liu & Layland check mentally is impressive. Practice with a few sets here.</div>
+    <div class="scope">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px">Task CPU utilizations (%): <input type="text" id="rmsIn" value="20, 30, 15" style="width:220px"></div>
+      <div class="rms-out" id="rmsOut"></div>
+    </div>
+    <div class="takeaway"><b>Recite:</b> RMS = shorter period → higher static priority; optimal among fixed-priority schemes. Bound: U ≤ n(2<sup>1/n</sup> − 1) → 69.3% as n→∞. Under the bound = guaranteed. Between bound and 100% = maybe (needs response-time analysis). Over 100% = never.</div>
+  </div>
+</section>
+
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:1rem 0 2rem">Concepts Lab 2b · with Vol 2 + the study hub + Drill Mode, every Must-Know topic now has coverage · state is in-memory only</div>
+</div>
+
+<script>
+/* ===== 1. BLE TIMING ===== */
+(function(){
+  const $=id=>document.getElementById(id);
+  let timer=null,evt=0,supMs=0,dead=false;
+  const WINDOW=16; // events shown
+  function params(){return{itv:+$('bInt').value,lat:+$('bLat').value,sup:+$('bSup').value,rf:$('bRF').checked}}
+  function formula(){
+    const{itv,lat,sup}=params();
+    const lhs=(1+lat)*itv, ok=lhs<sup/2;
+    $('bForm').className='formula '+(ok?'ok':'fail');
+    $('bForm').innerHTML='(1 + '+lat+') × '+itv+' ms = <b>'+lhs+' ms</b> '+(ok?'&lt;':'≥')+' timeout/2 = <b>'+(sup/2)+' ms</b> → <span class="verdict">'+(ok?'VALID — link survives a couple of lost packets':'INVALID — central may drop the link; most stacks reject these parameters')+'</span>';
+    const wakesPerMin=60000/((1+lat)*itv);
+    $('bSync').textContent=((1+lat)*itv)+' ms';
+    $('bWakes').textContent=wakesPerMin.toFixed(1);
+    // est: 5 mA for 2.5 ms per wake + 1 µA sleep
+    const avg=1+5000*(2.5/((1+lat)*itv));
+    $('bCur').textContent=avg.toFixed(1)+' µA';
+    return ok;
+  }
+  function drawStatic(){
+    const{lat}=params();
+    const c=$('bCent'),p=$('bPeri');c.innerHTML='';p.innerHTML='';
+    for(let i=0;i<WINDOW;i++){
+      const x=(i/(WINDOW-1))*96+2;
+      const a=document.createElement('div');a.className='evt anchor';a.style.left=x+'%';c.appendChild(a);
+      const w=document.createElement('div');
+      w.className='evt '+(i%(lat+1)===0?'wake':'sleepmark');
+      w.style.left=x+'%';w.dataset.i=i;p.appendChild(w);
+    }
+  }
+  function step(){
+    const{itv,lat,sup,rf}=params();
+    const i=evt%WINDOW;
+    if(i===0){drawStatic();}
+    const peri=$('bPeri').children[i];
+    const listens=(evt%(lat+1)===0);
+    if(listens){
+      if(rf){peri.className='evt miss';supMs+=0;/*accrued below*/}
+      else{peri.className='evt wake';supMs=0;$('bLink').innerHTML='<span class="good">CONNECTED</span>';
+        $('bNarr').textContent='Event '+evt+': peripheral woke, exchanged packets, supervision timer reset. It now sleeps through the next '+lat+' event(s).';}
+    }
+    if(rf){$('bNarr').textContent='Event '+evt+': interference — packet lost. Supervision timer accumulating: '+supMs+' / '+sup+' ms.';}
+    supMs+=rf?itv:(listens?0:0);
+    // accumulate also for skipped events under interference handled above; for clean link skipped events don't accrue (central got response last wake within timeout window)
+    if(!rf&&!listens){supMs+=itv;if(supMs>=sup){/*shouldn't happen if params valid*/}}
+    if(!rf&&listens)supMs=0;
+    $('bSupBar').style.width=Math.min(100,supMs/sup*100)+'%';
+    if(supMs>=sup){
+      dead=true;clearInterval(timer);timer=null;$('bPlay').textContent='▶ Play';
+      $('bLink').innerHTML='<span class="bad">SUPERVISION TIMEOUT — DISCONNECTED</span>';
+      $('bNarr').textContent='No successful packet within '+sup+' ms → both sides declare the link dead. Peripheral falls back to advertising. This is the "disconnects every 5 seconds" bug.';
+      return;
+    }
+    evt++;
+  }
+  function play(){
+    if(dead)reset();
+    if(timer){clearInterval(timer);timer=null;$('bPlay').textContent='▶ Play';return}
+    $('bPlay').textContent='❚❚ Pause';timer=setInterval(step,380);
+  }
+  function reset(){if(timer){clearInterval(timer);timer=null;$('bPlay').textContent='▶ Play'}
+    evt=0;supMs=0;dead=false;$('bSupBar').style.width='0%';$('bLink').textContent='—';
+    formula();drawStatic();
+    $('bNarr').textContent='The central transmits an anchor every interval. With slave latency, the peripheral may sleep through events and stay connected. Press Play.'}
+  ['bInt','bLat','bSup'].forEach(id=>{$(id).addEventListener('input',()=>{ $('bIntV').textContent=$('bInt').value;$('bLatV').textContent=$('bLat').value;$('bSupV').textContent=$('bSup').value;reset()})});
+  $('bRF').onchange=()=>{supMs=0;$('bSupBar').style.width='0%'};
+  $('bPlay').onclick=play;$('bReset').onclick=reset;
+  reset();
+})();
+
+/* ===== 2. GATT ===== */
+(function(){
+  const tree={label:'PROFILE · Heart Rate Profile',type:'profile',desc:'A profile is a spec: which services a device must implement to be e.g. a "heart rate monitor". Profiles aren\'t on the wire — services are.',children:[
+    {label:'SERVICE · Heart Rate Service · UUID 0x180D',type:'service',desc:'Groups related characteristics. Registered on TI BLE5-Stack via GATTServApp_RegisterService(). Standard SIG services use 16-bit UUIDs; custom ones use 128-bit.',children:[
+      {label:'CHARACTERISTIC · Heart Rate Measurement · 0x2A37 · props: NOTIFY',type:'char',desc:'Has a UUID, a value, and properties (read/write/notify/indicate). This one streams — the server pushes notifications when the client opts in.',children:[
+        {label:'DESCRIPTOR · CCCD · 0x2902',type:'desc',desc:'Client Characteristic Configuration Descriptor. The CLIENT writes 0x0001 to enable notifications or 0x0002 for indications. "Notifications don\'t arrive" bug #1: nobody wrote the CCCD.',children:[]}]},
+      {label:'CHARACTERISTIC · Body Sensor Location · 0x2A38 · props: READ',type:'char',desc:'A static readable value (wrist, chest…). Simple ATT read request/response.',children:[]}]},
+    {label:'SERVICE · Battery Service · 0x180F',type:'service',desc:'Devices expose multiple services. Battery Level (0x2A19) is the classic second service on a sensor.',children:[]}
+  ]};
+  function build(node,depth){
+    const d=document.createElement('div');d.className='gnode'+(depth<2?' open':'');
+    const colors={profile:'var(--purple)',service:'var(--teal)',char:'var(--amber)',desc:'var(--blue)'};
+    d.innerHTML='<div class="gnode-head"><span class="arrow">▶</span><span style="color:'+colors[node.type]+'">'+node.label+'</span></div><div class="gdesc">'+node.desc+'</div><div class="gnode-body"></div>';
+    d.querySelector('.gnode-head').onclick=e=>{e.stopPropagation();d.classList.toggle('open')};
+    const body=d.querySelector('.gnode-body');
+    node.children.forEach(c=>body.appendChild(build(c,depth+1)));
+    if(!node.children.length)body.remove();
+    return d;
+  }
+  document.getElementById('gattTree').appendChild(build(tree,0));
+  // race
+  let racing=false;
+  function dot(lane,cls,fromPct,toPct,ms){return new Promise(res=>{
+    const p=document.createElement('div');p.className='pkt '+cls;p.style.left=fromPct+'%';lane.appendChild(p);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{p.style.transition='left '+ms+'ms linear';p.style.left=toPct+'%'}));
+    setTimeout(()=>{p.remove();res()},ms+30);
+  })}
+  document.getElementById('gRace').onclick=async function(){
+    if(racing)return;racing=true;this.disabled=true;
+    const lN=document.getElementById('laneN'),lI=document.getElementById('laneI');
+    document.getElementById('tN').textContent='…';document.getElementById('tI').textContent='…';
+    document.getElementById('gNarr').textContent='Notify fires back-to-back. Indicate must wait for each ATT confirmation before the next packet.';
+    const t0=performance.now();
+    const notif=(async()=>{for(let k=0;k<3;k++){dot(lN,'n',8,95,550);await new Promise(r=>setTimeout(r,260))}await new Promise(r=>setTimeout(r,560));
+      document.getElementById('tN').textContent=((performance.now()-t0)/1000).toFixed(1)+' s'})();
+    const ind=(async()=>{for(let k=0;k<3;k++){await dot(lI,'ind',8,95,550);await dot(lI,'ack',95,8,550)}
+      document.getElementById('tI').textContent=((performance.now()-t0)/1000).toFixed(1)+' s';
+      document.getElementById('gNarr').textContent='Indicate took ~2× longer for the same 3 packets — that round-trip is the price of guaranteed delivery. Throughput tools like OTA batch carefully or use notify + app-level ACKs.'})();
+    await Promise.all([notif,ind]);racing=false;this.disabled=false;
+  };
+})();
+
+/* ===== 3. RF CORE ===== */
+(function(){
+  const steps=[
+    {hl:['rf-m4'],n:'1/6 — The app (or BLE stack) builds a radio operation command struct and calls RF_runCmd(). Your code never touches the radio registers directly.'},
+    {hl:['rf-m4','rf-a1','rf-mb'],n:'2/6 — The RF driver posts the command into the shared mailbox and rings the doorbell register.'},
+    {hl:['rf-mb','rf-a2','rf-m0'],n:'3/6 — The CPE (Cortex-M0 running TI\'s certified RF firmware) parses the command and takes over all timing for the radio operation.'},
+    {hl:['rf-m0','rf-a3','rf-phy'],n:'4/6 — The M0 programs the PHY and executes the BLE connection event with hard real-time precision — your M4 application code cannot disturb this.'},
+    {hl:['rf-m4'],n:'5/6 — Meanwhile the M4 sleeps (standby) or does other work. This split is a big reason CC26xx hits ~1 µA average in connected idle.'},
+    {hl:['rf-m0','rf-a2','rf-mb','rf-a1','rf-m4'],n:'6/6 — Operation done: CPE writes status to the mailbox and raises an interrupt → your RF driver CALLBACK runs on the M4. Rule: react in callbacks, never call RF APIs from arbitrary ISRs.'}
+  ];
+  let i=-1;
+  const dots=document.getElementById('rfDots');
+  steps.forEach(()=>{const d=document.createElement('div');d.className='sdot';dots.appendChild(d)});
+  function draw(){
+    ['rf-m4','rf-mb','rf-m0','rf-phy','rf-a1','rf-a2','rf-a3'].forEach(id=>document.getElementById(id).classList.remove('hl'));
+    [...dots.children].forEach((d,k)=>d.classList.toggle('on',k<=i));
+    if(i<0){document.getElementById('rfNarr').textContent='Press Step to post a BLE connection-event command.';return}
+    steps[i].hl.forEach(id=>document.getElementById(id).classList.add('hl'));
+    document.getElementById('rfNarr').textContent=steps[i].n;
+  }
+  document.getElementById('rfNext').onclick=()=>{if(i<steps.length-1){i++;draw()}};
+  document.getElementById('rfPrev').onclick=()=>{if(i>-1){i--;draw()}};
+  draw();
+})();
+
+/* ===== 4. CLOCK TREE ===== */
+(function(){
+  const $=id=>document.getElementById(id);
+  const BAUD=115200;let storedBRR=null,broken=false;
+  function calc(){
+    const src=+$('cSrc').value, mult=+$('cPll').value, apb=+$('cApb').value;
+    const sys=src*mult, periph=sys/apb;
+    $('cSrcF').textContent=src+' MHz';
+    $('cPllF').textContent='×'+mult+' → '+sys+' MHz';
+    $('cSysF').textContent=sys+' MHz';
+    $('cSysNode').classList.toggle('warn',sys>80);
+    $('cApbF').textContent='÷'+apb+' → '+periph+' MHz';
+    const correctBRR=Math.round(periph*1e6/BAUD);
+    const brr=broken&&storedBRR?storedBRR:correctBRR;
+    const actual=periph*1e6/brr;
+    const err=(actual-BAUD)/BAUD*100;
+    $('cBrr').textContent='BRR='+brr;
+    $('cErr').textContent='actual '+Math.round(actual)+' Bd · err '+err.toFixed(2)+'%';
+    const al=$('cAlert');
+    if(sys>80){al.className='alert bad';al.textContent='⚠ SYSCLK over spec (80 MHz max) — flash wait states / hard limits violated. Real init code must respect device limits and wait for PLLRDY before switching.';}
+    else if(Math.abs(err)>2){al.className='alert bad';al.textContent='⚠ Baud error '+err.toFixed(1)+'% — outside UART\'s ~±2% tolerance. RX is now garbage / framing errors. THIS is the "UART broke after a clock change" bug.';}
+    else{al.className='alert good';al.textContent='✓ Baud error '+err.toFixed(2)+'% — within tolerance. UART healthy.';}
+    return correctBRR;
+  }
+  $('cBreak').onclick=()=>{
+    storedBRR=calc();broken=true;
+    // change the tree under it
+    const opts=[['cPll',['2','4','6','8','12','16']],['cApb',['1','2','4']]];
+    opts.forEach(([id,vals])=>{const el=$(id);let nv;do{nv=vals[Math.floor(Math.random()*vals.length)]}while(nv===el.value);el.value=nv});
+    $('cNarr').textContent='Clocks changed (e.g. power-mode switch reconfigured the PLL/dividers) — but BRR still holds the OLD value computed for the OLD peripheral clock.';
+    calc();
+  };
+  $('cFix').onclick=()=>{broken=false;storedBRR=null;$('cNarr').textContent='BRR recomputed from the new peripheral clock — baud error back near zero. Recalculate BRR after ANY clock change.';calc()};
+  ['cSrc','cPll','cApb'].forEach(id=>$(id).addEventListener('change',()=>{if(!broken)$('cNarr').textContent='BRR = f_periph / baud. Recomputed live as you change the tree — that\'s the correct behavior.';calc()}));
+  calc();
+})();
+
+/* ===== 5. I2C ===== */
+(function(){
+  const svg=document.getElementById('i2cSvg'),desc=document.getElementById('i2cDesc');
+  const HI_SCL=55,LO_SCL=95,HI_SDA=135,LO_SDA=175;
+  function bits(byte){const a=[];for(let k=7;k>=0;k--)a.push((byte>>k)&1);return a}
+  function build(){
+    const stretch=document.getElementById('i2cStretch').checked;
+    // slots: {sda:0/1/'fall'/'rise', kind, label, w}
+    let slots=[];
+    const pushByte=(byte,kind)=>{bits(byte).forEach((b,ix)=>slots.push({sda:b,kind,label:kind+' bit'+(7-ix)+'='+b}))};
+    slots.push({sda:'fall',kind:'start',label:'START'});
+    pushByte(0x90,'addrW');                       // 0x48<<1 | W
+    slots.push({sda:0,kind:'ack',label:'ACK'});
+    if(stretch)slots.push({sda:0,kind:'stretch',w:3,label:'STRETCH'});
+    pushByte(0x01,'reg');
+    slots.push({sda:0,kind:'ack',label:'ACK'});
+    slots.push({sda:'fall',kind:'rs',label:'Sr'});
+    pushByte(0x91,'addrR');                       // 0x48<<1 | R
+    slots.push({sda:0,kind:'ack',label:'ACK'});
+    pushByte(0x5A,'data');
+    slots.push({sda:1,kind:'nack',label:'NACK'});
+    slots.push({sda:'rise',kind:'stop',label:'STOP'});
+    // regions for hover
+    const regions=[
+      {kinds:['start'],t:'START: SDA falls WHILE SCL is high — the only time SDA may change with SCL high (besides STOP/Sr). Claims the bus.'},
+      {kinds:['addrW'],t:'Address byte: 7-bit address 0x48 shifted left + R/W̄=0 (write) → 0x90 on the wire. No ACK here = wrong address, unpowered or crashed slave.'},
+      {kinds:['ack'],t:'ACK: the RECEIVER pulls SDA low during the 9th clock. Open-drain bus — anyone can pull low, nobody drives high (pull-ups do).'},
+      {kinds:['stretch'],t:'CLOCK STRETCHING: the slave holds SCL LOW to pause the master while it prepares data. Master must wait. Not all masters support it → timeouts or garbage at high speed.'},
+      {kinds:['reg'],t:'Register pointer 0x01: tells the slave WHICH register the upcoming read targets — a protocol convention on top of I2C, defined by the device datasheet.'},
+      {kinds:['rs'],t:'REPEATED START: a new START without a STOP — keeps the bus (no other master can grab it) while reversing direction from write to read. Essential for atomic write-read.'},
+      {kinds:['addrR'],t:'Address again, now with R/W̄=1 (read) → 0x91. From here the SLAVE drives SDA for data bytes.'},
+      {kinds:['data'],t:'Data byte 0x5A driven by the slave, clocked by the master. Master ACKs to keep reading…'},
+      {kinds:['nack'],t:'…or NACKs (leaves SDA high) to say "last byte — I\'m done." Forgetting the final NACK is a classic driver bug: the slave keeps driving SDA and the STOP fails.'},
+      {kinds:['stop'],t:'STOP: SDA rises while SCL is high. Bus released.'}
+    ];
+    const colors={start:'rgba(160,128,224,.5)',rs:'rgba(160,128,224,.5)',stop:'rgba(160,128,224,.5)',addrW:'rgba(255,180,84,.5)',addrR:'rgba(255,180,84,.5)',reg:'rgba(0,153,204,.5)',data:'rgba(80,200,120,.4)',ack:'rgba(80,200,120,.55)',nack:'rgba(224,80,80,.5)',stretch:'rgba(224,80,80,.25)'};
+    // geometry
+    const x0=70;const totalW=slots.reduce((s,sl)=>s+(sl.w||1),0);
+    const W=(900-x0)/totalW;
+    let x=x0,scl='M '+(x0-30)+' '+HI_SCL,sda='M '+(x0-30)+' '+HI_SDA,over='';
+    // SCL idles high before start
+    scl+=' L '+x0+' '+HI_SCL; sda+=' L '+x0+' '+HI_SDA;
+    let sclY=HI_SCL,sdaY=HI_SDA;
+    const seg=(p,xx,yy)=>' L '+xx.toFixed(1)+' '+yy;
+    slots.forEach(sl=>{
+      const w=(sl.w||1)*W, xe=x+w;
+      if(sl.kind==='start'||sl.kind==='rs'){
+        // SCL high across (for rs, ensure high)
+        if(sclY!==HI_SCL){scl+=seg(0,x,sclY)+seg(0,x,HI_SCL);sclY=HI_SCL}
+        scl+=seg(0,xe,HI_SCL);
+        if(sdaY!==HI_SDA){sda+=seg(0,x,sdaY)+seg(0,x,HI_SDA);sdaY=HI_SDA}
+        sda+=seg(0,x+w/2,HI_SDA)+seg(0,x+w/2,LO_SDA)+seg(0,xe,LO_SDA);sdaY=LO_SDA;
+      }else if(sl.kind==='stop'){
+        if(sclY!==HI_SCL){scl+=seg(0,x,sclY)+seg(0,x,HI_SCL);sclY=HI_SCL}
+        scl+=seg(0,xe,HI_SCL);
+        if(sdaY!==LO_SDA){sda+=seg(0,x,sdaY)+seg(0,x,LO_SDA);sdaY=LO_SDA}
+        sda+=seg(0,x+w/2,LO_SDA)+seg(0,x+w/2,HI_SDA)+seg(0,xe,HI_SDA);sdaY=HI_SDA;
+      }else if(sl.kind==='stretch'){
+        if(sclY!==LO_SCL){scl+=seg(0,x,LO_SCL);sclY=LO_SCL}
+        scl+=seg(0,xe,LO_SCL);
+        sda+=seg(0,xe,sdaY);
+      }else{
+        // data/ack bit: sda settles while scl low, pulse in middle
+        const lvl=sl.sda?HI_SDA:LO_SDA;
+        if(sclY!==LO_SCL){scl+=seg(0,x,LO_SCL);sclY=LO_SCL}
+        if(sdaY!==lvl){sda+=seg(0,x+w*0.12,sdaY)+seg(0,x+w*0.12,lvl);sdaY=lvl}
+        sda+=seg(0,xe,lvl);
+        scl+=seg(0,x+w*0.3,LO_SCL)+seg(0,x+w*0.3,HI_SCL)+seg(0,x+w*0.75,HI_SCL)+seg(0,x+w*0.75,LO_SCL)+seg(0,xe,LO_SCL);
+      }
+      x=xe;
+    });
+    // overlays per contiguous region
+    x=x0;let ov='';
+    let i=0;
+    while(i<slots.length){
+      const kind=slots[i].kind;let w=0,j=i;
+      while(j<slots.length&&slots[j].kind===kind){w+=(slots[j].w||1)*W;j++}
+      const reg=regions.find(r=>r.kinds.includes(kind));
+      ov+='<rect class="i2cz" data-t="'+(reg?encodeURIComponent(reg.t):'')+'" x="'+x.toFixed(1)+'" y="30" width="'+w.toFixed(1)+'" height="155" fill="'+(colors[kind]||'transparent')+'" opacity="0.28" style="cursor:pointer"/>';
+      // label
+      const lbl={start:'S',rs:'Sr',stop:'P',addrW:'ADDR+W 0x90',addrR:'ADDR+R 0x91',reg:'REG 0x01',data:'DATA 0x5A',ack:'A',nack:'N',stretch:'⏸'}[kind];
+      ov+='<text x="'+(x+w/2).toFixed(1)+'" y="44" fill="#5a6a7a" font-size="9" text-anchor="middle">'+lbl+'</text>';
+      x+=w;i=j;
+    }
+    svg.innerHTML='<text x="14" y="'+(HI_SCL+22)+'" fill="#5a6a7a" font-size="10">SCL</text><text x="14" y="'+(HI_SDA+22)+'" fill="#5a6a7a" font-size="10">SDA</text>'
+      +'<path d="'+scl+'" fill="none" stroke="#00d4aa" stroke-width="1.8"/>'
+      +'<path d="'+sda+'" fill="none" stroke="#ffb454" stroke-width="1.8"/>'+ov;
+    svg.querySelectorAll('.i2cz').forEach(r=>{
+      const show=()=>{const t=decodeURIComponent(r.dataset.t);if(t)desc.textContent=t;r.setAttribute('opacity','0.5')};
+      const hide=()=>r.setAttribute('opacity','0.28');
+      r.addEventListener('mouseenter',show);r.addEventListener('mouseleave',hide);r.addEventListener('click',show);
+    });
+  }
+  document.getElementById('i2cStretch').onchange=build;
+  build();
+})();
+
+/* ===== 6. ZEPHYR BUILD ===== */
+(function(){
+  const steps=[
+    {hl:['z-in'],n:'1/6 — Trace: you add CONFIG_SERIAL=y + CONFIG_UART_CONSOLE=y to prj.conf, and the board .dts already has a uart0 node with chosen { zephyr,console = &uart0; }.'},
+    {hl:['z-in','z-a1','z-west'],n:'2/6 — west build -b <board> resolves the board, picks the toolchain, and drives CMake. West also manages the multi-repo workspace (west init / update).'},
+    {hl:['z-gen'],n:'3/6 — Kconfig tree + prj.conf merge into autoconf.h (#define CONFIG_UART_CONSOLE 1). The DTS + bindings compile into devicetree_generated.h — uart0\'s base address, IRQ, and baud become C macros.'},
+    {hl:['z-gen','z-a3','z-cc'],n:'4/6 — Because CONFIG_SERIAL is set, the UART driver source is compiled in at all. DEVICE_DT_DEFINE instantiates uart0 from the DT macros — config resolved at COMPILE time, no runtime discovery.'},
+    {hl:['z-cc'],n:'5/6 — Link against Zephyr\'s linker script: vector table, .text/.data/.bss placed for this SoC. Map file generated alongside.'},
+    {hl:['z-out'],n:'6/6 — zephyr.elf/.bin out → west flash programs it, west debug attaches. In CI, Twister builds and runs tests on native_posix/QEMU — printk now appears on uart0 because of the three files you touched in step 1.'}
+  ];
+  let i=-1;const dots=document.getElementById('zDots');
+  steps.forEach(()=>{const d=document.createElement('div');d.className='sdot';dots.appendChild(d)});
+  function draw(){
+    ['z-in','z-west','z-gen','z-cc','z-out','z-a1','z-a2','z-a3','z-a4'].forEach(id=>document.getElementById(id).classList.remove('hl'));
+    [...dots.children].forEach((d,k)=>d.classList.toggle('on',k<=i));
+    if(i<0){document.getElementById('zNarr').textContent='Press Step. We\'ll trace one concrete thing through the pipeline: enabling the UART console.';return}
+    steps[i].hl.forEach(id=>document.getElementById(id).classList.add('hl'));
+    document.getElementById('zNarr').textContent=steps[i].n;
+  }
+  document.getElementById('zNext').onclick=()=>{if(i<steps.length-1){i++;draw()}};
+  document.getElementById('zPrev').onclick=()=>{if(i>-1){i--;draw()}};
+  draw();
+})();
+
+/* ===== 7. THREAD MESH ===== */
+(function(){
+  const svg=document.getElementById('meshSvg');
+  const nodes={BR:{x:80,y:120,label:'BR',sub:'border router'},R1:{x:280,y:55,label:'R1',sub:'router'},R2:{x:280,y:185,label:'R2',sub:'router'},R3:{x:480,y:120,label:'R3',sub:'parent router'},SED:{x:660,y:120,label:'SED',sub:'sleepy sensor'}};
+  const links=[['BR','R1'],['BR','R2'],['R1','R2'],['R1','R3'],['R2','R3']];
+  let running=false;
+  function killed(){return document.getElementById('mKill').checked}
+  function draw(){
+    let s='';
+    links.forEach(([a,b],i)=>{
+      const dead=killed()&&(a==='R1'||b==='R1');
+      s+='<line id="L'+i+'" x1="'+nodes[a].x+'" y1="'+nodes[a].y+'" x2="'+nodes[b].x+'" y2="'+nodes[b].y+'" stroke="'+(dead?'#2a3340':'#3a4a5a')+'" stroke-width="2" '+(dead?'stroke-dasharray="2,6"':'')+'/>';
+    });
+    s+='<line id="Lsed" x1="'+nodes.R3.x+'" y1="'+nodes.R3.y+'" x2="'+nodes.SED.x+'" y2="'+nodes.SED.y+'" stroke="#3a4a5a" stroke-width="2" stroke-dasharray="5,5"/>';
+    Object.entries(nodes).forEach(([k,n])=>{
+      const dead=killed()&&k==='R1';
+      const col=k==='SED'?'#a080e0':(k==='BR'?'#0099cc':'#00d4aa');
+      s+='<circle id="N'+k+'" cx="'+n.x+'" cy="'+n.y+'" r="22" fill="#111418" stroke="'+(dead?'#2a3340':col)+'" stroke-width="2"/>'
+       +'<text x="'+n.x+'" y="'+(n.y+4)+'" fill="'+(dead?'#3a4a5a':col)+'" font-size="12" text-anchor="middle" font-weight="600">'+n.label+'</text>'
+       +'<text x="'+n.x+'" y="'+(n.y+40)+'" fill="#5a6a7a" font-size="9" text-anchor="middle">'+n.sub+(dead?' ✕ FAILED':'')+'</text>';
+    });
+    s+='<circle id="mPkt" r="6" fill="#ffb454" opacity="0"/>';
+    s+='<text id="mBadge" x="'+nodes.R3.x+'" y="'+(nodes.R3.y-32)+'" fill="#ffb454" font-size="10" text-anchor="middle" opacity="0"></text>';
+    s+='<text x="'+nodes.SED.x+'" y="'+(nodes.SED.y-32)+'" fill="#5a6a7a" font-size="9" text-anchor="middle">radio OFF between polls</text>';
+    svg.innerHTML=s;
+  }
+  function move(pkt,from,to,ms){return new Promise(res=>{
+    const t0=performance.now();pkt.setAttribute('opacity','1');
+    function f(t){const k=Math.min(1,(t-t0)/ms);
+      pkt.setAttribute('cx',from.x+(to.x-from.x)*k);pkt.setAttribute('cy',from.y+(to.y-from.y)*k);
+      if(k<1)requestAnimationFrame(f);else res()}
+    requestAnimationFrame(f)})}
+  document.getElementById('mSend').onclick=async function(){
+    if(running)return;running=true;this.disabled=true;
+    draw();
+    const pkt=document.getElementById('mPkt'),badge=document.getElementById('mBadge'),narr=document.getElementById('mNarr');
+    const via=killed()?'R2':'R1';
+    narr.textContent='Message enters from IP via the border router, routed '+(killed()?'around the failed R1 via R2 (self-healing mesh)':'via R1')+' toward the SED\'s parent…';
+    pkt.setAttribute('cx',nodes.BR.x);pkt.setAttribute('cy',nodes.BR.y);
+    await move(pkt,nodes.BR,nodes[via],700);
+    await move(pkt,nodes[via],nodes.R3,700);
+    pkt.setAttribute('opacity','0');
+    badge.textContent='BUFFERED — SED is asleep';badge.setAttribute('opacity','1');
+    narr.textContent='The parent (R3) buffers the message. The SED\'s radio is OFF — nothing can be delivered until it polls. Average current stays in the single-digit µA range.';
+    await new Promise(r=>setTimeout(r,1400));
+    // poll
+    narr.textContent='SED wakes for its periodic poll (every few seconds): "anything for me?"';
+    pkt.setAttribute('fill','#a080e0');
+    await move(pkt,nodes.SED,nodes.R3,500);
+    pkt.setAttribute('fill','#ffb454');badge.setAttribute('opacity','0');
+    narr.textContent='Parent delivers the buffered message in the poll response. SED processes it and goes straight back to sleep.';
+    await move(pkt,nodes.R3,nodes.SED,500);
+    pkt.setAttribute('opacity','0');
+    narr.textContent='Delivered. Total SED radio-on time: a few ms. '+(killed()?'And the mesh never noticed R1 was gone — routers re-route, end devices keep working.':'Toggle "router R1 fails" and run it again to see self-healing.');
+    running=false;this.disabled=false;
+  };
+  document.getElementById('mKill').onchange=()=>{draw();document.getElementById('mNarr').textContent=killed()?'R1 has failed. Routers detect the lost neighbor and recompute routes — deliver a message to see it.':'R1 restored.'};
+  draw();
+})();
+
+/* ===== 8. CONTEXT SWITCH ===== */
+(function(){
+  const HW=['xPSR','PC','LR','R12','R3','R2','R1','R0'].join(' · ');
+  const states=[
+    {a:['locals'],b:['locals','hw','sw'],cpu:{mode:'THREAD mode · PSP (Task A)',psp:'PSP = top of Task A stack',note:'Task A executing. Task B was switched out earlier — its registers wait on its own stack.'},n:'1/6 — Task A runs in thread mode on PSP. Press Step: SysTick fires.'},
+    {a:['locals','hw'],b:['locals','hw','sw'],cpu:{mode:'HANDLER mode · MSP',psp:'PSP = A (frame pushed)',note:'HARDWARE auto-pushed the exception frame (xPSR PC LR R12 R3–R0) onto Task A\'s stack. Handler itself runs on MSP.'},n:'2/6 — SysTick entry: the blue frame appeared with zero software involvement — the CPU did it.'},
+    {a:['locals','hw'],b:['locals','hw','sw'],cpu:{mode:'HANDLER mode · MSP',psp:'PSP = A',note:'SysTick handler decides a switch is due and PENDS PendSV — the lowest-priority exception — then returns.'},n:'3/6 — Why PendSV? So the switch runs only when NO other ISR is active. A context switch can never corrupt an in-flight interrupt.'},
+    {a:['locals','hw','sw'],b:['locals','hw','sw'],cpu:{mode:'HANDLER mode · MSP (PendSV)',psp:'PSP_A saved → TCB_A',note:'PendSV (kernel code) pushes the remaining registers R4–R11 (purple) and stores PSP into Task A\'s TCB. Task A is now fully frozen.'},n:'4/6 — Software saves what hardware didn\'t: R4–R11. Hardware frame + software frame = complete context.'},
+    {a:['locals','hw','sw'],b:['locals','hw'],cpu:{mode:'HANDLER mode · MSP (PendSV)',psp:'PSP ← TCB_B',note:'Scheduler picks Task B (highest-priority ready). Kernel loads PSP from TCB_B and POPS R4–R11 from Task B\'s stack.'},n:'5/6 — Mirror image: restore B\'s software frame, point PSP at B\'s stack.'},
+    {a:['locals','hw','sw'],b:['locals'],cpu:{mode:'THREAD mode · PSP (Task B)',psp:'PSP = top of Task B stack',note:'Exception return (magic EXC_RETURN value → thread mode, PSP): HARDWARE pops B\'s exception frame. PC = where B left off. Task B is running.'},n:'6/6 — Done. Task A\'s full context sleeps on its stack until its turn. Note the symmetry: hardware push ↔ hardware pop, kernel push ↔ kernel pop.'}
+  ];
+  let i=0;const dots=document.getElementById('xDots');
+  states.forEach(()=>{const d=document.createElement('div');d.className='sdot';dots.appendChild(d)});
+  function frame(t){
+    if(t==='hw')return'<div class="sframe hw new">HW frame: '+HW+'</div>';
+    if(t==='sw')return'<div class="sframe sw new">SW frame: R11 … R4</div>';
+    return'<div class="sframe">task locals / return addrs</div>';
+  }
+  function draw(){
+    const s=states[i];
+    document.getElementById('stA').innerHTML=s.a.map(frame).join('');
+    document.getElementById('stB').innerHTML=s.b.map(frame).join('');
+    document.getElementById('cpuBox').innerHTML='<b>CPU</b><br><span class="mode">'+s.cpu.mode+'</span><br><span class="psp">'+s.cpu.psp+'</span><br><br>'+s.cpu.note;
+    document.getElementById('xNarr').textContent=s.n;
+    [...dots.children].forEach((d,k)=>d.classList.toggle('on',k<=i));
+  }
+  document.getElementById('xNext').onclick=()=>{if(i<states.length-1){i++;draw()}};
+  document.getElementById('xPrev').onclick=()=>{if(i>0){i--;draw()}};
+  draw();
+})();
+
+/* ===== 9. RMS ===== */
+(function(){
+  const inp=document.getElementById('rmsIn'),out=document.getElementById('rmsOut');
+  function calc(){
+    const us=inp.value.split(/[,\s]+/).map(Number).filter(x=>isFinite(x)&&x>0);
+    if(!us.length){out.textContent='Enter utilizations, e.g. 20, 30, 15';return}
+    const n=us.length,total=us.reduce((a,b)=>a+b,0);
+    const bound=n*(Math.pow(2,1/n)-1)*100;
+    let verdict,col;
+    if(total>100){verdict='NOT SCHEDULABLE — over 100% CPU';col='var(--red)'}
+    else if(total<=bound){verdict='GUARANTEED schedulable under RMS (≤ Liu & Layland bound)';col='var(--green)'}
+    else{verdict='MAYBE — above the bound but under 100%: needs response-time analysis';col='var(--amber)'}
+    out.innerHTML='n = <span class="v">'+n+'</span> tasks · total U = <span class="v">'+total.toFixed(1)+'%</span> · bound n(2<sup>1/n</sup>−1) = <span class="v">'+bound.toFixed(1)+'%</span><br><span style="color:'+col+'">▸ '+verdict+'</span>';
+  }
+  inp.addEventListener('input',calc);calc();
+})();
+</script>
+</body>
+</html>

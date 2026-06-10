@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TI Prep · BLE Deep Dive — Senior Firmware Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --bg2:#111418; --bg3:#181d23; --border:#1e2530; --border2:#2a3340;
+  --text:#c8d4e0; --dim:#5a6a7a; --muted:#3a4a5a;
+  --teal:#00d4aa; --blue:#0099cc; --amber:#ffb454; --red:#e05050; --purple:#a080e0; --green:#50c878;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+.hdr{position:sticky;top:0;z-index:90;background:rgba(10,12,15,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);padding:1.1rem 1.5rem}
+.hdr-title{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.08em;text-transform:uppercase}
+.hdr-sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 9px;border:1px solid var(--border2);border-radius:20px;color:var(--dim);text-decoration:none;transition:.15s}
+.chip:hover{color:var(--teal);border-color:var(--teal)}
+.wrap{max-width:1000px;margin:0 auto;padding:1.5rem}
+.lab{margin:0 0 2.5rem;scroll-margin-top:150px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);overflow:hidden}
+.lab-head{display:flex;align-items:baseline;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.lab-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+.lab-title{font-size:15px;font-weight:600}
+.lab-tag{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:.06em;text-transform:uppercase}
+.lab-body{padding:16px 18px}
+.lab-why{font-size:12px;color:var(--dim);margin-bottom:14px;border-left:3px solid var(--teal);padding:6px 12px;background:rgba(0,212,170,.04);border-radius:0 4px 4px 0}
+.lab-why b{color:var(--teal);font-weight:500}
+.scope{background:#0c1014;border:1px solid var(--border2);border-radius:6px;padding:14px;
+  background-image:linear-gradient(rgba(42,51,64,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(42,51,64,.25) 1px,transparent 1px);
+  background-size:24px 24px;position:relative}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+button{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 14px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;transition:.15s}
+button:hover{border-color:var(--teal);color:var(--teal)}
+button.primary{border-color:var(--teal);color:var(--teal);background:rgba(0,212,170,.08)}
+button:disabled{opacity:.35;cursor:default}
+button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+button.sel{border-color:var(--amber);color:var(--amber)}
+.narr{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--amber);min-height:38px;margin-top:12px;line-height:1.6}
+.takeaway{margin-top:14px;font-size:12px;color:var(--dim);border-left:3px solid var(--amber);background:rgba(255,180,84,.05);padding:8px 12px;border-radius:0 4px 4px 0}
+.takeaway b{color:var(--amber);font-weight:500}
+code{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;color:var(--teal)}
+select,input[type=number],input[type=text],input[type=range]{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:6px 8px}
+label.sw{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);cursor:pointer}
+.statline{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--dim);margin-top:12px;display:flex;gap:18px;flex-wrap:wrap}
+.statline .v{color:var(--text)} .statline .good{color:var(--green)} .statline .bad{color:var(--red)}
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px}
+.sl label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:4px}
+.sl input{width:100%}
+.sl .val{color:var(--teal)}
+/* stack */
+.bstack{display:flex;flex-direction:column;gap:5px}
+.blayer{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:9px 14px;cursor:pointer;transition:.2s}
+.blayer:hover{border-color:var(--teal)}
+.blayer.hl{border-color:var(--teal);box-shadow:0 0 12px rgba(0,212,170,.2)}
+.blayer h4{font-family:'IBM Plex Mono',monospace;font-size:12px;display:flex;gap:10px;align-items:baseline}
+.blayer h4 .side{margin-left:auto;font-size:9px;color:var(--muted);letter-spacing:.06em}
+.blayer .det{display:none;font-size:12px;color:var(--dim);margin-top:5px;line-height:1.7}
+.blayer.open .det{display:block}
+.blayer .det b{color:var(--text);font-weight:500}
+.pktbar{display:flex;gap:2px;margin-top:14px;min-height:34px;align-items:stretch}
+.pseg{display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#0a0c0f;font-weight:600;border-radius:3px;padding:0 4px;white-space:nowrap;overflow:hidden;animation:pop .3s}
+@keyframes pop{from{transform:scaleX(.6);opacity:0}to{transform:scaleX(1);opacity:1}}
+/* spectrum */
+.specdesc{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);min-height:34px;margin-top:8px}
+/* discovery */
+.dtrackrow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.dlabel{width:110px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);text-align:right;flex-shrink:0}
+.dtrack{position:relative;flex:1;height:30px;background:rgba(17,20,24,.8);border:1px solid var(--border2);border-radius:3px;overflow:hidden}
+.dwin{position:absolute;top:3px;bottom:3px;background:rgba(0,153,204,.3);border:1px solid rgba(0,153,204,.5);border-radius:2px}
+.dwin small{position:absolute;top:1px;left:2px;font-size:7px;color:var(--blue);font-family:'IBM Plex Mono',monospace}
+.dadv{position:absolute;top:4px;bottom:4px;width:4px;background:var(--amber);border-radius:1px}
+.dadv.hit{background:var(--green);width:6px;box-shadow:0 0 8px var(--green)}
+/* hopping */
+.hopgrid{display:grid;grid-template-columns:repeat(37,1fr);gap:3px}
+.hcell{height:30px;border:1px solid var(--border2);border-radius:3px;background:rgba(17,20,24,.85);position:relative;font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--muted);display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px}
+.hcell.cur{background:var(--teal);border-color:var(--teal);color:#0a0c0f;box-shadow:0 0 8px var(--teal)}
+.hcell.prev1{background:rgba(0,212,170,.45)}
+.hcell.prev2{background:rgba(0,212,170,.2)}
+.hcell.blk{background:repeating-linear-gradient(45deg,rgba(224,80,80,.35),rgba(224,80,80,.35) 3px,rgba(17,20,24,.85) 3px,rgba(17,20,24,.85) 6px);border-color:rgba(224,80,80,.4)}
+/* gatt ops table */
+table.ops{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:4px}
+table.ops th{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border2)}
+table.ops td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--dim)}
+table.ops td:first-child{color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px}
+.calc-out{margin-top:14px;display:flex;gap:26px;flex-wrap:wrap}
+.calc-out .big{font-family:'IBM Plex Mono',monospace;font-size:22px;color:var(--teal)}
+.calc-out .lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+/* pairing */
+.pair-out{margin-top:14px;padding:12px 14px;border-radius:6px;border:1px solid var(--border2);background:rgba(17,20,24,.9)}
+.pair-out h4{font-family:'IBM Plex Mono',monospace;font-size:14px;margin-bottom:4px}
+.pair-out p{font-size:12px;color:var(--dim)}
+.keys{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.key{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border-radius:3px;border:1px solid var(--border2);color:var(--dim)}
+.key b{color:var(--teal);font-weight:600}
+/* rpa */
+.addrlist{font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-top:10px;line-height:2}
+.addrlist .a{color:var(--amber)} .addrlist .ok{color:var(--green)} .addrlist .no{color:var(--red)}
+.acard{display:inline-block;border:1px solid var(--border2);border-radius:5px;padding:8px 12px;margin:4px 6px 4px 0;background:rgba(17,20,24,.9);font-size:11.5px;color:var(--dim);max-width:230px;vertical-align:top}
+.acard b{font-family:'IBM Plex Mono',monospace;color:var(--text);display:block;font-size:11px;margin-bottom:2px}
+/* LL state machine */
+.llstates{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.llnode{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 12px;border:1px solid var(--border2);border-radius:5px;color:var(--dim);background:rgba(17,20,24,.85);transition:.2s}
+.llnode.active{border-color:var(--teal);color:var(--teal);box-shadow:0 0 10px rgba(0,212,170,.25)}
+.lllog{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);background:rgba(10,12,15,.8);border:1px solid var(--border2);border-radius:5px;padding:10px 12px;height:110px;overflow-y:auto;margin-top:10px;line-height:1.7}
+.lllog .ok{color:var(--green)}
+/* version timeline */
+.vtl{display:flex;gap:8px;flex-wrap:wrap}
+.vcard{flex:1;min-width:135px;border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:10px 12px;cursor:pointer;transition:.15s}
+.vcard:hover{border-color:var(--teal)}
+.vcard h4{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--teal)}
+.vcard .yr{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)}
+.vcard .hl1{font-size:11px;color:var(--dim);margin-top:4px}
+.vdetail{margin-top:12px;padding:10px 14px;border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);font-size:12px;color:var(--dim);line-height:1.8;display:none}
+.vdetail b{color:var(--text);font-weight:500}
+/* playbook */
+.symp{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);margin-bottom:8px;overflow:hidden}
+.symp-head{padding:9px 14px;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:12px;display:flex;gap:10px;align-items:center}
+.symp-head:hover{background:rgba(0,212,170,.05)}
+.symp-head .tg{margin-left:auto;color:var(--muted);font-size:10px;transition:transform .2s}
+.symp.open .symp-head .tg{transform:rotate(90deg)}
+.symp-body{display:none;padding:4px 16px 12px;font-size:12px;color:var(--dim);line-height:1.75;border-top:1px solid var(--border)}
+.symp.open .symp-body{display:block}
+.symp-body b{color:var(--text);font-weight:500}
+.symp-body .cause{color:var(--amber)}
+.refpanel{border:1px solid var(--border);border-radius:8px;background:var(--bg2);padding:16px 18px;margin-bottom:2.5rem}
+.refpanel h3{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-bottom:10px}
+.refpanel p,.refpanel li{font-size:12.5px;color:var(--dim);line-height:1.75}
+.refpanel ul{padding-left:1.1rem}
+.refpanel b{color:var(--text);font-weight:500}
+@media(max-width:760px){.hopgrid{grid-template-columns:repeat(19,1fr)}.dlabel{width:70px;font-size:9px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-title">TI Norway · BLE Deep Dive</div>
+  <div class="hdr-sub">Volume 4 — everything a senior firmware engineer should know about BLE · connection timing lives in Lab 13 (Vol 2b)</div>
+  <nav class="chips">
+    <a class="chip" href="#stack">Protocol stack</a>
+    <a class="chip" href="#spectrum">Channels & Wi-Fi</a>
+    <a class="chip" href="#disc">Advertising & discovery</a>
+    <a class="chip" href="#hop">Channel hopping / AFH</a>
+    <a class="chip" href="#tput">GATT ops & throughput</a>
+    <a class="chip" href="#pair">Pairing & security</a>
+    <a class="chip" href="#rpa">Privacy & RPA</a>
+    <a class="chip" href="#llsm">Link Layer states</a>
+    <a class="chip" href="#vers">BLE 4.0 → 5.4</a>
+    <a class="chip" href="#play">Debug playbook</a>
+  </nav>
+</header>
+
+<div class="wrap">
+
+<!-- ============ B1 STACK ============ -->
+<section class="lab" id="stack">
+  <div class="lab-head"><span class="lab-num">LAB 22</span><span class="lab-title">The BLE protocol stack — and what each layer adds to a packet</span><span class="lab-tag">Architecture</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "walk me through the BLE stack" is the opener for any connectivity role. Click layers for their job, then press <b>Send a notification</b> and watch the packet grow headers as it descends — the byte-level view is what makes the answer senior.</div>
+    <div class="scope">
+      <div class="bstack">
+        <div class="blayer" id="ly-app" onclick="this.classList.toggle('open')"><h4 style="color:var(--text)">APPLICATION / PROFILES <span class="side">HOST</span></h4><div class="det"><b>Your code + SIG profiles</b> (Heart Rate, Environmental Sensing…). Decides <i>what</i> to send and <i>when</i>. On TI: your app task talking to the BLE5-Stack via ICall messages.</div></div>
+        <div class="blayer" id="ly-gap" onclick="this.classList.toggle('open')"><h4 style="color:var(--purple)">GAP · GATT <span class="side">HOST</span></h4><div class="det"><b>GAP:</b> roles (central / peripheral / broadcaster / observer), advertising, connecting, security modes. <b>GATT:</b> the data model — services, characteristics, descriptors — built on ATT. GATT Server holds data; GATT Client reads/writes/subscribes.</div></div>
+        <div class="blayer" id="ly-att" onclick="this.classList.toggle('open')"><h4 style="color:var(--blue)">ATT · SMP <span class="side">HOST</span></h4><div class="det"><b>ATT:</b> the wire protocol — opcodes like Read Request (0x0A), Write Request (0x12), Handle Value Notification (0x1B). One outstanding transaction at a time, <b>30 s ATT timeout = disconnect</b>. <b>SMP:</b> pairing, key generation/distribution.</div></div>
+        <div class="blayer" id="ly-l2" onclick="this.classList.toggle('open')"><h4 style="color:var(--teal)">L2CAP <span class="side">HOST</span></h4><div class="det">Multiplexing + fragmentation. Fixed channels: <b>CID 0x0004 = ATT</b>, 0x0006 = SMP, 0x0005 = signaling (connection parameter update request lives here). <b>CoC</b> (connection-oriented channels) give credit-based flow control for high-throughput streams (used by OTA on some stacks).</div></div>
+        <div class="blayer" id="ly-hci" onclick="this.classList.toggle('open')"><h4 style="color:var(--dim)">HCI <span class="side">BOUNDARY</span></h4><div class="det">Standardized command/event interface between Host and Controller. On single-chip designs (CC26xx/CC23xx) it's an internal API; on dual-chip (network processor) it runs over UART/SPI. Useful in debugging: HCI logs show exactly what the host asked the controller to do.</div></div>
+        <div class="blayer" id="ly-ll" onclick="this.classList.toggle('open')"><h4 style="color:var(--amber)">LINK LAYER <span class="side">CONTROLLER</span></h4><div class="det">The hard real-time core: advertising/scanning/connection state machines, channel hopping, encryption (AES-CCM), LL control procedures (connection update, channel map update, PHY update, <b>LL_TERMINATE_IND</b>). On CC26xx this runs on the dedicated <b>M0 RF core</b>.</div></div>
+        <div class="blayer" id="ly-phy" onclick="this.classList.toggle('open')"><h4 style="color:var(--red)">PHY <span class="side">CONTROLLER</span></h4><div class="det">2.4 GHz ISM, GFSK, 40 channels × 2 MHz. <b>1M</b> (mandatory), <b>2M</b> (throughput), <b>Coded S=2/S=8</b> (range, −4/−12 dB sensitivity gain). TX power, receiver sensitivity (~−97 dBm @1M on CC2340) set the link budget.</div></div>
+      </div>
+      <div class="pktbar" id="pktbar"></div>
+      <div class="statline"><span>on-air bytes: <span class="v" id="pkBytes">—</span></span><span>airtime @ 1M PHY: <span class="v" id="pkAir">—</span></span></div>
+      <div class="narr" id="stNarr">Press "Send a notification" — a 20-byte sensor value leaves the app and gains headers on the way down.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="stNext">Send a notification ▸</button>
+      <button id="stReset">Reset</button>
+    </div>
+    <div class="takeaway"><b>One-breath version:</b> "App and profiles sit on GAP/GATT; GATT rides ATT; ATT rides L2CAP channel 0x0004; HCI splits Host from Controller; the Link Layer owns timing, hopping and encryption; the PHY is GFSK on 40 channels at 2.4 GHz. On TI parts the Controller runs on the dedicated RF core, which is why app code can't break radio timing."</div>
+  </div>
+</section>
+
+<!-- ============ B2 SPECTRUM ============ -->
+<section class="lab" id="spectrum">
+  <div class="lab-head"><span class="lab-num">LAB 23</span><span class="lab-title">40 channels & Wi-Fi coexistence — why 37/38/39 live where they do</span><span class="lab-tag">PHY / RF</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "BLE works on the bench but fails in the office" → 2.4 GHz interference. Toggle the Wi-Fi networks and see which BLE channels get stomped — and notice the three advertising channels sitting precisely in the gaps.</div>
+    <div class="scope">
+      <svg id="specSvg" width="100%" height="150" viewBox="0 0 960 150" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="specdesc" id="specDesc">Hover or tap a channel. Purple = advertising (37, 38, 39) · teal = data (0–36).</div>
+    </div>
+    <div class="btnrow">
+      <label class="sw"><input type="checkbox" id="wf1"> Wi-Fi ch 1 (2412)</label>
+      <label class="sw"><input type="checkbox" id="wf6" checked> Wi-Fi ch 6 (2437)</label>
+      <label class="sw"><input type="checkbox" id="wf11"> Wi-Fi ch 11 (2462)</label>
+    </div>
+    <div class="takeaway"><b>Facts to drop:</b> 40 channels, 2 MHz spacing, 2402–2480 MHz. Advertising channels <b>37 (2402), 38 (2426), 39 (2480)</b> were deliberately placed in the gaps between Wi-Fi 1/6/11 so discovery survives even in dirty RF. Data channels that overlap an access point get excluded by the host via the <b>channel map / adaptive frequency hopping</b> (next lab).</div>
+  </div>
+</section>
+
+<!-- ============ B3 DISCOVERY ============ -->
+<section class="lab" id="disc">
+  <div class="lab-head"><span class="lab-num">LAB 24</span><span class="lab-title">Advertising & scanning — the discovery lottery</span><span class="lab-tag">GAP</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> discovery is probabilistic — an advertiser and a scanner have to <i>overlap in time</i>. Tune the three knobs, run it a few times, and watch discovery latency change. This is the power-vs-latency tradeoff you tune in every product.</div>
+    <div class="scope">
+      <div class="sliders">
+        <div class="sl"><label>Advertising interval: <span class="val" id="aIntV">100</span> ms (+0–10 ms random delay)</label><input type="range" id="aInt" min="20" max="1000" step="20" value="100"></div>
+        <div class="sl"><label>Scan interval: <span class="val" id="sIntV">300</span> ms</label><input type="range" id="sInt" min="100" max="1000" step="50" value="300"></div>
+        <div class="sl"><label>Scan window: <span class="val" id="sWinV">60</span> ms</label><input type="range" id="sWin" min="10" max="300" step="10" value="60"></div>
+      </div>
+      <div class="dtrackrow"><div class="dlabel">SCANNER<br>(central)</div><div class="dtrack" id="dScan"></div></div>
+      <div class="dtrackrow"><div class="dlabel">ADVERTISER<br>(peripheral)</div><div class="dtrack" id="dAdv"></div></div>
+      <div class="statline">
+        <span>scanner duty cycle: <span class="v" id="dDuty">—</span></span>
+        <span>discovered after: <span class="v" id="dTime">—</span></span>
+        <span>adv current cost: <span class="v" id="dCost">—</span></span>
+      </div>
+      <div class="narr" id="dNarr">Each amber tick = one advertising event (sent on ch 37, 38, 39 back-to-back). Blue blocks = scanner listening. Overlap = discovery.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="dRun">▶ Run discovery</button>
+    </div>
+    <div class="takeaway"><b>Senior notes:</b> the 0–10 ms random advDelay exists to prevent two advertisers colliding forever in lockstep. Active scanning adds SCAN_REQ → SCAN_RSP for extra payload; passive just listens. <b>ADV_IND</b> = connectable/scannable (the normal one); <b>ADV_NONCONN_IND</b> = beacons; <b>ADV_DIRECT_IND</b> = fast reconnect to a known peer. BLE 5 <b>extended advertising</b> moves big payloads off 37/38/39 onto data channels (ADV_EXT_IND points to AUX_ADV_IND).</div>
+  </div>
+</section>
+
+<!-- ============ B4 HOPPING ============ -->
+<section class="lab" id="hop">
+  <div class="lab-head"><span class="lab-num">LAB 25</span><span class="lab-title">Channel hopping & adaptive frequency hopping</span><span class="lab-tag">Link Layer</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> every connection event hops to a new data channel — that's BLE's interference armor. Watch CSA#1's hop pattern, then toggle interference and see the channel map shrink and remap around the blocked region.</div>
+    <div class="scope">
+      <div class="hopgrid" id="hopGrid"></div>
+      <div class="statline">
+        <span>event #: <span class="v" id="hEvt">0</span></span>
+        <span>channel: <span class="v" id="hCh">—</span></span>
+        <span>hop increment: <span class="v">7</span></span>
+        <span>channels in map: <span class="v" id="hMap">37</span></span>
+      </div>
+      <div class="narr" id="hNarr">CSA#1: nextChannel = (lastChannel + hopIncrement) mod 37 — then remapped if that channel is excluded from the map.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="hPlay">▶ Auto-hop</button>
+      <button id="hStep">Step one event</button>
+      <button id="hReset">Reset</button>
+      <label class="sw"><input type="checkbox" id="hWifi"> Wi-Fi ch 6 interference → host updates channel map</label>
+    </div>
+    <div class="takeaway"><b>Say it like this:</b> "Both sides hop to a new data channel each connection event, following the channel map the central distributes via <code>LL_CHANNEL_MAP_IND</code>. When the host sees high PER on certain channels it excludes them — adaptive frequency hopping. BLE 5 adds <b>CSA#2</b>, a pseudo-random hop that decorrelates better than the +increment pattern. Minimum 2 channels must stay in the map."</div>
+  </div>
+</section>
+
+<!-- ============ B5 THROUGHPUT ============ -->
+<section class="lab" id="tput">
+  <div class="lab-head"><span class="lab-num">LAB 26</span><span class="lab-title">GATT operations & the throughput calculator</span><span class="lab-tag">ATT / GATT</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "why is my OTA so slow?" is throughput math. Three levers: MTU, PHY, packets per event. Move them and watch the number — the jump from default MTU 23 to 247 is the punchline.</div>
+    <div class="scope">
+      <table class="ops">
+        <tr><th>Operation</th><th>Direction</th><th>ACK?</th><th>Use for</th></tr>
+        <tr><td>Read Request</td><td>client → server</td><td>response</td><td>one-shot values</td></tr>
+        <tr><td>Write Request</td><td>client → server</td><td>response</td><td>config (guaranteed)</td></tr>
+        <tr><td>Write Without Response</td><td>client → server</td><td>no</td><td>fast uplink (client→server streaming)</td></tr>
+        <tr><td>Notification</td><td>server → client</td><td>no</td><td>fast downlink / sensor streams</td></tr>
+        <tr><td>Indication</td><td>server → client</td><td>ATT confirm</td><td>critical data — one in flight at a time</td></tr>
+      </table>
+      <div class="sliders" style="margin-top:14px">
+        <div class="sl"><label>ATT MTU: <span class="val" id="tMtuV">247</span> bytes (payload = MTU − 3)</label><input type="range" id="tMtu" min="23" max="247" step="1" value="247"></div>
+        <div class="sl"><label>Connection interval: <span class="val" id="tItvV">30</span> ms</label><input type="range" id="tItv" min="8" max="200" step="1" value="30"></div>
+        <div class="sl"><label>Notification packets per event: <span class="val" id="tPkV">4</span></label><input type="range" id="tPk" min="1" max="12" step="1" value="4"></div>
+      </div>
+      <div class="btnrow" style="margin-top:0">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)">PHY:</span>
+        <button class="phyb sel" data-f="1">1M</button><button class="phyb" data-f="2">2M (~2× packets fit)</button><button class="phyb" data-f="0.5">Coded S=8 (range, ~⅛)</button>
+      </div>
+      <div class="calc-out">
+        <div><div class="big" id="tOut">—</div><div class="lbl">application throughput</div></div>
+        <div><div class="big" id="tOta">—</div><div class="lbl">time for a 256 kB OTA image</div></div>
+        <div><div class="big" id="tCmp">—</div><div class="lbl">same settings at default MTU 23</div></div>
+      </div>
+      <div class="narr" id="tNarr"></div>
+    </div>
+    <div class="takeaway"><b>The recipe to recite for fast OTA:</b> negotiate <b>MTU 247</b> + <b>Data Length Extension</b> (LL payload 27→251 B, BLE 4.2) + <b>2M PHY</b> + short connection interval + notifications/Write-Without-Response with app-level ACKs every N chunks (not indications — one round trip each). Practical ceiling ~1.4 Mbps app throughput on 2M. And remember: an unanswered indication or read hits the <b>30 s ATT timeout → disconnect</b>.</div>
+  </div>
+</section>
+
+<!-- ============ B6 PAIRING ============ -->
+<section class="lab" id="pair">
+  <div class="lab-head"><span class="lab-num">LAB 27</span><span class="lab-title">Pairing & security — the IO-capability matrix</span><span class="lab-tag">SMP</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "your device has no display or buttons — how does pairing work, and what's the risk?" Pick the IO capabilities and read the resulting method straight off. Then say the LESC sentence below.</div>
+    <div class="scope">
+      <div class="sliders">
+        <div class="sl"><label>Initiator IO (e.g. phone)</label><select id="pIo1" style="width:100%"><option>KeyboardDisplay</option><option>DisplayYesNo</option><option>DisplayOnly</option><option>KeyboardOnly</option><option>NoInputNoOutput</option></select></div>
+        <div class="sl"><label>Responder IO (your device)</label><select id="pIo2" style="width:100%"><option>NoInputNoOutput</option><option>DisplayOnly</option><option>DisplayYesNo</option><option>KeyboardOnly</option><option>KeyboardDisplay</option></select></div>
+      </div>
+      <div class="btnrow" style="margin-top:0">
+        <label class="sw"><input type="checkbox" id="pLesc" checked> LE Secure Connections (4.2+, ECDH P-256)</label>
+        <label class="sw"><input type="checkbox" id="pOob"> OOB data available (NFC tap, QR…)</label>
+      </div>
+      <div class="pair-out">
+        <h4 id="pMethod">—</h4>
+        <p id="pDesc"></p>
+        <div class="keys" id="pKeys"></div>
+      </div>
+    </div>
+    <div class="takeaway"><b>The LESC sentence:</b> "Legacy pairing derives keys from a TK that Just-Works sets to zero — passively sniffable. LE Secure Connections does an <b>ECDH P-256</b> exchange, so even Just Works resists passive eavesdropping; it just can't stop an active MITM without numeric comparison, passkey, or OOB." <b>Pairing</b> = creating keys for this session; <b>bonding</b> = storing them (LTK to encrypt reconnects, IRK to resolve private addresses, CSRK for signed writes). BLE link encryption itself is <b>AES-128-CCM</b> in the Link Layer.</div>
+  </div>
+</section>
+
+<!-- ============ B7 RPA ============ -->
+<section class="lab" id="rpa">
+  <div class="lab-head"><span class="lab-num">LAB 28</span><span class="lab-title">Privacy — resolvable private addresses</span><span class="lab-tag">GAP privacy</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> "why can't my device reconnect to the phone after a while?" — because the phone's address <i>changed</i>. Rotate a few RPAs and resolve them with the bonded IRK to see why bonding matters beyond encryption.</div>
+    <div class="scope">
+      <div>
+        <div class="acard"><b>Public address</b>IEEE-assigned, fixed, trackable. Rare in consumer devices.</div>
+        <div class="acard"><b>Random static</b>Fixed until reboot/lifetime. Common default for peripherals (TI default).</div>
+        <div class="acard"><b>RPA (resolvable)</b>prand(24b) + ah(IRK, prand). Rotates ~every 15 min. Bonded peers resolve it with your IRK.</div>
+        <div class="acard"><b>Non-resolvable</b>Pure random, nobody can resolve. Beacons that want zero trackability.</div>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-top:12px">bonded IRK = <span style="color:var(--purple)" id="rIrk"></span></div>
+      <div class="addrlist" id="rList"></div>
+      <div class="narr" id="rNarr">The phone generates a fresh RPA periodically. Press rotate, then resolve.</div>
+    </div>
+    <div class="btnrow">
+      <button class="primary" id="rRotate">⟳ Rotate address (new RPA)</button>
+      <button id="rResolve">Resolve with bonded IRK</button>
+      <button id="rStranger">Try resolving a stranger's address</button>
+    </div>
+    <div class="takeaway"><b>Why firmware engineers care:</b> if you whitelist/filter by address without storing the <b>IRK</b>, reconnection breaks the moment the phone rotates its RPA — a very common field bug. Controllers resolve RPAs in hardware against the <b>resolving list</b>. RPA = 24-bit prand (top bits 01) + 24-bit hash <code>ah(IRK, prand)</code>; the peer recomputes the hash with each stored IRK and compares.</div>
+  </div>
+</section>
+
+<!-- ============ B8 LL STATES ============ -->
+<section class="lab" id="llsm">
+  <div class="lab-head"><span class="lab-num">LAB 29</span><span class="lab-title">Link Layer state machine — drive it</span><span class="lab-tag">Link Layer</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> roles fall out of this machine: enter Connection from Advertising and you're the <b>peripheral</b>; from Initiating and you're the <b>central</b>. Drive both routes.</div>
+    <div class="scope">
+      <div class="llstates" id="llNodes"></div>
+      <div class="btnrow" id="llBtns" style="margin-top:0"></div>
+      <div class="lllog" id="llLog"></div>
+    </div>
+    <div class="takeaway"><b>GAP roles map:</b> Broadcaster = advertising only (beacon). Observer = scanning only. Peripheral = advertise → accept connection. Central = scan → initiate → own the connection (decides parameters, distributes the channel map). One device can hold multiple roles at once on modern stacks — e.g. a CC2652 can be peripheral to a phone while central to a sensor.</div>
+  </div>
+</section>
+
+<!-- ============ B9 VERSIONS ============ -->
+<section class="lab" id="vers">
+  <div class="lab-head"><span class="lab-num">LAB 30</span><span class="lab-title">BLE 4.0 → 5.4 — what arrived when</span><span class="lab-tag">Spec literacy</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> dating features ("DLE is 4.2, 2M PHY is 5.0, subrating is 5.3") instantly signals depth. Click a version. Note: <b>CC2340 ships BLE 5.3</b> — connection subrating is its headline.</div>
+    <div class="scope">
+      <div class="vtl" id="vtl"></div>
+      <div class="vdetail" id="vDetail"></div>
+    </div>
+    <div class="takeaway"><b>Two you must own for TI:</b> <b>Connection Subrating (5.3)</b> — a connected device skips most events by a negotiated factor but can ramp to full rate instantly; better than slave latency for "idle but must respond fast" products (earbuds, locks). <b>PAwR (5.4)</b> — periodic advertising with responses; thousands of nodes synchronized to one broadcaster — electronic shelf labels.</div>
+  </div>
+</section>
+
+<!-- ============ B10 PLAYBOOK ============ -->
+<section class="lab" id="play">
+  <div class="lab-head"><span class="lab-num">LAB 31</span><span class="lab-title">Senior debugging playbook — symptom → cause</span><span class="lab-tag">Field experience</span></div>
+  <div class="lab-body">
+    <div class="lab-why"><b>Interview angle:</b> these are the bugs that actually happen. Quiz yourself: read the symptom, name causes out loud, then expand and compare. Tooling baseline: sniffer (TI Packet Sniffer 2 / nRF Sniffer + Wireshark), HCI logs, RSSI, and a spectrum view.</div>
+    <div class="scope" id="playList"></div>
+    <div class="takeaway"><b>The sniffer habit:</b> capture over-the-air first, then look at <code>LL_TERMINATE_IND</code> — it tells you <b>which side</b> dropped the link and the <b>reason code</b> (0x08 supervision timeout, 0x13 remote user terminated, 0x16 local host terminated, 0x3D MIC failure = encryption/key mismatch). Half of all BLE debugging is knowing who hung up and why.</div>
+  </div>
+</section>
+
+<!-- ============ TI REFERENCE ============ -->
+<div class="refpanel">
+  <h3>TI BLE5-Stack quick reference (CC26xx) — sprinkle these in</h3>
+  <ul>
+    <li><b>Architecture:</b> stack runs as its own task above the RF driver; your app exchanges <b>ICall</b> messages with it. On CC23xx the stack moves toward a more library-style integration, and TrustZone can isolate the controller.</li>
+    <li><b>GATT server:</b> services registered with <code>GATTServApp_RegisterService()</code>; each service supplies an attribute table + read/write callbacks. Newer SDKs generate much of this from <b>SysConfig</b>.</li>
+    <li><b>GAP:</b> advertising sets via <code>GapAdv_*</code>, connection handling via <code>GapInit_*</code>/GAP events; bond storage in NV via <b>GapBondMgr</b> (stores LTK/IRK — the RPA lab is why).</li>
+    <li><b>Power:</b> the power driver + RF core let the M4 sleep through connection events automatically — you mostly just avoid holding constraints (<code>Power_setConstraint</code>) longer than needed.</li>
+    <li><b>Tools:</b> SimpleLink Starter / SysConfig for config, <b>TI Packet Sniffer 2</b> + Wireshark for OTA capture, EnergyTrace for current profiling of connection parameters.</li>
+  </ul>
+</div>
+
+<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:0 0 2rem">BLE Deep Dive · Volume 4 · pair with Lab 13 (connection timing) and Lab 14 (GATT tree) in Volume 2b</div>
+</div>
+
+<script>
+/* ===== B1 STACK PACKET ===== */
+(function(){
+  const segs=[
+    {b:20,c:'#c8d4e0',l:'VALUE 20B',layer:'ly-app',n:'1/6 — App: a 20-byte sensor reading. GATT wraps it as a Handle Value Notification on a characteristic the client subscribed to (CCCD = 0x0001).'},
+    {b:3,c:'#0099cc',l:'ATT 3B',layer:'ly-att',n:'2/6 — ATT prepends opcode 0x1B (Handle Value Notification) + the 2-byte attribute handle. Total ATT PDU = MTU-limited.'},
+    {b:4,c:'#00d4aa',l:'L2CAP 4B',layer:'ly-l2',n:'3/6 — L2CAP prepends length + channel ID 0x0004 (the fixed ATT channel). Would fragment here if the PDU exceeded the LL payload.'},
+    {b:2,c:'#ffb454',l:'LL 2B',layer:'ly-ll',n:'4/6 — Link Layer adds a 2-byte header (LLID, length). If the link is encrypted, the payload is AES-CCM encrypted and a 4-byte MIC is added. Whitening applied.'},
+    {b:3,c:'#e05050',l:'CRC 3B',layer:'ly-ll',n:'5/6 — …and a 3-byte CRC at the tail. Receiver silently drops CRC failures — they become retransmissions at the next opportunity.'},
+    {b:5,c:'#a080e0',l:'PRE+AA 5B',layer:'ly-phy',n:'6/6 — PHY prepends 1-byte preamble + 4-byte Access Address (unique per connection — how receivers know this packet is theirs) and transmits GFSK on the current hopped channel.'}
+  ];
+  let i=-1;const bar=document.getElementById('pktbar');
+  function draw(){
+    bar.innerHTML='';let total=0;
+    // draw in on-air order: from PHY headers (last added) to payload — but build progressively
+    const added=segs.slice(0,i+1);
+    // on-air order: PRE+AA, LL, L2CAP, ATT, VALUE, CRC — approximate display: headers left of payload, CRC right
+    const order=['PRE+AA 5B','LL 2B','L2CAP 4B','ATT 3B','VALUE 20B','CRC 3B'];
+    order.forEach(lbl=>{
+      const s=added.find(x=>x.l===lbl);
+      if(!s)return;total+=s.b;
+      const d=document.createElement('div');d.className='pseg';d.style.background=s.c;d.style.flex=String(s.b);d.textContent=s.l;bar.appendChild(d);
+    });
+    document.querySelectorAll('.blayer').forEach(b=>b.classList.remove('hl'));
+    if(i>=0){document.getElementById(segs[i].layer).classList.add('hl');
+      document.getElementById('stNarr').textContent=segs[i].n;}
+    document.getElementById('pkBytes').textContent=total?total+' B':'—';
+    document.getElementById('pkAir').textContent=total?(total*8)+' µs':'—';
+  }
+  document.getElementById('stNext').onclick=()=>{if(i<segs.length-1){i++;draw()}};
+  document.getElementById('stReset').onclick=()=>{i=-1;draw();document.getElementById('stNarr').textContent='Press "Send a notification" — a 20-byte sensor value leaves the app and gains headers on the way down.'};
+  draw();
+})();
+
+/* ===== B2 SPECTRUM ===== */
+(function(){
+  const chans=[];
+  chans.push({ch:37,f:2402,adv:true});
+  for(let k=0;k<=10;k++)chans.push({ch:k,f:2404+2*k});
+  chans.push({ch:38,f:2426,adv:true});
+  for(let k=11;k<=36;k++)chans.push({ch:k,f:2428+2*(k-11)});
+  chans.push({ch:39,f:2480,adv:true});
+  const wifi={wf1:{c:2412,l:'Wi-Fi 1'},wf6:{c:2437,l:'Wi-Fi 6'},wf11:{c:2462,l:'Wi-Fi 11'}};
+  const X=f=>30+(f-2400)/82*900;
+  function draw(){
+    let s='';
+    // wifi bands
+    Object.entries(wifi).forEach(([id,w])=>{
+      if(!document.getElementById(id).checked)return;
+      s+='<rect x="'+X(w.c-11)+'" y="20" width="'+(X(w.c+11)-X(w.c-11))+'" height="100" fill="rgba(224,80,80,.13)" stroke="rgba(224,80,80,.35)" stroke-dasharray="3,3"/>'
+        +'<text x="'+X(w.c)+'" y="34" fill="#e05050" font-size="10" text-anchor="middle" font-family="IBM Plex Mono">'+w.l+'</text>';
+    });
+    chans.forEach(c=>{
+      const hit=Object.entries(wifi).some(([id,w])=>document.getElementById(id).checked&&Math.abs(c.f-w.c)<=11);
+      const col=c.adv?'#a080e0':(hit?'rgba(224,80,80,.8)':'#00d4aa');
+      const h=c.adv?72:54;
+      s+='<rect class="bch" data-ch="'+c.ch+'" data-f="'+c.f+'" data-adv="'+(c.adv?1:0)+'" data-hit="'+(hit?1:0)+'" x="'+(X(c.f)-7)+'" y="'+(120-h)+'" width="14" height="'+h+'" rx="2" fill="'+col+'" style="cursor:pointer"/>';
+      if(c.adv)s+='<text x="'+X(c.f)+'" y="'+(112-h)+'" fill="#a080e0" font-size="9" text-anchor="middle" font-family="IBM Plex Mono">'+c.ch+'</text>';
+    });
+    s+='<line x1="20" y1="122" x2="940" y2="122" stroke="#2a3340"/>';
+    [2402,2426,2440,2462,2480].forEach(f=>{s+='<text x="'+X(f)+'" y="138" fill="#3a4a5a" font-size="9" text-anchor="middle" font-family="IBM Plex Mono">'+f+'</text>'});
+    document.getElementById('specSvg').innerHTML=s;
+    document.querySelectorAll('.bch').forEach(r=>{
+      const fn=()=>{const adv=r.dataset.adv==='1',hit=r.dataset.hit==='1';
+        document.getElementById('specDesc').textContent='Channel '+r.dataset.ch+' · '+r.dataset.f+' MHz · '+(adv?'ADVERTISING channel — discovery, in a Wi-Fi gap by design':'data channel')+(hit?' · ⚠ overlaps an active Wi-Fi network → candidate for exclusion from the channel map':'');};
+      r.addEventListener('mouseenter',fn);r.addEventListener('click',fn);
+    });
+  }
+  ['wf1','wf6','wf11'].forEach(id=>document.getElementById(id).onchange=draw);
+  draw();
+})();
+
+/* ===== B3 DISCOVERY ===== */
+(function(){
+  const $=id=>document.getElementById(id);
+  function run(){
+    const aI=+$('aInt').value,sI=+$('sInt').value,sW=Math.min(+$('sWin').value,sI);
+    $('dDuty').textContent=(sW/sI*100).toFixed(0)+'%';
+    // advertising current rough: 3 channels * ~1ms @ ~6mA per event
+    $('dCost').textContent=(6*3/aI*1000/1000).toFixed(2)+' µA avg @0dBm (rough)';
+    // simulate
+    const phase=Math.random()*aI;
+    let advTimes=[],t=phase;
+    while(t<60000){advTimes.push(t);t+=aI+Math.random()*10}
+    let found=null;
+    for(const a of advTimes){const k=Math.floor(a/sI);const ws=k*sI;if(a>=ws&&a<ws+sW){found=a;break}}
+    const view=Math.max(2000,found?found+200:3000);
+    const scan=$('dScan'),adv=$('dAdv');scan.innerHTML='';adv.innerHTML='';
+    for(let k=0;k*sI<view;k++){
+      const d=document.createElement('div');d.className='dwin';
+      d.style.left=(k*sI/view*100)+'%';d.style.width=(sW/view*100)+'%';
+      d.innerHTML='<small>'+(37+k%3)+'</small>';
+      scan.appendChild(d);
+    }
+    advTimes.filter(a=>a<view).forEach(a=>{
+      const d=document.createElement('div');d.className='dadv'+(found===a?' hit':'');
+      d.style.left=(a/view*100)+'%';adv.appendChild(d);
+    });
+    if(found!==null){$('dTime').innerHTML='<span class="good">'+Math.round(found)+' ms</span>';
+      $('dNarr').textContent='Discovered at '+Math.round(found)+' ms — an adv event landed inside a scan window. Run again: the random phase + advDelay make latency statistical. Shrink the scan window or stretch the adv interval and watch latency grow.';}
+    else{$('dTime').innerHTML='<span class="bad">not within 60 s</span>';
+      $('dNarr').textContent='No overlap in 60 s of simulation — pathological parameters. This is what "my device is invisible" sometimes is: discovery starvation, not RF failure.';}
+  }
+  ['aInt','sInt','sWin'].forEach(id=>$(id).addEventListener('input',()=>{$('aIntV').textContent=$('aInt').value;$('sIntV').textContent=$('sInt').value;$('sWinV').textContent=Math.min(+$('sWin').value,+$('sInt').value);run()}));
+  $('dRun').onclick=run;
+  run();
+})();
+
+/* ===== B4 HOPPING ===== */
+(function(){
+  const grid=document.getElementById('hopGrid');
+  for(let k=0;k<37;k++){const d=document.createElement('div');d.className='hcell';d.textContent=k;grid.appendChild(d)}
+  const cells=[...grid.children];
+  let cur=0,evt=0,timer=null,hist=[];
+  function blocked(){return document.getElementById('hWifi').checked}
+  function map(){const bl=blocked();const used=[];for(let k=0;k<37;k++){if(!(bl&&k>=11&&k<=20))used.push(k)}return used}
+  function draw(){
+    const bl=blocked(),used=map();
+    cells.forEach((c,k)=>{c.className='hcell'+(bl&&k>=11&&k<=20?' blk':'')});
+    hist.slice(-3).forEach((h,ix,arr)=>{if(ix<arr.length-1)cells[h].classList.add(ix===arr.length-2?'prev1':'prev2')});
+    if(hist.length)cells[hist[hist.length-1]].classList.add('cur');
+    document.getElementById('hEvt').textContent=evt;
+    document.getElementById('hCh').textContent=hist.length?hist[hist.length-1]:'—';
+    document.getElementById('hMap').textContent=used.length;
+  }
+  function step(){
+    const used=map();
+    cur=(cur+7)%37;
+    let ch=cur;
+    if(!used.includes(ch)){ch=used[cur%used.length];
+      document.getElementById('hNarr').textContent='Event '+(evt+1)+': unmapped channel '+cur+' → REMAPPED to '+ch+' (index cur mod usedCount). The hop never lands on an excluded channel.';}
+    else{document.getElementById('hNarr').textContent='Event '+(evt+1)+': hop (prev + 7) mod 37 → channel '+ch+'.';}
+    hist.push(ch);evt++;draw();
+  }
+  document.getElementById('hStep').onclick=step;
+  document.getElementById('hPlay').onclick=function(){
+    if(timer){clearInterval(timer);timer=null;this.textContent='▶ Auto-hop';return}
+    this.textContent='❚❚ Pause';timer=setInterval(step,420);
+  };
+  document.getElementById('hReset').onclick=()=>{if(timer){clearInterval(timer);timer=null;document.getElementById('hPlay').textContent='▶ Auto-hop'}cur=0;evt=0;hist=[];draw();
+    document.getElementById('hNarr').textContent='CSA#1: nextChannel = (lastChannel + hopIncrement) mod 37 — then remapped if that channel is excluded from the map.'};
+  document.getElementById('hWifi').onchange=draw;
+  draw();
+})();
+
+/* ===== B5 THROUGHPUT ===== */
+(function(){
+  const $=id=>document.getElementById(id);
+  let phy=1;
+  document.querySelectorAll('.phyb').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('.phyb').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');phy=+b.dataset.f;calc();});
+  function calc(){
+    const mtu=+$('tMtu').value,itv=+$('tItv').value,pk=+$('tPk').value;
+    $('tMtuV').textContent=mtu;$('tItvV').textContent=itv;$('tPkV').textContent=pk;
+    const effPk=Math.max(1,Math.round(pk*phy));
+    const bytesPerEvt=effPk*(mtu-3);
+    const kbps=bytesPerEvt*8/itv; // bytes*8 bits / ms = kbps
+    $('tOut').textContent=kbps>=1000?(kbps/1000).toFixed(2)+' Mbps':kbps.toFixed(0)+' kbps';
+    const otaSec=256*1024/(bytesPerEvt/itv*1000);
+    $('tOta').textContent=otaSec>=60?(otaSec/60).toFixed(1)+' min':otaSec.toFixed(1)+' s';
+    const defKbps=effPk*(23-3)*8/itv;
+    $('tCmp').textContent=defKbps.toFixed(0)+' kbps';
+    $('tNarr').textContent='Per event: '+effPk+' packet(s) × ('+mtu+'−3) B = '+bytesPerEvt+' B every '+itv+' ms. At MTU 23 the same airtime carries only 20 B per packet — '+(bytesPerEvt/(effPk*20)).toFixed(1)+'× less payload. That is why the MTU exchange is the first thing a fast OTA does.';
+  }
+  ['tMtu','tItv','tPk'].forEach(id=>$(id).addEventListener('input',calc));
+  calc();
+})();
+
+/* ===== B6 PAIRING ===== */
+(function(){
+  const $=id=>document.getElementById(id);
+  function calc(){
+    const i=$('pIo1').value,r=$('pIo2').value,lesc=$('pLesc').checked,oob=$('pOob').checked;
+    const kb=x=>x==='KeyboardOnly'||x==='KeyboardDisplay';
+    const disp=x=>x==='DisplayOnly'||x==='DisplayYesNo'||x==='KeyboardDisplay';
+    const yn=x=>x==='DisplayYesNo'||x==='KeyboardDisplay';
+    let m,mitm,d;
+    if(oob){m='Out of Band';mitm=true;d='Keys/confirmation exchanged over another channel (NFC tap, QR scan). MITM-protected as long as the OOB channel is — the answer for headless devices that need real security.';}
+    else if(i==='NoInputNoOutput'||r==='NoInputNoOutput'){m='Just Works';mitm=false;d=lesc?'ECDH protects against PASSIVE eavesdropping, but with no user confirmation an ACTIVE MITM during pairing is undetectable. Acceptable for low-stakes; pair in a controlled moment (first boot, button press).':'Legacy Just Works: TK = 0 → keys are passively sniffable with tools like crackle. Avoid on anything that matters.';}
+    else if(lesc&&yn(i)&&yn(r)){m='Numeric Comparison';mitm=true;d='Both sides display a 6-digit number derived from the ECDH exchange; the user confirms they match. LESC-only. The gold standard for two devices with screens.';}
+    else if(kb(i)&&disp(r)){m='Passkey Entry';mitm=true;d='Responder (your device) displays a 6-digit passkey; initiator (phone) types it. 20 bits of MITM protection per attempt.';}
+    else if(disp(i)&&kb(r)){m='Passkey Entry';mitm=true;d='Initiator displays the 6-digit passkey; responder enters it on its keypad.';}
+    else if(kb(i)&&kb(r)){m='Passkey Entry';mitm=true;d='Both sides enter the same passkey, conveyed out of band by the user/product (printed code etc.).';}
+    else{m='Just Works';mitm=false;d='Two display-only devices have no way to confirm or enter anything → falls back to Just Works. No MITM protection without OOB.';}
+    $('pMethod').textContent=m+(lesc&&!oob?' · LE Secure Connections':oob?'':' · Legacy pairing');
+    $('pMethod').style.color=mitm?'var(--green)':'var(--amber)';
+    $('pDesc').textContent=d;
+    $('pKeys').innerHTML='<span class="key">MITM protected: <b>'+(mitm?'YES':'NO')+'</b></span>'
+      +'<span class="key">eavesdrop-resistant: <b>'+(lesc||oob?'YES (ECDH)':'NO (legacy)')+'</b></span>'
+      +'<span class="key">bonding stores: <b>LTK</b> (encrypt reconnects)</span>'
+      +'<span class="key"><b>IRK</b> (resolve RPAs)</span>'
+      +'<span class="key"><b>CSRK</b> (signed writes)</span>';
+  }
+  ['pIo1','pIo2'].forEach(id=>$(id).addEventListener('change',calc));
+  ['pLesc','pOob'].forEach(id=>$(id).addEventListener('change',calc));
+  calc();
+})();
+
+/* ===== B7 RPA ===== */
+(function(){
+  const $=id=>document.getElementById(id);
+  const IRK='6F:3A:91:C4:88:0D:5E:B2';
+  $('rIrk').textContent=IRK;
+  let last=null,lastIsOurs=true;
+  const hx=n=>n.toString(16).padStart(2,'0').toUpperCase();
+  function hash(p){ // toy ah() for illustration
+    let h=0x5A;for(const b of p)h=((h*31)+b+0x6F)&0xFFFFFF;
+    return[(h>>16)&255,(h>>8)&255,h&255];
+  }
+  function gen(ours){
+    const prand=[0x40|Math.floor(Math.random()*0x3F),Math.floor(Math.random()*256),Math.floor(Math.random()*256)];
+    const hsh=ours?hash(prand):[Math.floor(Math.random()*256),Math.floor(Math.random()*256),Math.floor(Math.random()*256)];
+    return{prand,hsh,str:prand.map(hx).join(':')+':'+hsh.map(hx).join(':')};
+  }
+  function add(line){const l=$('rList');const d=document.createElement('div');d.innerHTML=line;l.appendChild(d);while(l.children.length>5)l.removeChild(l.firstChild)}
+  $('rRotate').onclick=()=>{last=gen(true);lastIsOurs=true;
+    add('phone now advertises as <span class="a">'+last.str+'</span>  (prand | ah(IRK, prand))');
+    $('rNarr').textContent='New random address on the air. To everyone without the IRK this is an unrelated device — that\'s the anti-tracking point.';};
+  $('rResolve').onclick=()=>{
+    if(!last){$('rNarr').textContent='Rotate an address first.';return}
+    const ok=lastIsOurs&&hash(last.prand).join()===last.hsh.join();
+    add('resolve: recompute ah(IRK, prand) → '+(ok?'<span class="ok">MATCH — it\'s our bonded phone, reconnect ✓</span>':'<span class="no">no match — unknown device</span>'));
+    $('rNarr').textContent=ok?'Hash recomputed from the stored IRK matches the address — identity confirmed without a fixed address. The controller does this in hardware via the resolving list.':'No IRK produces this hash — not a bonded peer.';};
+  $('rStranger').onclick=()=>{last=gen(false);lastIsOurs=false;
+    add('some device advertises as <span class="a">'+last.str+'</span>');
+    $('rNarr').textContent='An address we did not generate. Try resolving it.';};
+})();
+
+/* ===== B8 LL STATE MACHINE ===== */
+(function(){
+  const names=['STANDBY','ADVERTISING','SCANNING','INITIATING','CONNECTION · PERIPHERAL','CONNECTION · CENTRAL'];
+  const wrap=document.getElementById('llNodes');
+  names.forEach(n=>{const d=document.createElement('div');d.className='llnode';d.textContent=n;wrap.appendChild(d)});
+  const nodes=[...wrap.children];
+  const log=document.getElementById('llLog'),btns=document.getElementById('llBtns');
+  let st=0;
+  function addLog(t,cls){const d=document.createElement('div');if(cls)d.className=cls;d.textContent='> '+t;log.appendChild(d);log.scrollTop=log.scrollHeight}
+  function btn(label,fn,primary){const b=document.createElement('button');if(primary)b.className='primary';b.textContent=label;b.onclick=fn;btns.appendChild(b)}
+  function set(s){st=s;nodes.forEach((n,i)=>n.classList.toggle('active',i===s));drawBtns()}
+  function drawBtns(){
+    btns.innerHTML='';
+    if(st===0){btn('Start advertising (ADV_IND)',()=>{addLog('TX ADV_IND on ch 37→38→39 every interval');set(1)},true);
+      btn('Start scanning',()=>{addLog('RX windows opened, cycling 37/38/39');set(2)});}
+    else if(st===1){btn('CONNECT_IND received',()=>{addLog('Initiator sent CONNECT_IND with AccessAddr, CRC init, hop, channel map, interval/latency/timeout — we are the PERIPHERAL','ok');set(4)},true);
+      btn('Stop',()=>{addLog('Advertising stopped');set(0)});}
+    else if(st===2){btn('Found target → initiate',()=>{addLog('Device of interest seen; switching to initiating: listen for its next ADV_IND');set(3)},true);
+      btn('Stop',()=>{addLog('Scanning stopped');set(0)});}
+    else if(st===3){btn('Send CONNECT_IND',()=>{addLog('CONNECT_IND sent in the 150 µs after its ADV_IND — we are the CENTRAL: we choose parameters and own the channel map','ok');set(5)},true);
+      btn('Abort',()=>set(0));}
+    else{btn('LL_TERMINATE_IND / timeout',()=>{addLog('Connection closed → back to standby. Peripheral typically resumes advertising for reconnect.');set(0)},true);
+      if(st===4)btn('Request new conn params',()=>addLog('Peripheral can only REQUEST (L2CAP param update / LL conn param req) — the central decides. iOS famously enforces its own rules.'));
+      if(st===5)btn('Update channel map',()=>addLog('Central distributes LL_CHANNEL_MAP_IND — AFH in action.'));}
+  }
+  addLog('Link Layer simulator. Reach CONNECTION via both doors: Advertising → Peripheral, Initiating → Central.');
+  set(0);
+})();
+
+/* ===== B9 VERSIONS ===== */
+(function(){
+  const vs=[
+    {v:'4.0',y:'2010',h:'BLE is born',d:'<b>Bluetooth Low Energy introduced</b> alongside classic BR/EDR: 1M PHY, 40 channels, GATT/ATT, 27-byte LL payloads, legacy pairing. The architecture you still describe today.'},
+    {v:'4.1',y:'2013',h:'topology + LE dual roles',d:'Devices can be <b>central and peripheral simultaneously</b>; better coexistence with LTE; groundwork for IPv6 over BLE.'},
+    {v:'4.2',y:'2014',h:'DLE + LESC',d:'<b>Data Length Extension</b>: LL payload 27 → 251 B (~2.6× throughput). <b>LE Secure Connections</b>: ECDH P-256 pairing kills passive sniffing of legacy pairing. Enhanced privacy (RPA improvements).'},
+    {v:'5.0',y:'2016',h:'2M · Coded · ext adv',d:'<b>2M PHY</b> (2× throughput), <b>Coded PHY S=2/S=8</b> (~4× range), <b>extended advertising</b> on data channels (up to 255 B, advertising sets, periodic advertising), <b>CSA#2</b> channel selection, higher TX power class.'},
+    {v:'5.1',y:'2019',h:'direction finding',d:'<b>AoA/AoD</b> direction finding via antenna arrays + IQ sampling — indoor positioning. GATT caching to skip re-discovery on reconnect.'},
+    {v:'5.2',y:'2020',h:'LE Audio · ISO',d:'<b>Isochronous channels</b> → LE Audio + Auracast broadcast audio. <b>LE Power Control</b>: peers ask each other to adjust TX power (battery + coexistence). Enhanced ATT (EATT): parallel ATT transactions over L2CAP CoC.'},
+    {v:'5.3',y:'2021',h:'subrating — CC2340',d:'<b>Connection Subrating</b>: skip events by a factor, ramp to full rate instantly — low idle power with fast response (vs slave latency\'s slow exit). Channel classification by the peripheral. <b>This is the CC2340\'s spec level.</b>'},
+    {v:'5.4',y:'2023',h:'PAwR · encrypted adv',d:'<b>Periodic Advertising with Responses</b>: one broadcaster, thousands of synchronized end nodes (electronic shelf labels). <b>Encrypted advertising data</b> for broadcast confidentiality.'}
+  ];
+  const tl=document.getElementById('vtl'),det=document.getElementById('vDetail');
+  vs.forEach(x=>{
+    const d=document.createElement('div');d.className='vcard';
+    d.innerHTML='<h4>'+x.v+'</h4><div class="yr">'+x.y+'</div><div class="hl1">'+x.h+'</div>';
+    d.onclick=()=>{det.style.display='block';det.innerHTML='<b>BLE '+x.v+' ('+x.y+'):</b> '+x.d};
+    tl.appendChild(d);
+  });
+})();
+
+/* ===== B10 PLAYBOOK ===== */
+(function(){
+  const items=[
+    {s:'Notifications never arrive at the central',c:'<span class="cause">#1: nobody wrote 0x0001 to the CCCD</span> — subscription is per-bond/per-connection state. Also check: characteristic actually has NOTIFY property; on reconnection without bonding, CCCD resets; stack TX queue full (notifications silently dropped — check the return code of your notify call).'},
+    {s:'Link drops after exactly ~30 seconds',c:'<span class="cause">ATT transaction timeout.</span> An indication, read response, or write response never got answered — ATT allows ONE outstanding transaction and kills the link after 30 s. Classic cause: app callback returns without sending the response, or indication confirm lost in a task-priority problem.'},
+    {s:'Disconnects every ~5 seconds',c:'<span class="cause">Supervision timeout</span> (defaults are often 5–6 s). Check (1+latency)×interval < timeout/2 first; then sniffer for who sent LL_TERMINATE_IND; then RSSI vs sensitivity; then 2.4 GHz interference; on TI parts, check the app isn\'t starving the RF driver/stack task.'},
+    {s:'Throughput stuck around 1–2 kB/s',c:'<span class="cause">Default MTU 23 + one packet per interval.</span> Fix in order: MTU exchange to 247, Data Length Extension, 2M PHY request, shorter connection interval, multiple notifications per event, Write-Without-Response for uplink. Also: iOS/Android central policies cap parameters — verify what was GRANTED, not what you requested.'},
+    {s:'Pairing fails immediately or keys mismatch (0x3D MIC failure)',c:'<span class="cause">Stale bond on one side.</span> One device deleted the bond, the other still encrypts with the old LTK → MIC failure → instant disconnect. Field fix: detect encryption failure → delete bond → re-pair. Also check IO-capability combo produces the method you assumed, and that bond storage (NV) isn\'t full.'},
+    {s:'Cannot reconnect to a bonded phone after a few minutes',c:'<span class="cause">RPA rotation.</span> The phone changed its random address (~every 15 min) and your firmware filters/whitelists by address instead of resolving with the stored IRK. Use the controller\'s resolving list / identity address, not the OTA address.'},
+    {s:'Device invisible to the scanner app',c:'Check in order: actually advertising (sniffer/current profile shows the 3-channel burst)? Advertising interval vs scanner duty (discovery starvation — see Lab 24)? <span class="cause">Legacy vs extended advertising</span> — some scanners don\'t show extended-only advertisers? Filtered by flags/UUID in the scanner? TX power/antenna issue (RSSI sanity check at 1 m ≈ −45 to −55 dBm)?'},
+    {s:'Works on the bench, fails at the customer site',c:'<span class="cause">RF environment.</span> Spectrum scan for Wi-Fi/microwave congestion; check channel map adaptation is actually happening; RSSI margin to sensitivity (want >10 dB); antenna detuning by enclosure/hand; coded PHY as range rescue. Bring the packet sniffer to the site — over-the-air truth beats logs.'},
+    {s:'Central ignores the connection parameters I set',c:'The <span class="cause">central owns the parameters</span> — a peripheral only REQUESTS (L2CAP param update or LL connection param request). iOS enforces documented rules (e.g. interval ≥ 15 ms, specific latency/timeout relationships); request compliant values or you get silently rejected. Always log the parameters from the connection-updated event, not your request.'},
+    {s:'Random crashes during heavy BLE traffic',c:'Usually not RF: <span class="cause">callback context abuse.</span> Stack callbacks often run in the stack task/ISR context — doing heavy work or calling blocking APIs there starves the controller. Marshal events to your app task (the ISR→task pattern). On TI: never call stack/RF APIs from arbitrary ISRs; watch ICall heap exhaustion under load.'}
+  ];
+  const wrap=document.getElementById('playList');
+  items.forEach(it=>{
+    const d=document.createElement('div');d.className='symp';
+    d.innerHTML='<div class="symp-head">▸ '+it.s+'<span class="tg">▶</span></div><div class="symp-body">'+it.c+'</div>';
+    d.querySelector('.symp-head').onclick=()=>d.classList.toggle('open');
+    wrap.appendChild(d);
+  });
+})();
+</script>
+</body>
+</html>
