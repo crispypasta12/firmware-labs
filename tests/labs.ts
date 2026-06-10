@@ -100,4 +100,15 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#hardfault-detective-hfNarr")).toContainText("Symptom revealed");
     },
   },
+  {
+    num: "15",
+    slug: "rf-core",
+    interact: async (page) => {
+      const narr = page.locator("#rf-core-rfNarr");
+      const before = await narr.textContent();
+      await page.locator("#rf-core-rfNext").click();
+      await expect(narr).not.toHaveText(before ?? "");
+      await expect(page.locator("#rf-core-rf-m4")).toHaveClass(/hl/);
+    },
+  },
 ];

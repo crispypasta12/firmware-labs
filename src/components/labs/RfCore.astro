@@ -1,0 +1,62 @@
+<!-- LAB 15 - extracted verbatim from golden/ti_concepts_lab_2b.html.
+     Only change: element ids prefixed with the lab slug (rf-core-). -->
+<div class="scope">
+  <div class="flow">
+    <div class="fbox" id="rf-core-rf-m4"><h4>CORTEX-M4F · APP</h4><p>Your application + BLE host stack + TI Drivers. Calls <code>RF_runCmd()</code> / <code>RF_scheduleCmd()</code>.</p></div>
+    <div class="farrow" id="rf-core-rf-a1">⇄</div>
+    <div class="fbox" id="rf-core-rf-mb"><h4>MAILBOX + DOORBELL</h4><p>Shared memory for radio operation command structs; doorbell registers signal both ways.</p></div>
+    <div class="farrow" id="rf-core-rf-a2">⇄</div>
+    <div class="fbox" id="rf-core-rf-m0"><h4>CORTEX-M0 · RF CORE (CPE)</h4><p>TI's proprietary RF firmware - the Command & Packet Engine. Owns all radio timing.</p></div>
+    <div class="farrow" id="rf-core-rf-a3">→</div>
+    <div class="fbox" id="rf-core-rf-phy"><h4>RADIO / PHY</h4><p>2.4 GHz transceiver. Modem, frequency synth, packet engine.</p></div>
+  </div>
+  <div class="stepdots" id="rf-core-rfDots"></div>
+  <div class="narr" id="rf-core-rfNarr">Press Step to post a BLE connection-event command.</div>
+</div>
+<div class="btnrow">
+  <button id="rf-core-rfPrev">◂ Back</button>
+  <button class="primary" id="rf-core-rfNext">Step ▸</button>
+</div>
+
+<style is:global>
+/* RF core + zephyr + ctx steppers */
+.flow{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.fbox{flex:1;min-width:150px;border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:10px 12px;transition:.25s}
+.fbox h4{font-family:'IBM Plex Mono',monospace;font-size:11px;margin-bottom:4px}
+.fbox p{font-size:11px;color:var(--dim);line-height:1.55}
+.fbox.hl{border-color:var(--teal);box-shadow:0 0 12px rgba(0,212,170,.2)}
+.fbox.hl h4{color:var(--teal)}
+.farrow{display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:14px}
+.farrow.hl{color:var(--teal);text-shadow:0 0 8px var(--teal)}
+.stepdots{display:flex;gap:6px;margin-top:14px}
+.sdot{width:26px;height:4px;border-radius:2px;background:var(--border2)}
+.sdot.on{background:var(--teal)}
+@media(max-width:700px){.flow{flex-direction:column}.farrow{transform:rotate(90deg);justify-content:center}}
+</style>
+
+<script is:inline>
+/* ===== 3. RF CORE ===== */
+(function(){
+  const steps=[
+    {hl:['rf-core-rf-m4'],n:'1/6 — The app (or BLE stack) builds a radio operation command struct and calls RF_runCmd(). Your code never touches the radio registers directly.'},
+    {hl:['rf-core-rf-m4','rf-core-rf-a1','rf-core-rf-mb'],n:'2/6 — The RF driver posts the command into the shared mailbox and rings the doorbell register.'},
+    {hl:['rf-core-rf-mb','rf-core-rf-a2','rf-core-rf-m0'],n:'3/6 — The CPE (Cortex-M0 running TI\'s certified RF firmware) parses the command and takes over all timing for the radio operation.'},
+    {hl:['rf-core-rf-m0','rf-core-rf-a3','rf-core-rf-phy'],n:'4/6 — The M0 programs the PHY and executes the BLE connection event with hard real-time precision — your M4 application code cannot disturb this.'},
+    {hl:['rf-core-rf-m4'],n:'5/6 — Meanwhile the M4 sleeps (standby) or does other work. This split is a big reason CC26xx hits ~1 µA average in connected idle.'},
+    {hl:['rf-core-rf-m0','rf-core-rf-a2','rf-core-rf-mb','rf-core-rf-a1','rf-core-rf-m4'],n:'6/6 — Operation done: CPE writes status to the mailbox and raises an interrupt → your RF driver CALLBACK runs on the M4. Rule: react in callbacks, never call RF APIs from arbitrary ISRs.'}
+  ];
+  let i=-1;
+  const dots=document.getElementById('rf-core-rfDots');
+  steps.forEach(()=>{const d=document.createElement('div');d.className='sdot';dots.appendChild(d)});
+  function draw(){
+    ['rf-core-rf-m4','rf-core-rf-mb','rf-core-rf-m0','rf-core-rf-phy','rf-core-rf-a1','rf-core-rf-a2','rf-core-rf-a3'].forEach(id=>document.getElementById(id).classList.remove('hl'));
+    [...dots.children].forEach((d,k)=>d.classList.toggle('on',k<=i));
+    if(i<0){document.getElementById('rf-core-rfNarr').textContent='Press Step to post a BLE connection-event command.';return}
+    steps[i].hl.forEach(id=>document.getElementById(id).classList.add('hl'));
+    document.getElementById('rf-core-rfNarr').textContent=steps[i].n;
+  }
+  document.getElementById('rf-core-rfNext').onclick=()=>{if(i<steps.length-1){i++;draw()}};
+  document.getElementById('rf-core-rfPrev').onclick=()=>{if(i>-1){i--;draw()}};
+  draw();
+})();
+</script>
