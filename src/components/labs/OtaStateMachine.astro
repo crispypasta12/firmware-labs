@@ -1,0 +1,57 @@
+<!-- LAB 11 - extracted verbatim from golden/ti_concepts_lab.html.
+     Only change: element ids prefixed with the lab slug (ota-state-machine-). -->
+<div class="scope">
+  <div class="ota-states" id="ota-state-machine-otaStates"></div>
+  <div class="progressbar"><div id="ota-state-machine-otaProg"></div></div>
+  <div class="btnrow" id="ota-state-machine-otaBtns"></div>
+  <div class="ota-log" id="ota-state-machine-otaLog"></div>
+</div>
+
+<style is:global>
+/* ota */
+.ota-states{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.onode{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:8px 12px;border:1px solid var(--border2);border-radius:5px;color:var(--dim);background:rgba(17,20,24,.85);transition:.2s}
+.onode.active{border-color:var(--teal);color:var(--teal);box-shadow:0 0 10px rgba(0,212,170,.25)}
+.onode.bad{border-color:var(--red);color:var(--red)}
+.ota-log{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);background:rgba(10,12,15,.8);border:1px solid var(--border2);border-radius:5px;padding:10px 12px;height:130px;overflow-y:auto;margin-top:10px;line-height:1.7}
+.ota-log .ok{color:var(--green)} .ota-log .warn{color:var(--amber)} .ota-log .err{color:var(--red)}
+.progressbar{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:8px;border:1px solid var(--border2)}
+.progressbar div{height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .2s}
+</style>
+
+<script is:inline>
+/* ===== 11. OTA ===== */
+(function(){
+  const stateNames=['SLOT A ACTIVE','DOWNLOADING → SLOT B','VALIDATING','PENDING + REBOOT','TEST BOOT (SLOT B)','CONFIRMED · SLOT B ACTIVE','ROLLED BACK → SLOT A'];
+  const sWrap=document.getElementById('ota-state-machine-otaStates');
+  stateNames.forEach(n=>{const d=document.createElement('div');d.className='onode';d.textContent=n;sWrap.appendChild(d)});
+  const nodes=[...sWrap.children];
+  const log=document.getElementById('ota-state-machine-otaLog'),btns=document.getElementById('ota-state-machine-otaBtns'),prog=document.getElementById('ota-state-machine-otaProg');
+  let state=0,chunks=0;const TOTAL=8;
+  function addLog(t,cls){const d=document.createElement('div');if(cls)d.className=cls;d.textContent='> '+t;log.appendChild(d);log.scrollTop=log.scrollHeight}
+  function setState(s,bad){state=s;nodes.forEach((n,i)=>{n.classList.toggle('active',i===s);n.classList.toggle('bad',bad&&i===s)});drawBtns()}
+  function btn(label,fn,primary){const b=document.createElement('button');if(primary)b.className='primary';b.textContent=label;b.onclick=fn;btns.appendChild(b)}
+  function drawBtns(){
+    btns.innerHTML='';
+    if(state===0){btn('Start OTA download',()=>{chunks=0;prog.style.width='0%';addLog('Version check: device v1.2 < server v1.3 — update available','ok');addLog('Begin chunked transfer to slot B (external/secondary flash)');setState(1)},true)}
+    else if(state===1){
+      btn('Chunk received OK',()=>{chunks++;prog.style.width=(chunks/TOTAL*100)+'%';addLog('Chunk '+chunks+'/'+TOTAL+' — CRC OK, written at offset '+((chunks-1)*4096).toString(16).padStart(5,'0'),'ok');
+        if(chunks>=TOTAL){addLog('Transfer complete — running full-image validation');setState(2)}},true);
+      btn('Chunk CRC fails',()=>{addLog('Chunk '+(chunks+1)+' CRC mismatch — request retransmit of THIS chunk only','warn')});
+      btn('Connection lost',()=>{addLog('Link dropped. Progress ('+chunks+'/'+TOTAL+' chunks) persisted — on reconnect, RESUME from offset, never restart from zero','warn')});
+    }
+    else if(state===2){
+      btn('SHA-256 + ECDSA signature valid',()=>{addLog('Hash matches header. Signature verifies against trusted public key','ok');addLog('Anti-rollback: image version 1.3 > counter 1.2 — accepted','ok');addLog('Mark slot B PENDING, reboot into bootloader');prog.style.width='100%';setState(3);setTimeout(()=>{addLog('Bootloader: pending image found → booting slot B (trial)');setState(4)},700)},true);
+      btn('Signature invalid',()=>{addLog('SIGNATURE FAIL — image rejected, slot B erased. Never boot unverified code.','err');setState(0)});
+      btn('Older version (downgrade attack)',()=>{addLog('Image version 1.1 < anti-rollback counter 1.2 — REJECTED. Counter lives in OTP/CCFG.','err');setState(0)});
+    }
+    else if(state===4){
+      btn('App self-test passes → confirm',()=>{addLog('App called confirm-OK API within timeout — slot B marked permanent','ok');setState(5)},true);
+      btn('App crashes / watchdog reset',()=>{addLog('No confirmation before watchdog/boot-count limit — bootloader REVERTS to slot A','err');setState(6,true);setTimeout(()=>{addLog('Device healthy on slot A v1.2. Failure reported via telemetry.','warn');setState(0)},1200)});
+    }
+    else if(state===5){btn('Run another update cycle',()=>{addLog('— new cycle —');prog.style.width='0%';setState(0)})}
+  }
+  addLog('Dual-bank OTA simulator. Slot A runs v1.2. Drive the update — try the failure paths too.');
+  setState(0);
+})();
+</script>

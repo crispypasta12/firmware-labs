@@ -211,4 +211,14 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#dma-pingpong-dmaHT")).not.toHaveText("0", { timeout: 3500 });
     },
   },
+  {
+    num: "11",
+    slug: "ota-state-machine",
+    interact: async (page) => {
+      await page.locator("#ota-state-machine-otaBtns button", { hasText: "Start OTA download" }).click();
+      await page.locator("#ota-state-machine-otaBtns button", { hasText: "Chunk received OK" }).click();
+      await expect(page.locator("#ota-state-machine-otaStates .onode.active")).toContainText("DOWNLOADING");
+      await expect(page.locator("#ota-state-machine-otaProg")).toHaveAttribute("style", /12\.5%/);
+    },
+  },
 ];

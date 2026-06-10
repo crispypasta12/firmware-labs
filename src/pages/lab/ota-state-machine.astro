@@ -1,0 +1,17 @@
+---
+import LabLayout from "../../layouts/LabLayout.astro";
+import LabShell from "../../components/LabShell.astro";
+import OtaStateMachine from "../../components/labs/OtaStateMachine.astro";
+---
+
+<LabLayout title="Lab 11 · OTA dual-bank update — run the state machine — Firmware Labs">
+  <LabShell
+    num="LAB 11"
+    title="OTA dual-bank update — run the state machine"
+    tag="PDF Q65–Q66"
+    why="<b>Interview angle:</b> drive the update yourself — including the failure paths. Being fluent in the rollback path is what makes the answer senior. Try: start → a CRC failure → finish → crash on test boot."
+    takeaway="<b>Checklist to recite:</b> chunked transfer with resume (offsets, not restart-from-zero) → per-chunk CRC → full-image SHA-256 + ECDSA signature → mark pending → test boot with confirm-or-rollback (watchdog-guarded) → anti-rollback version counter in OTP/CCFG. In Zephyr this is <b>MCUboot</b> — know its swap modes."
+  >
+    <OtaStateMachine />
+  </LabShell>
+</LabLayout>
