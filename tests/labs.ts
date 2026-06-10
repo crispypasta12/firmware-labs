@@ -80,4 +80,15 @@ export const LABS: LabEntry[] = [
       await expect(detail).toContainText("Data Length Extension");
     },
   },
+  {
+    num: "05",
+    slug: "cortex-boot",
+    interact: async (page) => {
+      const desc = page.locator("#cortex-boot-bootDesc");
+      const before = await desc.textContent();
+      await page.locator("#cortex-boot-bootNext").click();
+      await expect(desc).not.toHaveText(before ?? "");
+      await expect(page.locator("#cortex-boot-mb-vt")).toHaveClass(/hl/);
+    },
+  },
 ];

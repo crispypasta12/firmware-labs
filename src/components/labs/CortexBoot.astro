@@ -1,0 +1,69 @@
+<!-- LAB 05 - extracted verbatim from golden/ti_concepts_lab.html.
+     Only change: element ids prefixed with the lab slug (cortex-boot-). -->
+<div class="scope">
+  <div class="bootgrid">
+    <div class="memcol"><h4>FLASH</h4>
+      <div class="memblk" id="cortex-boot-mb-vt">0x0000_0000 · Vector table<small>[0] initial MSP · [1] Reset_Handler · faults · IRQs</small></div>
+      <div class="memblk" id="cortex-boot-mb-text">.text<small>code</small></div>
+      <div class="memblk" id="cortex-boot-mb-rodata">.rodata<small>constants</small></div>
+      <div class="memblk" id="cortex-boot-mb-datainit">.data load image<small>initial values stored in flash</small></div>
+    </div>
+    <div class="memcol"><h4>RAM</h4>
+      <div class="memblk" id="cortex-boot-mb-data">.data<small>initialized globals - copied from flash</small></div>
+      <div class="memblk" id="cortex-boot-mb-bss">.bss<small>zero-initialized globals</small></div>
+      <div class="memblk" id="cortex-boot-mb-heap">heap<small>(if used)</small></div>
+      <div class="memblk" id="cortex-boot-mb-stack">stack<small>MSP starts at top of RAM</small></div>
+    </div>
+  </div>
+  <div class="bootsteps">
+    <div class="stepdots" id="cortex-boot-bootDots"></div>
+    <div class="bootstep-desc" id="cortex-boot-bootDesc"></div>
+  </div>
+</div>
+<div class="btnrow">
+  <button id="cortex-boot-bootPrev">◂ Back</button>
+  <button class="primary" id="cortex-boot-bootNext">Step ▸</button>
+</div>
+
+<style is:global>
+/* boot */
+.bootgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.memcol{border:1px solid var(--border2);border-radius:6px;overflow:hidden;background:rgba(17,20,24,.85)}
+.memcol h4{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--border)}
+.memblk{padding:8px 10px;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--dim);transition:.25s}
+.memblk small{display:block;font-size:9px;color:var(--muted)}
+.memblk.hl{background:rgba(0,212,170,.12);color:var(--teal)}
+.bootsteps{margin-top:12px}
+.bootstep-desc{font-size:12.5px;color:var(--text);min-height:44px;margin-top:10px}
+.stepdots{display:flex;gap:6px;margin-top:6px}
+.sdot{width:26px;height:4px;border-radius:2px;background:var(--border2)}
+.sdot.on{background:var(--teal)}
+@media(max-width:700px){.bootgrid{grid-template-columns:1fr}}
+</style>
+
+<script is:inline>
+/* ===== 5. BOOT ===== */
+(function(){
+  const steps=[
+    {d:'POWER-ON RESET. The CPU fetches word [0] of the vector table at 0x0000_0000 → this is the INITIAL STACK POINTER. MSP is loaded before any code runs.',hl:['cortex-boot-mb-vt','cortex-boot-mb-stack']},
+    {d:'The CPU fetches word [1] → the RESET HANDLER address, and jumps there. Startup code (assembly/C) begins.',hl:['cortex-boot-mb-vt','cortex-boot-mb-text']},
+    {d:'Startup code copies the .data LOAD IMAGE from flash into the .data section in RAM → initialized globals get their values.',hl:['cortex-boot-mb-datainit','cortex-boot-mb-data']},
+    {d:'Startup code ZEROS the .bss section → uninitialized globals become 0, as C requires.',hl:['cortex-boot-mb-bss']},
+    {d:'System clock init (wait for PLLRDY before switching!) and, in C++, static constructors run.',hl:['cortex-boot-mb-text']},
+    {d:'main() is called → board/BSP init, peripheral init, create RTOS tasks, start the scheduler. From here the RTOS owns the CPU.',hl:['cortex-boot-mb-text','cortex-boot-mb-stack']}
+  ];
+  let i=-1;
+  const dots=document.getElementById('cortex-boot-bootDots');
+  steps.forEach(()=>{const d=document.createElement('div');d.className='sdot';dots.appendChild(d)});
+  function draw(){
+    document.querySelectorAll('.memblk').forEach(b=>b.classList.remove('hl'));
+    [...dots.children].forEach((d,k)=>d.classList.toggle('on',k<=i));
+    if(i<0){document.getElementById('cortex-boot-bootDesc').textContent='Press Step to begin at power-on reset.';return}
+    steps[i].hl.forEach(id=>document.getElementById(id).classList.add('hl'));
+    document.getElementById('cortex-boot-bootDesc').textContent=(i+1)+'/6 — '+steps[i].d;
+  }
+  document.getElementById('cortex-boot-bootNext').onclick=()=>{if(i<steps.length-1){i++;draw()}};
+  document.getElementById('cortex-boot-bootPrev').onclick=()=>{if(i>-1){i--;draw()}};
+  draw();
+})();
+</script>
