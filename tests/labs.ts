@@ -91,4 +91,13 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#cortex-boot-mb-vt")).toHaveClass(/hl/);
     },
   },
+  {
+    num: "06",
+    slug: "hardfault-detective",
+    interact: async (page) => {
+      await page.locator("#hardfault-detective-hfNext").click();
+      await expect(page.locator("#hardfault-detective-hfClues .clue").first()).toHaveClass(/show/);
+      await expect(page.locator("#hardfault-detective-hfNarr")).toContainText("Symptom revealed");
+    },
+  },
 ];

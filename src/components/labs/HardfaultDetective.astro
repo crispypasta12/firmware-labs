@@ -1,0 +1,40 @@
+<!-- LAB 06 - extracted verbatim from golden/ti_concepts_lab.html.
+     Only change: element ids prefixed with the lab slug (hardfault-detective-). -->
+<div class="scope">
+  <div id="hardfault-detective-hfClues">
+    <div class="clue"><div class="reg">▸ Symptom</div><div class="meaning">Device resets randomly under load. You attach the debugger and halt - PC is inside <b>HardFault_Handler</b>. Don't guess. Read the fault registers.</div></div>
+    <div class="clue"><div class="reg">▸ HFSR @ 0xE000ED2C = 0x4000_0000</div><div class="meaning">Bit 30 <b>FORCED = 1</b> → a configurable fault (bus/usage/mem) escalated to HardFault because its handler wasn't enabled. So the real story is in <b>CFSR</b>.</div></div>
+    <div class="clue"><div class="reg">▸ CFSR @ 0xE000ED28 = 0x0000_8200</div><div class="meaning">Bus fault byte: <b>PRECISERR = 1</b> (precise data bus error - the stacked PC points at the exact faulting instruction) and <b>BFARVALID = 1</b> → the faulting <i>address</i> is captured in <b>BFAR</b>.</div></div>
+    <div class="clue"><div class="reg">▸ BFAR @ 0xE000ED38 = 0x0000_0004</div><div class="meaning">Faulting address is near zero → a <b>NULL pointer dereference</b> (reading a struct field at offset 4 through a NULL pointer).</div></div>
+    <div class="clue"><div class="reg">▸ Stacked PC (from exception stack frame) = 0x0000_A4C2</div><div class="meaning">The CPU auto-pushed R0-R3, R12, LR, PC, xPSR on fault entry. Look up 0xA4C2 in the <b>.map file</b> / disassembly → it lands inside <b>uart_send()</b>, at a load through the driver handle.</div></div>
+    <div class="clue"><div class="reg">▸ Root cause</div><div class="meaning">A task called <code>uart_send()</code> before <code>uart_init()</code> ran - the handle pointer was still NULL. Fix: assert non-NULL handle at entry, fix init ordering, add an init-state flag. <b>Process change:</b> add an assertion-on-entry convention for all driver handles.</div></div>
+  </div>
+  <div class="narr" id="hardfault-detective-hfNarr">Press "Next clue" to start the investigation.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="hardfault-detective-hfNext">Next clue ▸</button>
+  <button id="hardfault-detective-hfReset">Restart</button>
+</div>
+
+<style is:global>
+/* hardfault */
+.clue{border:1px solid var(--border2);border-radius:6px;background:rgba(17,20,24,.9);padding:10px 14px;margin-bottom:8px;display:none}
+.clue.show{display:block;animation:fadein .3s}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+.clue .reg{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber)}
+.clue .meaning{font-size:12px;color:var(--dim);margin-top:3px}
+.clue .meaning b{color:var(--text);font-weight:500}
+</style>
+
+<script is:inline>
+/* ===== 6. HARDFAULT ===== */
+(function(){
+  const clues=[...document.querySelectorAll('#hardfault-detective-hfClues .clue')];let i=0;
+  const msgs=['Symptom revealed. What do you read first?','HFSR says: escalated fault. Where\'s the detail?','CFSR decoded: precise bus fault + valid fault address. Go get the address.','The address is ~0. What kind of bug lives at address zero?','Stacked PC → map file → the guilty function.','Case closed. Note the structure: registers → address → instruction → function → root cause → process fix.'];
+  document.getElementById('hardfault-detective-hfNext').onclick=()=>{
+    if(i<clues.length){clues[i].classList.add('show');document.getElementById('hardfault-detective-hfNarr').textContent=msgs[i];i++;}
+    if(i>=clues.length)document.getElementById('hardfault-detective-hfNext').disabled=true;
+  };
+  document.getElementById('hardfault-detective-hfReset').onclick=()=>{i=0;clues.forEach(c=>c.classList.remove('show'));document.getElementById('hardfault-detective-hfNext').disabled=false;document.getElementById('hardfault-detective-hfNarr').textContent='Press "Next clue" to start the investigation.'};
+})();
+</script>
