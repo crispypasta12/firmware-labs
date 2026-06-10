@@ -19,7 +19,7 @@ smoke test pass) → `committed`.
   - [x] Batch B (05, 06, 15, 18, 20, 22) — all committed, awaiting checkpoint approval
   - [x] Batch C (01, 03, 09, 16, 27, 28) — all committed, awaiting checkpoint approval
   - [x] Batch D (02, 04, 11, 29, 31, 14) — all committed, awaiting checkpoint approval
-  - [ ] Batch E (23, 25, 26, 24, 19, 17, 13)
+  - [x] Batch E (23, 25, 26, 24, 19, 17, 13) — all committed, awaiting checkpoint approval
 - [ ] **Phase 2 — Site shell** (tracks, home, prev/next, progress.ts, genericize copy, full suite re-run)
 - [ ] **Phase 3 — Drill engine** (DrillDeck.astro, generic deck, /deck page)
 - [ ] **Phase 4 — Hardening** (Lighthouse, mobile QA, SEO/OG, reduced-motion audit)
@@ -40,20 +40,20 @@ smoke test pass) → `committed`.
 | 10 | vol2 | layer-stack | A | committed |
 | 11 | vol2 | ota-state-machine | D | committed |
 | 12 | vol2 | battery-calc | A | committed |
-| 13 | vol2b | ble-connection-timing | E | todo |
+| 13 | vol2b | ble-connection-timing | E | committed |
 | 14 | vol2b | gatt-explorer | D | committed |
 | 15 | vol2b | rf-core | B | committed |
 | 16 | vol2b | clock-tree | C | committed |
-| 17 | vol2b | i2c-anatomy | E | todo |
+| 17 | vol2b | i2c-anatomy | E | committed |
 | 18 | vol2b | zephyr-build | B | committed |
-| 19 | vol2b | thread-mesh | E | todo |
+| 19 | vol2b | thread-mesh | E | committed |
 | 20 | vol2b | context-switch | B | committed |
 | 21 | vol2b | rms-check | A | committed |
 | 22 | vol4 | ble-stack-packet | B | committed |
-| 23 | vol4 | ble-channel-map | E | todo |
-| 24 | vol4 | discovery-sim | E | todo |
-| 25 | vol4 | channel-hopping | E | todo |
-| 26 | vol4 | throughput-calc | E | todo |
+| 23 | vol4 | ble-channel-map | E | committed |
+| 24 | vol4 | discovery-sim | E | committed |
+| 25 | vol4 | channel-hopping | E | committed |
+| 26 | vol4 | throughput-calc | E | committed |
 | 27 | vol4 | pairing-matrix | C | committed |
 | 28 | vol4 | rpa-privacy | C | committed |
 | 29 | vol4 | ll-state-machine | D | committed |
