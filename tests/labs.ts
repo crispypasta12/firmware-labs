@@ -290,4 +290,14 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#thread-mesh-mNarr")).toContainText("Delivered.", { timeout: 6000 });
     },
   },
+  {
+    num: "17",
+    slug: "i2c-anatomy",
+    interact: async (page) => {
+      const svg = page.locator("#i2c-anatomy-i2cSvg");
+      const before = await svg.innerHTML();
+      await page.locator("#i2c-anatomy-i2cStretch").check();
+      await expect.poll(async () => svg.innerHTML()).not.toBe(before);
+    },
+  },
 ];

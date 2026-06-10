@@ -1,0 +1,123 @@
+<!-- LAB 17 - extracted verbatim from golden/ti_concepts_lab_2b.html.
+     Only change: element ids prefixed with the lab slug (i2c-anatomy-). -->
+<div class="scope">
+  <svg id="i2c-anatomy-i2cSvg" width="100%" height="190" viewBox="0 0 980 190" preserveAspectRatio="xMidYMid meet"></svg>
+  <div class="i2c-legend">
+    <span><i class="lg-dot" style="background:rgba(255,180,84,.5)"></i>address + R/W</span>
+    <span><i class="lg-dot" style="background:rgba(0,153,204,.5)"></i>register</span>
+    <span><i class="lg-dot" style="background:rgba(80,200,120,.4)"></i>data (slave drives)</span>
+    <span><i class="lg-dot" style="background:rgba(160,128,224,.5)"></i>start / rep-start / stop</span>
+    <span><i class="lg-dot" style="background:rgba(224,80,80,.5)"></i>NACK</span>
+  </div>
+  <div class="i2c-desc" id="i2c-anatomy-i2cDesc">Hover or tap a region of the waveform.</div>
+</div>
+<div class="btnrow">
+  <label class="sw"><input type="checkbox" id="i2c-anatomy-i2cStretch"> show clock stretching (slave holds SCL low after ACK)</label>
+</div>
+
+<style is:global>
+/* i2c */
+.i2c-desc{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);min-height:34px;margin-top:8px}
+.i2c-legend{display:flex;gap:12px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin-top:6px}
+.i2c-legend span{display:inline-flex;align-items:center;gap:5px}
+.lg-dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+</style>
+
+<script is:inline>
+/* ===== 5. I2C ===== */
+(function(){
+  const svg=document.getElementById('i2c-anatomy-i2cSvg'),desc=document.getElementById('i2c-anatomy-i2cDesc');
+  const HI_SCL=55,LO_SCL=95,HI_SDA=135,LO_SDA=175;
+  function bits(byte){const a=[];for(let k=7;k>=0;k--)a.push((byte>>k)&1);return a}
+  function build(){
+    const stretch=document.getElementById('i2c-anatomy-i2cStretch').checked;
+    // slots: {sda:0/1/'fall'/'rise', kind, label, w}
+    let slots=[];
+    const pushByte=(byte,kind)=>{bits(byte).forEach((b,ix)=>slots.push({sda:b,kind,label:kind+' bit'+(7-ix)+'='+b}))};
+    slots.push({sda:'fall',kind:'start',label:'START'});
+    pushByte(0x90,'addrW');                       // 0x48<<1 | W
+    slots.push({sda:0,kind:'ack',label:'ACK'});
+    if(stretch)slots.push({sda:0,kind:'stretch',w:3,label:'STRETCH'});
+    pushByte(0x01,'reg');
+    slots.push({sda:0,kind:'ack',label:'ACK'});
+    slots.push({sda:'fall',kind:'rs',label:'Sr'});
+    pushByte(0x91,'addrR');                       // 0x48<<1 | R
+    slots.push({sda:0,kind:'ack',label:'ACK'});
+    pushByte(0x5A,'data');
+    slots.push({sda:1,kind:'nack',label:'NACK'});
+    slots.push({sda:'rise',kind:'stop',label:'STOP'});
+    // regions for hover
+    const regions=[
+      {kinds:['start'],t:'START: SDA falls WHILE SCL is high — the only time SDA may change with SCL high (besides STOP/Sr). Claims the bus.'},
+      {kinds:['addrW'],t:'Address byte: 7-bit address 0x48 shifted left + R/W̄=0 (write) → 0x90 on the wire. No ACK here = wrong address, unpowered or crashed slave.'},
+      {kinds:['ack'],t:'ACK: the RECEIVER pulls SDA low during the 9th clock. Open-drain bus — anyone can pull low, nobody drives high (pull-ups do).'},
+      {kinds:['stretch'],t:'CLOCK STRETCHING: the slave holds SCL LOW to pause the master while it prepares data. Master must wait. Not all masters support it → timeouts or garbage at high speed.'},
+      {kinds:['reg'],t:'Register pointer 0x01: tells the slave WHICH register the upcoming read targets — a protocol convention on top of I2C, defined by the device datasheet.'},
+      {kinds:['rs'],t:'REPEATED START: a new START without a STOP — keeps the bus (no other master can grab it) while reversing direction from write to read. Essential for atomic write-read.'},
+      {kinds:['addrR'],t:'Address again, now with R/W̄=1 (read) → 0x91. From here the SLAVE drives SDA for data bytes.'},
+      {kinds:['data'],t:'Data byte 0x5A driven by the slave, clocked by the master. Master ACKs to keep reading…'},
+      {kinds:['nack'],t:'…or NACKs (leaves SDA high) to say "last byte — I\'m done." Forgetting the final NACK is a classic driver bug: the slave keeps driving SDA and the STOP fails.'},
+      {kinds:['stop'],t:'STOP: SDA rises while SCL is high. Bus released.'}
+    ];
+    const colors={start:'rgba(160,128,224,.5)',rs:'rgba(160,128,224,.5)',stop:'rgba(160,128,224,.5)',addrW:'rgba(255,180,84,.5)',addrR:'rgba(255,180,84,.5)',reg:'rgba(0,153,204,.5)',data:'rgba(80,200,120,.4)',ack:'rgba(80,200,120,.55)',nack:'rgba(224,80,80,.5)',stretch:'rgba(224,80,80,.25)'};
+    // geometry
+    const x0=70;const totalW=slots.reduce((s,sl)=>s+(sl.w||1),0);
+    const W=(900-x0)/totalW;
+    let x=x0,scl='M '+(x0-30)+' '+HI_SCL,sda='M '+(x0-30)+' '+HI_SDA,over='';
+    // SCL idles high before start
+    scl+=' L '+x0+' '+HI_SCL; sda+=' L '+x0+' '+HI_SDA;
+    let sclY=HI_SCL,sdaY=HI_SDA;
+    const seg=(p,xx,yy)=>' L '+xx.toFixed(1)+' '+yy;
+    slots.forEach(sl=>{
+      const w=(sl.w||1)*W, xe=x+w;
+      if(sl.kind==='start'||sl.kind==='rs'){
+        // SCL high across (for rs, ensure high)
+        if(sclY!==HI_SCL){scl+=seg(0,x,sclY)+seg(0,x,HI_SCL);sclY=HI_SCL}
+        scl+=seg(0,xe,HI_SCL);
+        if(sdaY!==HI_SDA){sda+=seg(0,x,sdaY)+seg(0,x,HI_SDA);sdaY=HI_SDA}
+        sda+=seg(0,x+w/2,HI_SDA)+seg(0,x+w/2,LO_SDA)+seg(0,xe,LO_SDA);sdaY=LO_SDA;
+      }else if(sl.kind==='stop'){
+        if(sclY!==HI_SCL){scl+=seg(0,x,sclY)+seg(0,x,HI_SCL);sclY=HI_SCL}
+        scl+=seg(0,xe,HI_SCL);
+        if(sdaY!==LO_SDA){sda+=seg(0,x,sdaY)+seg(0,x,LO_SDA);sdaY=LO_SDA}
+        sda+=seg(0,x+w/2,LO_SDA)+seg(0,x+w/2,HI_SDA)+seg(0,xe,HI_SDA);sdaY=HI_SDA;
+      }else if(sl.kind==='stretch'){
+        if(sclY!==LO_SCL){scl+=seg(0,x,LO_SCL);sclY=LO_SCL}
+        scl+=seg(0,xe,LO_SCL);
+        sda+=seg(0,xe,sdaY);
+      }else{
+        // data/ack bit: sda settles while scl low, pulse in middle
+        const lvl=sl.sda?HI_SDA:LO_SDA;
+        if(sclY!==LO_SCL){scl+=seg(0,x,LO_SCL);sclY=LO_SCL}
+        if(sdaY!==lvl){sda+=seg(0,x+w*0.12,sdaY)+seg(0,x+w*0.12,lvl);sdaY=lvl}
+        sda+=seg(0,xe,lvl);
+        scl+=seg(0,x+w*0.3,LO_SCL)+seg(0,x+w*0.3,HI_SCL)+seg(0,x+w*0.75,HI_SCL)+seg(0,x+w*0.75,LO_SCL)+seg(0,xe,LO_SCL);
+      }
+      x=xe;
+    });
+    // overlays per contiguous region
+    x=x0;let ov='';
+    let i=0;
+    while(i<slots.length){
+      const kind=slots[i].kind;let w=0,j=i;
+      while(j<slots.length&&slots[j].kind===kind){w+=(slots[j].w||1)*W;j++}
+      const reg=regions.find(r=>r.kinds.includes(kind));
+      ov+='<rect class="i2cz" data-t="'+(reg?encodeURIComponent(reg.t):'')+'" x="'+x.toFixed(1)+'" y="30" width="'+w.toFixed(1)+'" height="155" fill="'+(colors[kind]||'transparent')+'" opacity="0.28" style="cursor:pointer"/>';
+      // label
+      const lbl={start:'S',rs:'Sr',stop:'P',addrW:'ADDR+W 0x90',addrR:'ADDR+R 0x91',reg:'REG 0x01',data:'DATA 0x5A',ack:'A',nack:'N',stretch:'⏸'}[kind];
+      ov+='<text x="'+(x+w/2).toFixed(1)+'" y="44" fill="#5a6a7a" font-size="9" text-anchor="middle">'+lbl+'</text>';
+      x+=w;i=j;
+    }
+    svg.innerHTML='<text x="14" y="'+(HI_SCL+22)+'" fill="#5a6a7a" font-size="10">SCL</text><text x="14" y="'+(HI_SDA+22)+'" fill="#5a6a7a" font-size="10">SDA</text>'
+      +'<path d="'+scl+'" fill="none" stroke="#00d4aa" stroke-width="1.8"/>'
+      +'<path d="'+sda+'" fill="none" stroke="#ffb454" stroke-width="1.8"/>'+ov;
+    svg.querySelectorAll('.i2cz').forEach(r=>{
+      const show=()=>{const t=decodeURIComponent(r.dataset.t);if(t)desc.textContent=t;r.setAttribute('opacity','0.5')};
+      const hide=()=>r.setAttribute('opacity','0.28');
+      r.addEventListener('mouseenter',show);r.addEventListener('mouseleave',hide);r.addEventListener('click',show);
+    });
+  }
+  document.getElementById('i2c-anatomy-i2cStretch').onchange=build;
+  build();
+})();
+</script>

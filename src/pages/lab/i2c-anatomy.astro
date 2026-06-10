@@ -1,0 +1,20 @@
+---
+import LabLayout from "../../layouts/LabLayout.astro";
+import LabShell from "../../components/LabShell.astro";
+import I2cAnatomy from "../../components/labs/I2cAnatomy.astro";
+
+const why = `<b>Interview angle:</b> "debug an I2C failure with a logic analyzer" — this is what you'd see on screen. Hover/tap any region for what it means. Reading a register at slave 0x48 (a TMP117-style temp sensor): write the register address, repeated start, read the data.`;
+const takeaway = `<b>Logic-analyzer checklist:</b> no ACK on address → wrong address / dead / unpowered slave. Slow rising edges → wrong pull-ups (setup violation). SCL held low forever → stretch-timeout or stuck slave → <b>bus recovery</b>: toggle SCL ~9×, send STOP, reinit. Master must change SDA only while SCL is low — except START (fall) and STOP (rise) which happen while SCL is high; that's exactly what makes them unique.`;
+---
+
+<LabLayout title="Lab 17 ? I2C write-read transaction — decoded waveform ? Firmware Labs">
+  <LabShell
+    num="LAB 17"
+    title="I2C write-read transaction — decoded waveform"
+    tag="PDF Q43 · Hub S1"
+    why={why}
+    takeaway={takeaway}
+  >
+    <I2cAnatomy />
+  </LabShell>
+</LabLayout>
