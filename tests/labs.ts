@@ -272,4 +272,14 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#throughput-calc-tOut")).toHaveText("21 kbps");
     },
   },
+  {
+    num: "24",
+    slug: "discovery-sim",
+    interact: async (page) => {
+      const time = page.locator("#discovery-sim-dTime");
+      const before = await time.textContent();
+      await page.locator("#discovery-sim-dRun").click();
+      await expect(time).not.toHaveText(before ?? "");
+    },
+  },
 ];

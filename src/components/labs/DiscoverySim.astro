@@ -1,0 +1,74 @@
+<!-- LAB 24 - extracted verbatim from golden/ti_ble_deep_dive.html.
+     Only change: element ids prefixed with the lab slug (discovery-sim-). -->
+<div class="scope">
+  <div class="sliders">
+    <div class="sl"><label>Advertising interval: <span class="val" id="discovery-sim-aIntV">100</span> ms (+0–10 ms random delay)</label><input type="range" id="discovery-sim-aInt" min="20" max="1000" step="20" value="100"></div>
+    <div class="sl"><label>Scan interval: <span class="val" id="discovery-sim-sIntV">300</span> ms</label><input type="range" id="discovery-sim-sInt" min="100" max="1000" step="50" value="300"></div>
+    <div class="sl"><label>Scan window: <span class="val" id="discovery-sim-sWinV">60</span> ms</label><input type="range" id="discovery-sim-sWin" min="10" max="300" step="10" value="60"></div>
+  </div>
+  <div class="dtrackrow"><div class="dlabel">SCANNER<br>(central)</div><div class="dtrack" id="discovery-sim-dScan"></div></div>
+  <div class="dtrackrow"><div class="dlabel">ADVERTISER<br>(peripheral)</div><div class="dtrack" id="discovery-sim-dAdv"></div></div>
+  <div class="statline">
+    <span>scanner duty cycle: <span class="v" id="discovery-sim-dDuty">—</span></span>
+    <span>discovered after: <span class="v" id="discovery-sim-dTime">—</span></span>
+    <span>adv current cost: <span class="v" id="discovery-sim-dCost">—</span></span>
+  </div>
+  <div class="narr" id="discovery-sim-dNarr">Each amber tick = one advertising event (sent on ch 37, 38, 39 back-to-back). Blue blocks = scanner listening. Overlap = discovery.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="discovery-sim-dRun">▶ Run discovery</button>
+</div>
+
+<style is:global>
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px}
+.sl label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:4px}
+.sl input{width:100%}
+.sl .val{color:var(--teal)}
+/* discovery */
+.dtrackrow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.dlabel{width:110px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);text-align:right;flex-shrink:0}
+.dtrack{position:relative;flex:1;height:30px;background:rgba(17,20,24,.8);border:1px solid var(--border2);border-radius:3px;overflow:hidden}
+.dwin{position:absolute;top:3px;bottom:3px;background:rgba(0,153,204,.3);border:1px solid rgba(0,153,204,.5);border-radius:2px}
+.dwin small{position:absolute;top:1px;left:2px;font-size:7px;color:var(--blue);font-family:'IBM Plex Mono',monospace}
+.dadv{position:absolute;top:4px;bottom:4px;width:4px;background:var(--amber);border-radius:1px}
+.dadv.hit{background:var(--green);width:6px;box-shadow:0 0 8px var(--green)}
+@media(max-width:760px){.dlabel{width:70px;font-size:9px}}
+</style>
+
+<script is:inline>
+/* ===== B3 DISCOVERY ===== */
+(function(){
+  const $=id=>document.getElementById('discovery-sim-'+id);
+  function run(){
+    const aI=+$('aInt').value,sI=+$('sInt').value,sW=Math.min(+$('sWin').value,sI);
+    $('dDuty').textContent=(sW/sI*100).toFixed(0)+'%';
+    // advertising current rough: 3 channels * ~1ms @ ~6mA per event
+    $('dCost').textContent=(6*3/aI*1000/1000).toFixed(2)+' µA avg @0dBm (rough)';
+    // simulate
+    const phase=Math.random()*aI;
+    let advTimes=[],t=phase;
+    while(t<60000){advTimes.push(t);t+=aI+Math.random()*10}
+    let found=null;
+    for(const a of advTimes){const k=Math.floor(a/sI);const ws=k*sI;if(a>=ws&&a<ws+sW){found=a;break}}
+    const view=Math.max(2000,found?found+200:3000);
+    const scan=$('dScan'),adv=$('dAdv');scan.innerHTML='';adv.innerHTML='';
+    for(let k=0;k*sI<view;k++){
+      const d=document.createElement('div');d.className='dwin';
+      d.style.left=(k*sI/view*100)+'%';d.style.width=(sW/view*100)+'%';
+      d.innerHTML='<small>'+(37+k%3)+'</small>';
+      scan.appendChild(d);
+    }
+    advTimes.filter(a=>a<view).forEach(a=>{
+      const d=document.createElement('div');d.className='dadv'+(found===a?' hit':'');
+      d.style.left=(a/view*100)+'%';adv.appendChild(d);
+    });
+    if(found!==null){$('dTime').innerHTML='<span class="good">'+Math.round(found)+' ms</span>';
+      $('dNarr').textContent='Discovered at '+Math.round(found)+' ms — an adv event landed inside a scan window. Run again: the random phase + advDelay make latency statistical. Shrink the scan window or stretch the adv interval and watch latency grow.';}
+    else{$('dTime').innerHTML='<span class="bad">not within 60 s</span>';
+      $('dNarr').textContent='No overlap in 60 s of simulation — pathological parameters. This is what "my device is invisible" sometimes is: discovery starvation, not RF failure.';}
+  }
+  ['aInt','sInt','sWin'].forEach(id=>$(id).addEventListener('input',()=>{$('aIntV').textContent=$('aInt').value;$('sIntV').textContent=$('sInt').value;$('sWinV').textContent=Math.min(+$('sWin').value,+$('sInt').value);run()}));
+  $('dRun').onclick=run;
+  run();
+})();
+</script>
