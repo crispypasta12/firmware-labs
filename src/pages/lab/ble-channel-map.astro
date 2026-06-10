@@ -1,0 +1,20 @@
+---
+import LabLayout from "../../layouts/LabLayout.astro";
+import LabShell from "../../components/LabShell.astro";
+import BleChannelMap from "../../components/labs/BleChannelMap.astro";
+
+const why = `<b>Interview angle:</b> "BLE works on the bench but fails in the office" → 2.4 GHz interference. Toggle the Wi-Fi networks and see which BLE channels get stomped — and notice the three advertising channels sitting precisely in the gaps.`;
+const takeaway = `<b>Facts to drop:</b> 40 channels, 2 MHz spacing, 2402–2480 MHz. Advertising channels <b>37 (2402), 38 (2426), 39 (2480)</b> were deliberately placed in the gaps between Wi-Fi 1/6/11 so discovery survives even in dirty RF. Data channels that overlap an access point get excluded by the host via the <b>channel map / adaptive frequency hopping</b> (next lab).`;
+---
+
+<LabLayout title="Lab 23 ? 40 channels & Wi-Fi coexistence — why 37/38/39 live where they do ? Firmware Labs" maxWidth={1000}>
+  <LabShell
+    num="LAB 23"
+    title="40 channels & Wi-Fi coexistence — why 37/38/39 live where they do"
+    tag="PHY / RF"
+    why={why}
+    takeaway={takeaway}
+  >
+    <BleChannelMap />
+  </LabShell>
+</LabLayout>

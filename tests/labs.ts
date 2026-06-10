@@ -248,4 +248,12 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#gatt-explorer-tI")).not.toHaveText("—", { timeout: 4000 });
     },
   },
+  {
+    num: "23",
+    slug: "ble-channel-map",
+    interact: async (page) => {
+      await page.locator("#ble-channel-map-wf1").check();
+      await expect(page.locator("#ble-channel-map-specSvg text", { hasText: "Wi-Fi 1" })).toHaveCount(1);
+    },
+  },
 ];

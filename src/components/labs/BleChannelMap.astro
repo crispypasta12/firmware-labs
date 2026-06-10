@@ -1,0 +1,56 @@
+<!-- LAB 23 - extracted verbatim from golden/ti_ble_deep_dive.html.
+     Only change: element ids prefixed with the lab slug (ble-channel-map-). -->
+<div class="scope">
+  <svg id="ble-channel-map-specSvg" width="100%" height="150" viewBox="0 0 960 150" preserveAspectRatio="xMidYMid meet"></svg>
+  <div class="specdesc" id="ble-channel-map-specDesc">Hover or tap a channel. Purple = advertising (37, 38, 39) · teal = data (0–36).</div>
+</div>
+<div class="btnrow">
+  <label class="sw"><input type="checkbox" id="ble-channel-map-wf1"> Wi-Fi ch 1 (2412)</label>
+  <label class="sw"><input type="checkbox" id="ble-channel-map-wf6" checked> Wi-Fi ch 6 (2437)</label>
+  <label class="sw"><input type="checkbox" id="ble-channel-map-wf11"> Wi-Fi ch 11 (2462)</label>
+</div>
+
+<style is:global>
+/* spectrum */
+.specdesc{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);min-height:34px;margin-top:8px}
+</style>
+
+<script is:inline>
+/* ===== B2 SPECTRUM ===== */
+(function(){
+  const chans=[];
+  chans.push({ch:37,f:2402,adv:true});
+  for(let k=0;k<=10;k++)chans.push({ch:k,f:2404+2*k});
+  chans.push({ch:38,f:2426,adv:true});
+  for(let k=11;k<=36;k++)chans.push({ch:k,f:2428+2*(k-11)});
+  chans.push({ch:39,f:2480,adv:true});
+  const wifi={wf1:{c:2412,l:'Wi-Fi 1'},wf6:{c:2437,l:'Wi-Fi 6'},wf11:{c:2462,l:'Wi-Fi 11'}};
+  const X=f=>30+(f-2400)/82*900;
+  function draw(){
+    let s='';
+    // wifi bands
+    Object.entries(wifi).forEach(([id,w])=>{
+      if(!document.getElementById('ble-channel-map-'+id).checked)return;
+      s+='<rect x="'+X(w.c-11)+'" y="20" width="'+(X(w.c+11)-X(w.c-11))+'" height="100" fill="rgba(224,80,80,.13)" stroke="rgba(224,80,80,.35)" stroke-dasharray="3,3"/>'
+        +'<text x="'+X(w.c)+'" y="34" fill="#e05050" font-size="10" text-anchor="middle" font-family="IBM Plex Mono">'+w.l+'</text>';
+    });
+    chans.forEach(c=>{
+      const hit=Object.entries(wifi).some(([id,w])=>document.getElementById('ble-channel-map-'+id).checked&&Math.abs(c.f-w.c)<=11);
+      const col=c.adv?'#a080e0':(hit?'rgba(224,80,80,.8)':'#00d4aa');
+      const h=c.adv?72:54;
+      s+='<rect class="bch" data-ch="'+c.ch+'" data-f="'+c.f+'" data-adv="'+(c.adv?1:0)+'" data-hit="'+(hit?1:0)+'" x="'+(X(c.f)-7)+'" y="'+(120-h)+'" width="14" height="'+h+'" rx="2" fill="'+col+'" style="cursor:pointer"/>';
+      if(c.adv)s+='<text x="'+X(c.f)+'" y="'+(112-h)+'" fill="#a080e0" font-size="9" text-anchor="middle" font-family="IBM Plex Mono">'+c.ch+'</text>';
+    });
+    s+='<line x1="20" y1="122" x2="940" y2="122" stroke="#2a3340"/>';
+    [2402,2426,2440,2462,2480].forEach(f=>{s+='<text x="'+X(f)+'" y="138" fill="#3a4a5a" font-size="9" text-anchor="middle" font-family="IBM Plex Mono">'+f+'</text>'});
+    document.getElementById('ble-channel-map-specSvg').innerHTML=s;
+    document.querySelectorAll('.bch').forEach(r=>{
+      const fn=()=>{const adv=r.dataset.adv==='1',hit=r.dataset.hit==='1';
+        document.getElementById('ble-channel-map-specDesc').textContent='Channel '+r.dataset.ch+' · '+r.dataset.f+' MHz · '+(adv?'ADVERTISING channel — discovery, in a Wi-Fi gap by design':'data channel')+(hit?' · ⚠ overlaps an active Wi-Fi network → candidate for exclusion from the channel map':'');};
+      r.addEventListener('mouseenter',fn);r.addEventListener('click',fn);
+    });
+  }
+  ['wf1','wf6','wf11'].forEach(id=>document.getElementById('ble-channel-map-'+id).onchange=draw);
+  draw();
+})();
+</script>
