@@ -203,4 +203,12 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#priority-inversion-gwrap .gseg").first()).toBeVisible({ timeout: 1000 });
     },
   },
+  {
+    num: "04",
+    slug: "dma-pingpong",
+    interact: async (page) => {
+      await page.locator("#dma-pingpong-dmaPlay").click();
+      await expect(page.locator("#dma-pingpong-dmaHT")).not.toHaveText("0", { timeout: 3500 });
+    },
+  },
 ];

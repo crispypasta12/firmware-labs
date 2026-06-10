@@ -1,0 +1,64 @@
+<!-- LAB 04 - extracted verbatim from golden/ti_concepts_lab.html.
+     Only change: element ids prefixed with the lab slug (dma-pingpong-). -->
+<div class="scope">
+  <div class="dmabuf" id="dma-pingpong-dmaBuf"></div>
+  <div class="dma-half-label"><div>← first half · HT interrupt fires when full</div><div>second half · TC interrupt fires, DMA wraps to 0 →</div></div>
+  <div class="statline">
+    <span>HT events: <span class="v" id="dma-pingpong-dmaHT">0</span></span>
+    <span>TC events: <span class="v" id="dma-pingpong-dmaTC">0</span></span>
+    <span>overruns: <span class="bad" id="dma-pingpong-dmaOver">0</span></span>
+  </div>
+  <div class="narr" id="dma-pingpong-dmaNarr">DMA fills cells (amber). On HT/TC interrupt, the CPU consumes that half (teal). Press Play.</div>
+</div>
+<div class="btnrow">
+  <button class="primary" id="dma-pingpong-dmaPlay">▶ Play</button>
+  <button id="dma-pingpong-dmaReset">Reset</button>
+  <label class="sw"><input type="checkbox" id="dma-pingpong-dmaSlow"> CPU too slow (processing &gt; fill time)</label>
+</div>
+
+<style is:global>
+/* dma */
+.dmabuf{display:grid;grid-template-columns:repeat(16,1fr);gap:4px}
+.dcell{height:34px;border:1px solid var(--border2);border-radius:3px;background:rgba(17,20,24,.85);transition:.15s;position:relative}
+.dcell.filled{background:rgba(255,180,84,.55);border-color:var(--amber)}
+.dcell.consumed{background:rgba(0,212,170,.25);border-color:rgba(0,212,170,.5)}
+.dcell.overrun{background:rgba(224,80,80,.7);border-color:var(--red)}
+.dma-half-label{display:flex;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-top:5px}
+.dma-half-label div{flex:1;text-align:center}
+/* vol2 .statline variant (tokens.css carries the vol2b/vol4 12px margin) */
+.statline{margin-top:26px}
+.statline .bad{color:var(--red)}
+</style>
+
+<script is:inline>
+/* ===== 4. DMA ===== */
+(function(){
+  const N=16;const wrap=document.getElementById('dma-pingpong-dmaBuf');
+  for(let i=0;i<N;i++){const d=document.createElement('div');d.className='dcell';wrap.appendChild(d)}
+  const cells=[...wrap.children];
+  let idx=0,ht=0,tc=0,over=0,queue=[],credit=0,timer=null;
+  const filled=new Array(N).fill(false),consumed=new Array(N).fill(true);
+  const narr=document.getElementById('dma-pingpong-dmaNarr');
+  function draw(){cells.forEach((c,i)=>{c.className='dcell'+(filled[i]?(consumed[i]?' consumed':' filled'):'')});
+    document.getElementById('dma-pingpong-dmaHT').textContent=ht;document.getElementById('dma-pingpong-dmaTC').textContent=tc;document.getElementById('dma-pingpong-dmaOver').textContent=over}
+  function tick(){
+    // DMA writes one cell
+    if(filled[idx]&&!consumed[idx]){over++;cells[idx].classList.add('overrun');narr.textContent='⚠ OVERRUN — DMA wrapped into data the CPU hasn\'t consumed yet. Processing per half must be faster than fill per half.';setTimeout(()=>cells[idx]&&cells[idx].classList.remove('overrun'),300)}
+    filled[idx]=true;consumed[idx]=false;idx=(idx+1)%N;
+    if(idx===N/2){ht++;queue.push(...Array.from({length:N/2},(_,k)=>k));narr.textContent='Half-transfer (HT) interrupt → CPU starts consuming the FIRST half while DMA fills the second.'}
+    if(idx===0){tc++;queue.push(...Array.from({length:N/2},(_,k)=>k+N/2));narr.textContent='Transfer-complete (TC) interrupt → CPU consumes the SECOND half; DMA wraps to 0. Circular mode never stops.'}
+    // CPU consumes
+    credit+=document.getElementById('dma-pingpong-dmaSlow').checked?0.35:2;
+    while(credit>=1&&queue.length){const i=queue.shift();consumed[i]=true;credit--}
+    draw();
+  }
+  document.getElementById('dma-pingpong-dmaPlay').onclick=function(){
+    if(timer){clearInterval(timer);timer=null;this.textContent='▶ Play';return}
+    this.textContent='❚❚ Pause';timer=setInterval(tick,300);
+  };
+  document.getElementById('dma-pingpong-dmaReset').onclick=()=>{if(timer){clearInterval(timer);timer=null;document.getElementById('dma-pingpong-dmaPlay').textContent='▶ Play'}
+    idx=0;ht=0;tc=0;over=0;queue=[];credit=0;filled.fill(false);consumed.fill(true);
+    narr.textContent='DMA fills cells (amber). On HT/TC interrupt, the CPU consumes that half (teal). Press Play.';draw()};
+  draw();
+})();
+</script>
