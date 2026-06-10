@@ -1,0 +1,68 @@
+<!-- LAB 26 - extracted verbatim from golden/ti_ble_deep_dive.html.
+     Only change: element ids prefixed with the lab slug (throughput-calc-). -->
+<div class="scope">
+  <table class="ops">
+    <tr><th>Operation</th><th>Direction</th><th>ACK?</th><th>Use for</th></tr>
+    <tr><td>Read Request</td><td>client → server</td><td>response</td><td>one-shot values</td></tr>
+    <tr><td>Write Request</td><td>client → server</td><td>response</td><td>config (guaranteed)</td></tr>
+    <tr><td>Write Without Response</td><td>client → server</td><td>no</td><td>fast uplink (client→server streaming)</td></tr>
+    <tr><td>Notification</td><td>server → client</td><td>no</td><td>fast downlink / sensor streams</td></tr>
+    <tr><td>Indication</td><td>server → client</td><td>ATT confirm</td><td>critical data — one in flight at a time</td></tr>
+  </table>
+  <div class="sliders" style="margin-top:14px">
+    <div class="sl"><label>ATT MTU: <span class="val" id="throughput-calc-tMtuV">247</span> bytes (payload = MTU − 3)</label><input type="range" id="throughput-calc-tMtu" min="23" max="247" step="1" value="247"></div>
+    <div class="sl"><label>Connection interval: <span class="val" id="throughput-calc-tItvV">30</span> ms</label><input type="range" id="throughput-calc-tItv" min="8" max="200" step="1" value="30"></div>
+    <div class="sl"><label>Notification packets per event: <span class="val" id="throughput-calc-tPkV">4</span></label><input type="range" id="throughput-calc-tPk" min="1" max="12" step="1" value="4"></div>
+  </div>
+  <div class="btnrow" style="margin-top:0">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)">PHY:</span>
+    <button class="phyb sel" data-f="1">1M</button><button class="phyb" data-f="2">2M (~2× packets fit)</button><button class="phyb" data-f="0.5">Coded S=8 (range, ~⅛)</button>
+  </div>
+  <div class="calc-out">
+    <div><div class="big" id="throughput-calc-tOut">—</div><div class="lbl">application throughput</div></div>
+    <div><div class="big" id="throughput-calc-tOta">—</div><div class="lbl">time for a 256 kB OTA image</div></div>
+    <div><div class="big" id="throughput-calc-tCmp">—</div><div class="lbl">same settings at default MTU 23</div></div>
+  </div>
+  <div class="narr" id="throughput-calc-tNarr"></div>
+</div>
+
+<style is:global>
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px}
+.sl label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:4px}
+.sl input{width:100%}
+.sl .val{color:var(--teal)}
+button.sel{border-color:var(--amber);color:var(--amber)}
+/* gatt ops table */
+table.ops{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:4px}
+table.ops th{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border2)}
+table.ops td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--dim)}
+table.ops td:first-child{color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px}
+.calc-out{margin-top:14px;display:flex;gap:26px;flex-wrap:wrap}
+.calc-out .big{font-family:'IBM Plex Mono',monospace;font-size:22px;color:var(--teal)}
+.calc-out .lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim)}
+</style>
+
+<script is:inline>
+/* ===== B5 THROUGHPUT ===== */
+(function(){
+  const $=id=>document.getElementById('throughput-calc-'+id);
+  let phy=1;
+  document.querySelectorAll('.phyb').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('.phyb').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');phy=+b.dataset.f;calc();});
+  function calc(){
+    const mtu=+$('tMtu').value,itv=+$('tItv').value,pk=+$('tPk').value;
+    $('tMtuV').textContent=mtu;$('tItvV').textContent=itv;$('tPkV').textContent=pk;
+    const effPk=Math.max(1,Math.round(pk*phy));
+    const bytesPerEvt=effPk*(mtu-3);
+    const kbps=bytesPerEvt*8/itv; // bytes*8 bits / ms = kbps
+    $('tOut').textContent=kbps>=1000?(kbps/1000).toFixed(2)+' Mbps':kbps.toFixed(0)+' kbps';
+    const otaSec=256*1024/(bytesPerEvt/itv*1000);
+    $('tOta').textContent=otaSec>=60?(otaSec/60).toFixed(1)+' min':otaSec.toFixed(1)+' s';
+    const defKbps=effPk*(23-3)*8/itv;
+    $('tCmp').textContent=defKbps.toFixed(0)+' kbps';
+    $('tNarr').textContent='Per event: '+effPk+' packet(s) × ('+mtu+'−3) B = '+bytesPerEvt+' B every '+itv+' ms. At MTU 23 the same airtime carries only 20 B per packet — '+(bytesPerEvt/(effPk*20)).toFixed(1)+'× less payload. That is why the MTU exchange is the first thing a fast OTA does.';
+  }
+  ['tMtu','tItv','tPk'].forEach(id=>$(id).addEventListener('input',calc));
+  calc();
+})();
+</script>

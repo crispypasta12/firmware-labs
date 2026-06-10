@@ -264,4 +264,12 @@ export const LABS: LabEntry[] = [
       await expect(page.locator("#channel-hopping-hCh")).toHaveText("7");
     },
   },
+  {
+    num: "26",
+    slug: "throughput-calc",
+    interact: async (page) => {
+      await page.locator("#throughput-calc-tMtu").fill("23");
+      await expect(page.locator("#throughput-calc-tOut")).toHaveText("21 kbps");
+    },
+  },
 ];
